@@ -1,5 +1,7 @@
 # Aurora DSQL adapter for Django
 
+<a href="https://pypi.org/project/aurora-dsql-django"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/aurora-dsql-django?style=for-the-badge"></a>
+
 This is the adapter for enabling development of Django applications using Aurora DSQL.
 
 ## Requirements
