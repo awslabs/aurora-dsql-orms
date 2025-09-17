@@ -19,7 +19,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       # with:
       #   # For pull requests, check out the base branch, not the PR branch
       #   ref: ${{ github.event.pull_request.base.sha }}
