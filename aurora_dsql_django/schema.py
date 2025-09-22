@@ -22,35 +22,38 @@ from django.db.backends.postgresql import schema
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
-    # The PostgreSQL backend uses "SET CONSTRAINTS ... IMMEDIATE" before
-    # "ALTER TABLE..." to run any any deferred checks to allow dropping the
-    # foreign key in the same transaction. This doesn't apply to Aurora DSQL.
-    sql_delete_fk = ""
+    """
+    Aurora DSQL schema editor based on the PostgreSQL backend.
+    
+    Aurora DSQL is PostgreSQL-compatible but supports a subset of PostgreSQL
+    operations. This class overrides SQL templates and methods to work within
+    DSQL's constraints.
+    """
 
-    # ALTER TABLE ADD CONSTRAINT PRIMARY KEY is not supported
-    sql_create_pk = ""
+    # Use DSQL's async index creation syntax.
+    sql_create_index = (
+        "CREATE INDEX ASYNC %(name)s ON %(table)s%(using)s "
+        "(%(columns)s)%(include)s%(extra)s%(condition)s"
+    )
 
-    # "ALTER TABLE ... DROP CONSTRAINT ..." not supported for dropping UNIQUE
-    # constraints; must use this instead.
+    # Create unique constraints as unique indexes instead of using "ALTER TABLE".
+    sql_create_unique = "CREATE UNIQUE INDEX ASYNC %(name)s ON %(table)s (%(columns)s)"
+
+    # Delete unique constraints by dropping the underlying index.
     sql_delete_unique = "DROP INDEX %(name)s CASCADE"
 
-    # The PostgreSQL backend uses "SET CONSTRAINTS ... IMMEDIATE" after this
-    # statement. This isn't supported by Aurora DSQL.
+    # Remove constraint management from default updates.
     sql_update_with_default = (
         "UPDATE %(table)s SET %(column)s = %(default)s WHERE %(column)s IS NULL"
     )
 
-    # ALTER TABLE ADD CONSTRAINT is not supported
-    sql_create_unique = ""
-
-    # ALTER TABLE ADD CONSTRAINT FOREIGN KEY is not supported
+    # These "ALTER TABLE" operations are not supported.
+    sql_create_pk = ""
     sql_create_fk = ""
-    # ALTER TABLE ADD CONSTRAINT CHECK is not supported
+    sql_delete_fk = ""
     sql_create_check = ""
     sql_delete_check = ""
-    # ALTER TABLE DROP CONSTRAINT is not supported
     sql_delete_constraint = ""
-    # ALTER TABLE DROP COLUMN is not supported
     sql_delete_column = ""
 
     def __enter__(self):
