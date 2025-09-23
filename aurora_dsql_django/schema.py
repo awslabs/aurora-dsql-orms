@@ -49,8 +49,6 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     # These "ALTER TABLE" operations are not supported.
     sql_create_pk = ""
-    sql_create_fk = ""
-    sql_delete_fk = ""
     sql_create_check = ""
     sql_delete_check = ""
     sql_delete_constraint = ""
