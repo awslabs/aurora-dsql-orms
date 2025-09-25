@@ -18,6 +18,9 @@ class TestDatabaseFeatures(unittest.TestCase):
     def test_supports_foreign_keys(self):
         self.assertFalse(self.features.supports_foreign_keys)
 
+    def test_supports_check_constraints(self):
+        self.assertFalse(self.features.supports_table_check_constraints)
+
     def test_can_create_inline_fk(self):
         self.assertFalse(self.features.can_create_inline_fk)
 

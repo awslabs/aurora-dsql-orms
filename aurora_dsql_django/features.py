@@ -31,8 +31,9 @@ class DatabaseFeatures(features.DatabaseFeatures):
     # at the end of each save operation?
     supports_forward_references = True
 
-    # Does it support foreign keys?
     supports_foreign_keys = False
+
+    supports_table_check_constraints = False
 
     # Can it create foreign key constraints inline when adding columns?
     can_create_inline_fk = False

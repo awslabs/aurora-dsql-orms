@@ -19,6 +19,7 @@ for Aurora DSQL.
 
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.postgresql import schema
+from django.db.models import CheckConstraint
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
@@ -49,8 +50,6 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     # These "ALTER TABLE" operations are not supported.
     sql_create_pk = ""
-    sql_create_check = ""
-    sql_delete_check = ""
     sql_delete_constraint = ""
     sql_delete_column = ""
 
@@ -66,13 +65,32 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     def add_index(self, model, index, concurrently=False):
         if index.contains_expressions and not self.connection.features.supports_expression_indexes:
-            return None
+            return
         super().add_index(model, index, concurrently)
 
     def remove_index(self, model, index, concurrently=False):
         if index.contains_expressions and not self.connection.features.supports_expression_indexes:
-            return None
+            return
         super().remove_index(model, index, concurrently)
+
+    def _check_sql(self, name, check):
+        # There is no feature check in the upstream implementation when creating
+        # a model, so we add our own check.
+        if not self.connection.features.supports_table_check_constraints:
+            return None
+        return super()._check_sql(name, check)
+
+    def add_constraint(self, model, constraint):
+        # Older versions of Django don't reference supports_table_check_constraints, so we add this as a backup.
+        if isinstance(constraint, CheckConstraint) and not self.connection.features.supports_table_check_constraints:
+            return
+        super().add_constraint(model, constraint)
+
+    def remove_constraint(self, model, constraint):
+        # Older versions of Django don't reference supports_table_check_constraints, so we add this as a backup.
+        if isinstance(constraint, CheckConstraint) and not self.connection.features.supports_table_check_constraints:
+            return
+        super().remove_constraint(model, constraint)
 
     def _index_columns(self, table, columns, col_suffixes, opclasses):
         # Aurora DSQL doesn't support PostgreSQL opclasses.
