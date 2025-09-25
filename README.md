@@ -66,18 +66,17 @@ For more info follow the [Aurora DSQL with Django example](examples/pet-clinic-a
 
 ### Setup
 
-Assuming that you have Python installed, set up your environment and installed the dependencies
-like this instead of the `pip install aurora-dsql-django` defined above:
+## Development
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then:
 
 ```
 $ git clone https://github.com/awslabs/aurora-dsql-django
 $ cd aurora-dsql-django
-$ python -m venv venv
-...
-$ source venv/bin/activate
-$ pip install -r requirements.txt
-$ pip install -e .
+$ uv sync --extra test --extra dev
 ```
+
+`uv` will automatically install the correct Python version and manage the virtual environment.
 
 ### Running Tests
 
@@ -99,10 +98,8 @@ $ pytest -v aurora_dsql_django/tests/integration/
 Sphinx is used for documentation. You can generate HTML locally with the following:
 
 ```
-$ pip install -r requirements-docs.txt
-$ pip install -e .
-$ cd docs
-$ make html
+$ uv sync --extra test --extra dev
+$ uv run sphinx-build docs/source build
 ```
 
 ## Getting Help

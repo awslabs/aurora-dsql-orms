@@ -45,13 +45,8 @@ jobs:
       with:
         python-version: ${{ matrix.version }}
 
-    - name: Cache pip packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ matrix.version }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v5
@@ -59,27 +54,24 @@ jobs:
         role-to-assume: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
         aws-region: us-east-1
 
-    - name: Setup venv
+    - name: Setup dependencies
       run: |
-        pip install --upgrade pip
-        pip install --force-reinstall -r requirements.txt
-        python3 -c "import boto3; print(boto3.__version__)"
-        pip install pytest pytest-cov
+        uv sync --extra test --extra dev
+        uv run python3 -c "import boto3; print(boto3.__version__)"
         echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
 
     - name: Lint with flake8
       run: |
-        pip install flake8
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.venv
 
     - name: Run unit tests
       env:
         DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
       run: |
-        pytest --cov=aurora_dsql_django aurora_dsql_django/tests/unit/ --cov-report=xml
+        uv run pytest --cov=aurora_dsql_django aurora_dsql_django/tests/unit/ --cov-report=xml
   
     - name: Debug test results
       if: always()
@@ -97,5 +89,5 @@ jobs:
         DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
         CLUSTER_ENDPOINT: ${{ secrets.CLUSTER_ENDPOINT }}
       run: |
-        pytest -v aurora_dsql_django/tests/integration/
+        uv run pytest -v aurora_dsql_django/tests/integration/
         

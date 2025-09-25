@@ -1,0 +1,51 @@
+[project]
+name = "aurora_dsql_django"
+dynamic = ["version"]
+description = "Aurora DSQL adapter for Django"
+readme = "README.md"
+license = {text = "Apache License 2.0"}
+authors = [{name = "Amazon Web Services"}]
+requires-python = ">=3.8"
+dependencies = [
+    "boto3>=1.35.74,<2",
+    "botocore>=1.35.74,<2",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8",
+    "django>=4.2.16",
+    "wheel",
+    "psycopg2-binary",
+    "psycopg",
+    "pytest-cov",
+]
+dev = [
+    "flake8",
+    "Sphinx>=7.1.0,<8.0.0",
+    "docutils>=0.18.0,<0.21.0",
+    "pip>=24.3.1,<25.0.0",
+    "guzzle_sphinx_theme~=0.7.11",
+    "setuptools>=61.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "aurora_dsql_django.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aurora_dsql_django*"]

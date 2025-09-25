@@ -16,13 +16,13 @@ phases:
       # - There are no build commands
   pre_build:
     commands:
-      # TODO: Remove force re-install once SDKs are available in PyPI
-      - pip install --force-reinstall -r requirements.txt
-      - pip install -e .
+      - curl -LsSf https://astral.sh/uv/install.sh | sh
+      - source $HOME/.cargo/env
+      - uv sync --extra test --extra dev
   build:
     commands:
-      - pytest tests/unit/
-      - pytest tests/integration/ -rfs
+      - uv run pytest aurora_dsql_django/tests/unit/
+      - uv run pytest aurora_dsql_django/tests/integration/ -rfs
   post_build:
     commands:
-      - python setup.py sdist bdist_wheel
+      - uv build
