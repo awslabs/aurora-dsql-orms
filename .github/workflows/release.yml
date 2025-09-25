@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  DEFAULT_BRANCH: version-0
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and push changelog
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          BRANCH_NAME="changelog-update-$TAG_NAME"
+          git checkout -b $BRANCH_NAME
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          if ! git diff --staged --quiet; then
+            git commit -m "Update CHANGELOG.md for $TAG_NAME"
+            git push origin $BRANCH_NAME
+
+            gh pr create \
+              --title "Update CHANGELOG.md for $TAG_NAME" \
+              --body "Automated changelog update for release $TAG_NAME" \
+              --base ${{ env.DEFAULT_BRANCH }} \
+              --head $BRANCH_NAME
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
