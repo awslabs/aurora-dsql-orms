@@ -3,6 +3,12 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name to simulate'
+        required: true
+        default: 'v0.0.0'
 
 permissions:
   contents: write
@@ -26,7 +32,7 @@ jobs:
 
       - name: Commit and push changelog
         run: |
-          TAG_NAME="${{ github.event.release.tag_name }}"
+          TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.tag_name }}"
           BRANCH_NAME="changelog-update-$TAG_NAME"
           git checkout -b $BRANCH_NAME
           git config --local user.email "action@github.com"
