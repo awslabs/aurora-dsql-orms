@@ -48,11 +48,6 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         "UPDATE %(table)s SET %(column)s = %(default)s WHERE %(column)s IS NULL"
     )
 
-    # These "ALTER TABLE" operations are not supported.
-    sql_create_pk = ""
-    sql_delete_constraint = ""
-    sql_delete_column = ""
-
     def __enter__(self):
         super().__enter__()
         # As long as DatabaseFeatures.can_rollback_ddl = False, compose() may

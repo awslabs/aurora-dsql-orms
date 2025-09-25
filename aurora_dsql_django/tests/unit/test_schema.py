@@ -16,7 +16,6 @@ class TestDatabaseSchemaEditor(unittest.TestCase):
         self.schema_editor = DatabaseSchemaEditor(self.connection)
 
     def test_sql_attributes(self):
-        self.assertEqual(self.schema_editor.sql_create_pk, "")
         self.assertEqual(self.schema_editor.sql_create_index,
                          "CREATE INDEX ASYNC %(name)s ON %(table)s%(using)s (%(columns)s)%(include)s%(extra)s%(condition)s")
         self.assertEqual(self.schema_editor.sql_create_unique,
@@ -28,8 +27,6 @@ class TestDatabaseSchemaEditor(unittest.TestCase):
             self.schema_editor.sql_update_with_default,
             "UPDATE %(table)s SET %(column)s = %(default)s WHERE %(column)s IS NULL"
         )
-        self.assertEqual(self.schema_editor.sql_delete_constraint, "")
-        self.assertEqual(self.schema_editor.sql_delete_column, "")
 
     @patch('aurora_dsql_django.schema.schema.DatabaseSchemaEditor.add_index')
     def test_add_index_with_expressions(self, mock_super_add_index):
