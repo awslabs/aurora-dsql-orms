@@ -57,6 +57,8 @@ class DatabaseFeatures(features.DatabaseFeatures):
     # Can the database rename an index?
     can_rename_index = True
 
+    supports_expression_indexes = False
+
     # Does the database use savepoints for nested transactions?
     uses_savepoints = False
 

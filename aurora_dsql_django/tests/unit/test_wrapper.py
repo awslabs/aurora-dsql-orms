@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 import django
 from django.conf import settings
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.db.models import CheckConstraint, Q, Index
+from django.db.models.functions import Upper
 from aurora_dsql_django.base import DatabaseWrapper
 from aurora_dsql_django.features import DatabaseFeatures
 from aurora_dsql_django.schema import DatabaseSchemaEditor
@@ -47,7 +48,8 @@ class TestWrapper(unittest.TestCase):
         quote_patch = patch.object(self.schema_editor, 'quote_value', side_effect=simple_quote_value)
 
         with execute_patch, quote_patch:
-            operation_func()
+            with self.schema_editor:
+                operation_func()
 
         all_sql = [str(sql) for sql, _ in executed_sql]
         if hasattr(self.schema_editor, 'deferred_sql'):
@@ -70,8 +72,7 @@ class TestWrapper(unittest.TestCase):
                 app_label = 'test_app'
 
         def operation():
-            with self.schema_editor:
-                self.schema_editor.create_model(ChildModel)
+            self.schema_editor.create_model(ChildModel)
 
         self._assert_sql_not_generated(
             operation,
@@ -92,8 +93,7 @@ class TestWrapper(unittest.TestCase):
                 ]
 
         def operation():
-            with self.schema_editor:
-                self.schema_editor.create_model(CheckConstraintModel)
+            self.schema_editor.create_model(CheckConstraintModel)
 
         self._assert_sql_not_generated(
             operation,
@@ -139,6 +139,47 @@ class TestWrapper(unittest.TestCase):
             operation,
             ['CONSTRAINT'],
             "Should not execute check constraint removal SQL"
+        )
+
+
+    def test_add_index_expression_ignored(self):
+        """Ensure add_index operations ignore expression indexes when the feature is disabled"""
+
+        class AddIndexModel(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'test_app'
+
+        expression_index = Index(Upper('name'), name='upper_name_idx')
+
+        def operation():
+            self.schema_editor.add_index(AddIndexModel, expression_index)
+
+        self._assert_sql_not_generated(
+            operation,
+            ['CREATE INDEX'],
+            "Should not generate index creation SQL for expression indexes"
+        )
+
+    def test_remove_index_expression_ignored(self):
+        """Ensure remove_index operations ignore expression indexes when the feature is disabled"""
+
+        class RemoveIndexModel(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = 'test_app'
+
+        expression_index = Index(Upper('name'), name='upper_name_idx')
+
+        def operation():
+            self.schema_editor.remove_index(RemoveIndexModel, expression_index)
+
+        self._assert_sql_not_generated(
+            operation,
+            ['DROP INDEX'],
+            "Should not generate index removal SQL for expression indexes"
         )
 
 

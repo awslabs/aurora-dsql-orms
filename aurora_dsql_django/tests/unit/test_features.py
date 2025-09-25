@@ -48,6 +48,9 @@ class TestDatabaseFeatures(unittest.TestCase):
     def test_can_rename_index(self):
         self.assertTrue(self.features.can_rename_index)
 
+    def test_supports_expression_indexes(self):
+        self.assertFalse(self.features.supports_expression_indexes)
+
     def test_inheritance(self):
         from django.db.backends.postgresql.features import DatabaseFeatures as PostgreSQLDatabaseFeatures
         self.assertIsInstance(self.features, PostgreSQLDatabaseFeatures)
