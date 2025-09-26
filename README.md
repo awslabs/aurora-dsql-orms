@@ -77,10 +77,6 @@ For more info follow the [Aurora DSQL with Django example](examples/pet-clinic-a
 
 ## Development
 
-### Setup
-
-## Development
-
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then:
 
 ```
