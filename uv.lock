@@ -107,7 +107,7 @@ test = [
 requires-dist = [
     { name = "boto3", specifier = ">=1.35.74,<2" },
     { name = "botocore", specifier = ">=1.35.74,<2" },
-    { name = "django", marker = "extra == 'test'", specifier = ">=4.2.16" },
+    { name = "django", marker = "extra == 'test'", specifier = ">=4.2" },
     { name = "docutils", marker = "extra == 'dev'", specifier = ">=0.18.0,<0.21.0" },
     { name = "flake8", marker = "extra == 'dev'" },
     { name = "guzzle-sphinx-theme", marker = "extra == 'dev'", specifier = "~=0.7.11" },
@@ -122,7 +122,7 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'dev'", specifier = ">=7.1.0,<8.0.0" },
     { name = "wheel", marker = "extra == 'test'" },
 ]
-provides-extras = ["dev", "test"]
+provides-extras = ["test", "dev"]
 
 [[package]]
 name = "babel"

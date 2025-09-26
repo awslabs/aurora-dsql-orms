@@ -15,16 +15,42 @@ on:
 
 jobs:
   integration-tests:
-    name: Python v${{ matrix.version }}
-    runs-on: ubuntu-latest        
+    name: Python v${{ matrix.python-version }} - Django ${{ matrix.django-version }}
+    runs-on: ubuntu-latest
     strategy:
       # If we run more than one job at a time, we will have to have one cluster
       # for each flavor of the job. Otherwise they will interfere with each other
       # These tests are quite fast. We don't need to have many clusters.
       max-parallel: 1
       matrix:
-        # Run test for every python version we intend to support.
-        version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        # Run test for every Python and Django version we intend to support.
+        python-version:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+        django-version:
+          - 'default'
+          - '>=4.2,<4.3'
+          - '>=5.0,<5.1'
+          - '>=5.1,<5.2'
+          - '>=5.2,<5.3'
+        exclude:
+          # Django 5.0+ requires Python 3.10+
+          - python-version: '3.8'
+            django-version: '>=5.0,<5.1'
+          - python-version: '3.8'
+            django-version: '>=5.1,<5.2'
+          - python-version: '3.8'
+            django-version: '>=5.2,<5.3'
+          - python-version: '3.9'
+            django-version: '>=5.0,<5.1'
+          - python-version: '3.9'
+            django-version: '>=5.1,<5.2'
+          - python-version: '3.9'
+            django-version: '>=5.2,<5.3'
     permissions:
       id-token: write
       contents: read
@@ -36,14 +62,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
-      # with:
-      #   # For pull requests, check out the base branch, not the PR branch
-      #   ref: ${{ github.event.pull_request.base.sha }}
 
-    - name: Set up Python ${{ matrix.version }}
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.version }}
+        python-version: ${{ matrix.python-version }}
 
     - name: Install uv
       uses: astral-sh/setup-uv@v6
@@ -57,8 +80,18 @@ jobs:
     - name: Setup dependencies
       run: |
         uv sync --extra test --extra dev
-        uv run python3 -c "import boto3; print(boto3.__version__)"
+        uv run python -c "import boto3; print(boto3.__version__)"
         echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
+
+    # Install specific Django version for matrix testing, skip for 'default' to verify pyproject.toml version
+    - name: Install Django ${{ matrix.django-version }}
+      if: matrix.django-version != 'default'
+      run: |
+        uv pip install "django${{ matrix.django-version }}"
+
+    - name: Print Django version
+      run: |
+        uv run python -c "import django; print(f'Django version: {django.get_version()}')"
 
     - name: Lint with ruff
       run: |
@@ -79,17 +112,17 @@ jobs:
         DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
       run: |
         uv run pytest --cov=aurora_dsql_django aurora_dsql_django/tests/unit/ --cov-report=xml
-  
+
     - name: Debug test results
       if: always()
       run: |
         cat coverage.xml || echo "coverage.xml not found"
-  
+
     - name: Archive code coverage results
       uses: actions/upload-artifact@v4
       with:
-        name: code-coverage-report
-        path: coverage-v${{ matrix.version }}.xml
+        name: code-coverage-report-${{ github.job }}-${{ strategy.job-index }}
+        path: coverage.xml
 
     - name: Run integration tests
       env:

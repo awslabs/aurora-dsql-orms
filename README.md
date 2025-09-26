@@ -6,6 +6,14 @@ This is the adapter for enabling development of Django applications using Aurora
 
 ## Requirements
 
+### Django
+
+Aurora DSQL adapter for Django supports Django 4.2+ with the following versions:
+- Django 4.2.x (LTS)
+- Django 5.0.x
+- Django 5.1.x
+- Django 5.2.x (LTS)
+
 ### Boto3
 
 Aurora DSQL Django adapter needs boto3 to work. Follow the Boto3 [installation guide](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html) to install Boto3
