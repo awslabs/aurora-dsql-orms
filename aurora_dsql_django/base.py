@@ -114,6 +114,10 @@ class DatabaseWrapper(base.DatabaseWrapper):
         super().__init__(*args, **kwargs)
         self._patch_autofields()
 
+        # Automatically disable server-side cursors since Aurora DSQL doesn't support them.
+        # We preserve the user config if it is defined but this is likely a user mistake.
+        self.settings_dict.setdefault('DISABLE_SERVER_SIDE_CURSORS', True)
+
     def _patch_autofields(self):
         """
         Patch AutoField classes to return UUID type for related fields.

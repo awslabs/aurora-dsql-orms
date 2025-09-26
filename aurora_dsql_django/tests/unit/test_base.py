@@ -216,10 +216,10 @@ class TestAuroraDSQLBackend(unittest.TestCase):
 
         # Test with valid UUID string.
         uuid_string = "8fcc0dd2-1d96-4428-a619-f0e43996dc19"
-        
+
         result_auto = autofield.to_python(uuid_string)
         result_big = bigautofield.to_python(uuid_string)
-        
+
         # Should convert to UUID objects.
         self.assertIsInstance(result_auto, uuid.UUID)
         self.assertIsInstance(result_big, uuid.UUID)
@@ -230,11 +230,11 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         """Test that AutoField.to_python handles existing UUID objects."""
         autofield = models.AutoField()
         bigautofield = models.BigAutoField()
-        
+
         uuid_obj = uuid.UUID("8fcc0dd2-1d96-4428-a619-f0e43996dc19")
         result_auto = autofield.to_python(uuid_obj)
         result_big = bigautofield.to_python(uuid_obj)
-        
+
         self.assertEqual(result_auto, uuid_obj)
         self.assertEqual(result_big, uuid_obj)
 
@@ -242,10 +242,10 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         """Test that AutoField.to_python handles None values."""
         autofield = models.AutoField()
         bigautofield = models.BigAutoField()
-        
+
         result_auto = autofield.to_python(None)
         result_big = bigautofield.to_python(None)
-        
+
         self.assertIsNone(result_auto)
         self.assertIsNone(result_big)
 
@@ -272,13 +272,62 @@ class TestAuroraDSQLBackend(unittest.TestCase):
     def test_autofield_error_message_content(self):
         """Test that AutoField validation errors contain correct UUID message."""
         autofield = models.AutoField()
-        
+
         with self.assertRaises(ValidationError) as cm:
             autofield.to_python(123)
-        
+
         error_message = str(cm.exception.messages[0])
         self.assertIn("must be a valid UUID", error_message)
         self.assertIn("123", error_message)
+
+    def test_disable_server_side_cursors_auto_set(self):
+        """Test that DISABLE_SERVER_SIDE_CURSORS is automatically set to True."""
+        wrapper = DatabaseWrapper({
+            'ENGINE': 'aurora_dsql_django',
+            'NAME': 'test_db',
+        })
+
+        self.assertTrue(wrapper.settings_dict['DISABLE_SERVER_SIDE_CURSORS'])
+
+    def test_disable_server_side_cursors_respects_customer_setting(self):
+        """Test that customer's DISABLE_SERVER_SIDE_CURSORS setting is not overridden."""
+        wrapper_false = DatabaseWrapper({
+            'ENGINE': 'aurora_dsql_django',
+            'NAME': 'test_db',
+
+            # Explicit user configuration.
+            'DISABLE_SERVER_SIDE_CURSORS': False,
+        })
+
+        # Ensure we do not override a value that conflicts with the default.
+        self.assertFalse(wrapper_false.settings_dict['DISABLE_SERVER_SIDE_CURSORS'])
+
+        # Test with customer setting True
+        wrapper_true = DatabaseWrapper({
+            'ENGINE': 'aurora_dsql_django',
+            'NAME': 'test_db',
+
+            # Explicit user configuration.
+            'DISABLE_SERVER_SIDE_CURSORS': True,
+        })
+
+        self.assertTrue(wrapper_true.settings_dict['DISABLE_SERVER_SIDE_CURSORS'])
+
+    def test_disable_server_side_cursors_with_other_options(self):
+        """Test that DISABLE_SERVER_SIDE_CURSORS works with other settings."""
+        wrapper = DatabaseWrapper({
+            'ENGINE': 'aurora_dsql_django',
+            'NAME': 'test_db',
+            'OPTIONS': {
+                'sslmode': 'require',
+                'region': 'us-east-1',
+            }
+        })
+
+        # Should add DISABLE_SERVER_SIDE_CURSORS while preserving other options
+        self.assertTrue(wrapper.settings_dict['DISABLE_SERVER_SIDE_CURSORS'])
+        self.assertEqual(wrapper.settings_dict['OPTIONS']['sslmode'], 'require')
+        self.assertEqual(wrapper.settings_dict['OPTIONS']['region'], 'us-east-1')
 
 
 if __name__ == '__main__':
