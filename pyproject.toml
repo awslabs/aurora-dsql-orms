@@ -36,6 +36,7 @@ test = [
 ]
 dev = [
     "flake8",
+    "ruff",
     "Sphinx>=7.1.0,<8.0.0",
     "docutils>=0.18.0,<0.21.0",
     "pip>=24.3.1,<25.0.0",
@@ -53,3 +54,18 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["aurora_dsql_django*"]
+
+[tool.ruff]
+indent-width = 4
+target-version = "py38"
+
+# Aligns with flake8 check in CI/CD workflow.
+line-length = 127
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
