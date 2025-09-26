@@ -1,14 +1,15 @@
 import os
-from django.test import TestCase
+
 from django.db import connections, transaction
+from django.test import TestCase
 
 
 class TestAuroraDSQLAdapter(TestCase):
-    databases = {'default'}
+    databases = {"default"}
 
     @classmethod
     def setUpClass(cls):
-        cls.connection = connections['default']
+        cls.connection = connections["default"]
         transaction.set_autocommit(False)
         super().setUpClass()
 
@@ -21,10 +22,9 @@ class TestAuroraDSQLAdapter(TestCase):
     def test_connection_params(self):
         params = self.connection.get_connection_params()
 
-        self.assertEqual(
-            params['host'], os.environ.get('CLUSTER_ENDPOINT', None))
-        self.assertEqual(params['user'], 'admin')
-        self.assertIn('password', params)
+        self.assertEqual(params["host"], os.environ.get("CLUSTER_ENDPOINT", None))
+        self.assertEqual(params["user"], "admin")
+        self.assertIn("password", params)
 
         # Test database connection
         with self.connection.cursor() as cursor:
@@ -36,7 +36,7 @@ class TestAuroraDSQLAdapter(TestCase):
 
     def test_aws_connection_params(self):
         result = self.connection.get_connection_params()
-        self.assertIn('password', result)
+        self.assertIn("password", result)
 
     def test_table_creation(self):
         with self.connection.cursor() as cursor:
@@ -45,12 +45,10 @@ class TestAuroraDSQLAdapter(TestCase):
                 cursor.execute("BEGIN")
 
                 # Create table
-                cursor.execute(
-                    "CREATE TABLE foobar (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT)")
+                cursor.execute("CREATE TABLE foobar (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT)")
 
                 # Verify index creation
-                cursor.execute(
-                    "SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'foobar'")
+                cursor.execute("SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'foobar'")
                 count = cursor.fetchone()[0]
                 self.assertEqual(count, 1)
 
@@ -62,10 +60,9 @@ class TestAuroraDSQLAdapter(TestCase):
 
                 # Delete the table
                 cursor.execute("DROP TABLE IF EXISTS foobar")
-                
+
                 # Verify index destruction
-                cursor.execute(
-                    "SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'foobar'")
+                cursor.execute("SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'foobar'")
                 count = cursor.fetchone()[0]
                 self.assertEqual(count, 0)
 
@@ -79,7 +76,6 @@ class TestAuroraDSQLAdapter(TestCase):
 
             finally:
                 # Verify that the table has been deleted
-                cursor.execute(
-                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'test_index'")
+                cursor.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'test_index'")
                 count = cursor.fetchone()[0]
                 self.assertEqual(count, 0)

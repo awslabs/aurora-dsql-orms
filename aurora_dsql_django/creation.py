@@ -22,9 +22,7 @@ from django.db.backends.postgresql import creation
 
 
 class DatabaseCreation(creation.DatabaseCreation):
-
     def _clone_test_db(self, suffix, verbosity, keepdb=False):
         raise NotImplementedError(
-            "Aurora DSQL doesn't support cloning databases. "
-            "Disable the option to run tests in parallel processes."
+            "Aurora DSQL doesn't support cloning databases. Disable the option to run tests in parallel processes."
         )

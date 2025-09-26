@@ -16,8 +16,9 @@
 
 import os
 
-import aurora_dsql_django
 import guzzle_sphinx_theme
+
+import aurora_dsql_django
 
 # -- General configuration -----------------------------------------------------
 
@@ -26,23 +27,23 @@ import guzzle_sphinx_theme
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'AuroraDSQL Docs'
-copyright = 'Amazon Web Services, Inc'
+project = "AuroraDSQL Docs"
+copyright = "Amazon Web Services, Inc"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -82,21 +83,21 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
 extensions.append("guzzle_sphinx_theme")
-html_translator_class = 'guzzle_sphinx_theme.HTMLTranslator'
+html_translator_class = "guzzle_sphinx_theme.HTMLTranslator"
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
-html_theme = 'guzzle_sphinx_theme'
+html_theme = "guzzle_sphinx_theme"
 # Guzzle theme options (see theme.conf for more information)
 
 html_theme_options = {
     # hack to add tracking
-    "google_analytics_account": os.getenv('TRACKING', False),
-    "base_url": "http://docs.aws.amazon.com/aws-sdk-php/guide/latest/"
+    "google_analytics_account": os.getenv("TRACKING", False),
+    "base_url": "http://docs.aws.amazon.com/aws-sdk-php/guide/latest/",
 }
 
 # -- Options for HTML output ---------------------------------------------------
@@ -132,10 +133,10 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 html_css_files = [
-    'css/custom.css',
+    "css/custom.css",
 ]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
@@ -148,11 +149,7 @@ html_css_files = [
 
 # Custom sidebar templates, maps document names to template names.
 html_show_sourcelink = False
-html_sidebars = {
-    '**': ['logo-text.html',
-           'globaltoc.html',
-           'searchbox.html']
-}
+html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "searchbox.html"]}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -185,7 +182,7 @@ html_sidebars = {
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'AuroraDSQLdoc'
+htmlhelp_basename = "AuroraDSQLdoc"
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -202,8 +199,7 @@ latex_elements = {}
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'AuroraDSQL.tex', 'AuroraDSQL Documentation',
-   'Amazon.com, Inc.', 'manual'),
+    ("index", "AuroraDSQL.tex", "AuroraDSQL Documentation", "Amazon.com, Inc.", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -231,10 +227,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'AuroraDSQL', 'AuroraDSQL Documentation',
-     ['Amazon.com, Inc.'], 1)
-]
+man_pages = [("index", "AuroraDSQL", "AuroraDSQL Documentation", ["Amazon.com, Inc."], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -246,9 +239,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'AuroraDSQL', 'AuroraDSQL Documentation',
-   'Amazon.com, Inc.', 'AuroraDSQL', 'One line description of project.',
-   'Miscellaneous'),
+    (
+        "index",
+        "AuroraDSQL",
+        "AuroraDSQL Documentation",
+        "Amazon.com, Inc.",
+        "AuroraDSQL",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -260,4 +259,4 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
 
-autoclass_content = 'both'
+autoclass_content = "both"

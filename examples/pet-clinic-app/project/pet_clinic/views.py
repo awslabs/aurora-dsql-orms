@@ -9,21 +9,19 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from django.views.generic import View
-from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.db.transaction import atomic
-from django.db import Error
-import json
 import html
+import json
 import time
 
-from pet_clinic.models import Owner
-from pet_clinic.models import Pet
-from pet_clinic.models import Specialty
-from pet_clinic.models import Vet
-from pet_clinic.models import VetSpecialties
+from django.db import Error
+from django.db.transaction import atomic
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
+
+from pet_clinic.models import Owner, Pet, Specialty, Vet, VetSpecialties
+
 # Create your views here.
 
 
@@ -39,7 +37,7 @@ def with_retries(retries=3, failed_response=HttpResponse(status=500), initial_wa
         def retry_fn(*args, **kwargs):
             delay = initial_wait
             for i in range(retries):
-                print(("attempt: %s/%s") % (i+1, retries))
+                print(("attempt: %s/%s") % (i + 1, retries))
                 try:
                     return view(*args, **kwargs)
                 # TODO: check error code?
@@ -48,11 +46,13 @@ def with_retries(retries=3, failed_response=HttpResponse(status=500), initial_wa
                     time.sleep(delay)
                     delay *= delay_factor
             return failed_response
+
         return retry_fn
+
     return handle
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class OwnerView(View):
     @with_retries()
     def get(self, request, id=None, *args, **kwargs):
@@ -68,19 +68,19 @@ class OwnerView(View):
         data = json.loads(request.body.decode())
 
         # If id is provided we try updating the existing object
-        id = data.get('id', None)
+        id = data.get("id", None)
         try:
             owner = Owner.objects.get(id=id) if id is not None else None
         except Exception:
             return HttpResponseBadRequest(("error: check if owner with id `%s` exists") % (html.escape(str(id))))
 
-        name = data.get('name', owner.name if owner else None)
+        name = data.get("name", owner.name if owner else None)
         # Either the name or id must be provided.
         if owner is None and name is None:
             return HttpResponseBadRequest()
 
-        telephone = data.get('telephone', owner.telephone if owner else None)
-        city = data.get('city', owner.city if owner else None)
+        telephone = data.get("telephone", owner.telephone if owner else None)
+        city = data.get("city", owner.city if owner else None)
 
         if owner is None:
             # Owner _not_ present, creating new one
@@ -104,7 +104,7 @@ class OwnerView(View):
         return HttpResponse(status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class PetView(View):
     @with_retries()
     def get(self, request=None, id=None, *args, **kwargs):
@@ -120,19 +120,19 @@ class PetView(View):
         data = json.loads(request.body.decode())
 
         # If id is provided we try updating the existing object
-        id = data.get('id', None)
+        id = data.get("id", None)
         try:
             pet = Pet.objects.get(id=id) if id is not None else None
         except Exception:
             return HttpResponseBadRequest(("error: check if pet with id `%s` exists") % (html.escape(str(id))))
 
-        name = data.get('name', pet.name if pet else None)
+        name = data.get("name", pet.name if pet else None)
         # Either the name or id must be provided.
         if pet is None and name is None:
             return HttpResponseBadRequest()
 
-        birth_date = data.get('birth_date', pet.birth_date if pet else None)
-        owner_id = data.get('owner_id', pet.owner.id if pet and pet.owner else None)
+        birth_date = data.get("birth_date", pet.birth_date if pet else None)
+        owner_id = data.get("owner_id", pet.owner.id if pet and pet.owner else None)
         try:
             owner = Owner.objects.get(id=owner_id) if owner_id else None
         except Exception:
@@ -160,7 +160,7 @@ class PetView(View):
         return HttpResponse(status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class VetView(View):
     @with_retries()
     def get(self, request=None, id=None, *args, **kwargs):
@@ -175,25 +175,25 @@ class VetView(View):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body.decode())
         # If id is provided we try updating the existing object
-        id = data.get('id', None)
+        id = data.get("id", None)
         try:
             vet = Vet.objects.get(id=id) if id is not None else None
         except Exception:
             return HttpResponseBadRequest(("error: check if vet with id `%s` exists") % (html.escape(str(id))))
 
-        name = data.get('name', vet.name if vet else None)
+        name = data.get("name", vet.name if vet else None)
 
         # Either the name or id must be provided.
         if vet is None and name is None:
             return HttpResponseBadRequest()
 
-        owner_id = data.get('owner_id', vet.owner.id if vet and vet.owner else None)
+        owner_id = data.get("owner_id", vet.owner.id if vet and vet.owner else None)
         try:
             owner = Owner.objects.get(id=owner_id) if owner_id else None
         except Exception:
             return HttpResponseBadRequest(("error: check if owner with id `%s` exists") % (html.escape(str(id))))
 
-        specialties_list = data.get('specialties', vet.specialties if vet and vet.specialties else [])
+        specialties_list = data.get("specialties", vet.specialties if vet and vet.specialties else [])
         specialties = []
         for specialty in specialties_list:
             try:
@@ -218,9 +218,11 @@ class VetView(View):
         vet.specialties.add(*specialties)
         return JsonResponse(
             {
-                'Veterinarian': list(Vet.objects.filter(id=vet.id).values()),
-                'Specialties': list(VetSpecialties.objects.filter(vet=vet.id).values())
-            }, safe=False)
+                "Veterinarian": list(Vet.objects.filter(id=vet.id).values()),
+                "Specialties": list(VetSpecialties.objects.filter(vet=vet.id).values()),
+            },
+            safe=False,
+        )
 
     @with_retries()
     @atomic
@@ -230,7 +232,7 @@ class VetView(View):
         return HttpResponse(status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class SpecialtyView(View):
     @with_retries()
     def get(self, request=None, name=None, *args, **kwargs):
@@ -244,7 +246,7 @@ class SpecialtyView(View):
     @atomic
     def post(self, request=None, *args, **kwargs):
         data = json.loads(request.body.decode())
-        name = data.get('name', None)
+        name = data.get("name", None)
         if name is None:
             return HttpResponseBadRequest()
         specialty = Specialty(name=name)
@@ -259,13 +261,13 @@ class SpecialtyView(View):
         return HttpResponse(status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class VetSpecialtiesView(View):
     @with_retries()
     def get(self, request=None, *args, **kwargs):
         data = json.loads(request.body.decode())
-        vet_id = data.get('vet_id', None)
-        specialty_id = data.get('specialty_id', None)
+        vet_id = data.get("vet_id", None)
+        specialty_id = data.get("specialty_id", None)
         specialties = VetSpecialties.objects
         # Apply filter if specific name is requested.
         if vet_id is not None:

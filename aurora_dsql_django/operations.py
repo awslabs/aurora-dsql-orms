@@ -21,7 +21,6 @@ from django.db.backends.postgresql import operations
 
 
 class DatabaseOperations(operations.DatabaseOperations):
-
     cast_data_types = {
         "AutoField": "uuid",
         "BigAutoField": "uuid",

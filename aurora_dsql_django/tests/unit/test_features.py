@@ -1,9 +1,9 @@
 import unittest
+
 from aurora_dsql_django.features import DatabaseFeatures
 
 
 class TestDatabaseFeatures(unittest.TestCase):
-
     def setUp(self):
         # DatabaseFeatures usually requires a connection object, but for these tests,
         # we can pass None as we're only checking static attributes
@@ -53,26 +53,20 @@ class TestDatabaseFeatures(unittest.TestCase):
 
     def test_inheritance(self):
         from django.db.backends.postgresql.features import DatabaseFeatures as PostgreSQLDatabaseFeatures
+
         self.assertIsInstance(self.features, PostgreSQLDatabaseFeatures)
 
     def test_overridden_attributes(self):
         from django.db.backends.postgresql.features import DatabaseFeatures as PostgreSQLDatabaseFeatures
+
         postgresql_features = PostgreSQLDatabaseFeatures(None)
 
         # Check that we've actually overridden some attributes
-        self.assertNotEqual(
-            self.features.can_rollback_ddl,
-            postgresql_features.can_rollback_ddl)
-        self.assertNotEqual(
-            self.features.supports_foreign_keys,
-            postgresql_features.supports_foreign_keys)
-        self.assertNotEqual(
-            self.features.can_clone_databases,
-            postgresql_features.can_clone_databases)
-        self.assertNotEqual(
-            self.features.has_native_json_field,
-            postgresql_features.has_native_json_field)
+        self.assertNotEqual(self.features.can_rollback_ddl, postgresql_features.can_rollback_ddl)
+        self.assertNotEqual(self.features.supports_foreign_keys, postgresql_features.supports_foreign_keys)
+        self.assertNotEqual(self.features.can_clone_databases, postgresql_features.can_clone_databases)
+        self.assertNotEqual(self.features.has_native_json_field, postgresql_features.has_native_json_field)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

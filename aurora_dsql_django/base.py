@@ -54,31 +54,26 @@ def get_aws_connection_params(params):
     user = params.get("user")
     sslmode = params.get("sslmode", None)
     sslrootcert = params.get("sslrootcert", None)
-    if sslrootcert is None and sslmode == 'verify-full':
+    if sslrootcert is None and sslmode == "verify-full":
         params["sslrootcert"] = "system"
     expires_in = params.pop("expires_in", None)
     aws_profile = params.pop("aws_profile", None)
 
     try:
-        session = boto3.session.Session(
-            profile_name=aws_profile) if aws_profile else boto3.session.Session()
+        session = boto3.session.Session(profile_name=aws_profile) if aws_profile else boto3.session.Session()
         client = session.client("dsql", region_name=region)
 
         # Set correct IAM Auth token
-        is_admin = user == 'admin'
+        is_admin = user == "admin"
         has_expires_in = expires_in is not None
         if is_admin and has_expires_in:
-            params["password"] = client.generate_db_connect_admin_auth_token(
-                hostname, region, expires_in)
+            params["password"] = client.generate_db_connect_admin_auth_token(hostname, region, expires_in)
         elif is_admin and not has_expires_in:
-            params["password"] = client.generate_db_connect_admin_auth_token(
-                hostname, region)
+            params["password"] = client.generate_db_connect_admin_auth_token(hostname, region)
         elif not is_admin and has_expires_in:
-            params["password"] = client.generate_db_connect_auth_token(
-                hostname, region, expires_in)
+            params["password"] = client.generate_db_connect_auth_token(hostname, region, expires_in)
         else:
-            params["password"] = client.generate_db_connect_auth_token(
-                hostname, region)
+            params["password"] = client.generate_db_connect_auth_token(hostname, region)
 
         params.setdefault("port", 5432)
 
@@ -93,6 +88,7 @@ class DatabaseWrapper(base.DatabaseWrapper):
     """
     A wrapper class that adapts the Django base API for Aurora DSQL
     """
+
     vendor = "dsql"
     display_name = "Aurora DSQL"
     # Override some types from the postgresql adapter.
@@ -116,7 +112,7 @@ class DatabaseWrapper(base.DatabaseWrapper):
 
         # Automatically disable server-side cursors since Aurora DSQL doesn't support them.
         # We preserve the user config if it is defined but this is likely a user mistake.
-        self.settings_dict.setdefault('DISABLE_SERVER_SIDE_CURSORS', True)
+        self.settings_dict.setdefault("DISABLE_SERVER_SIDE_CURSORS", True)
 
     def _patch_autofields(self):
         """

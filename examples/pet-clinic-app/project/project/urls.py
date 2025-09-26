@@ -25,21 +25,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.urls import path
-from pet_clinic.views import OwnerView
-from pet_clinic.views import PetView
-from pet_clinic.views import VetView
-from pet_clinic.views import SpecialtyView
-from pet_clinic.views import VetSpecialtiesView
+from pet_clinic.views import OwnerView, PetView, SpecialtyView, VetSpecialtiesView, VetView
 
 urlpatterns = [
-    path('owner/', OwnerView.as_view(), name='owner'),
-    path('owner/<id>', OwnerView.as_view(), name='owner'),
-    path('pet/', PetView.as_view(), name='pet'),
-    path('pet/<id>', PetView.as_view(), name='pet'),
-    path('vet/', VetView.as_view(), name='vet'),
-    path('vet/<id>', VetView.as_view(), name='vet'),
-    path('specialty/', SpecialtyView.as_view(), name='specialty'),
-    path('specialty/<name>', SpecialtyView.as_view(), name='specialty'),
-    path('vet-specialties/', VetSpecialtiesView.as_view(), name='vet-specialties'),
+    path("owner/", OwnerView.as_view(), name="owner"),
+    path("owner/<id>", OwnerView.as_view(), name="owner"),
+    path("pet/", PetView.as_view(), name="pet"),
+    path("pet/<id>", PetView.as_view(), name="pet"),
+    path("vet/", VetView.as_view(), name="vet"),
+    path("vet/<id>", VetView.as_view(), name="vet"),
+    path("specialty/", SpecialtyView.as_view(), name="specialty"),
+    path("specialty/<name>", SpecialtyView.as_view(), name="specialty"),
+    path("vet-specialties/", VetSpecialtiesView.as_view(), name="vet-specialties"),
 ]

@@ -1,10 +1,10 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from aurora_dsql_django.creation import DatabaseCreation
 
 
 class TestDatabaseCreation(unittest.TestCase):
-
     def setUp(self):
         # Create a mock connection object
         self.mock_connection = MagicMock()
@@ -12,14 +12,10 @@ class TestDatabaseCreation(unittest.TestCase):
 
     def test_clone_test_db_raises_not_implemented_error(self):
         with self.assertRaises(NotImplementedError) as context:
-            self.creation._clone_test_db(suffix='test', verbosity=1)
+            self.creation._clone_test_db(suffix="test", verbosity=1)
 
-        self.assertIn(
-            "Aurora DSQL doesn't support cloning databases", str(
-                context.exception))
-        self.assertIn(
-            "Disable the option to run tests in parallel processes", str(
-                context.exception))
+        self.assertIn("Aurora DSQL doesn't support cloning databases", str(context.exception))
+        self.assertIn("Disable the option to run tests in parallel processes", str(context.exception))
 
     """
     The 'keepdb' parameter in Django's test database creation process determines whether
@@ -42,20 +38,20 @@ class TestDatabaseCreation(unittest.TestCase):
 
     def test_clone_test_db_with_keepdb(self):
         with self.assertRaises(NotImplementedError):
-            self.creation._clone_test_db(
-                suffix='test', verbosity=1, keepdb=True)
+            self.creation._clone_test_db(suffix="test", verbosity=1, keepdb=True)
 
-    @patch('aurora_dsql_django.creation.creation.DatabaseCreation._clone_test_db')
+    @patch("aurora_dsql_django.creation.creation.DatabaseCreation._clone_test_db")
     def test_parent_clone_test_db_not_called(self, mock_parent_clone):
         with self.assertRaises(NotImplementedError):
-            self.creation._clone_test_db(suffix='test', verbosity=1)
+            self.creation._clone_test_db(suffix="test", verbosity=1)
 
         mock_parent_clone.assert_not_called()
 
     def test_inheritance(self):
         from django.db.backends.postgresql.creation import DatabaseCreation as PostgreSQLDatabaseCreation
+
         self.assertIsInstance(self.creation, PostgreSQLDatabaseCreation)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

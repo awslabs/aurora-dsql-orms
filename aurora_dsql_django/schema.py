@@ -25,17 +25,14 @@ from django.db.models import CheckConstraint
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     """
     Aurora DSQL schema editor based on the PostgreSQL backend.
-    
+
     Aurora DSQL is PostgreSQL-compatible but supports a subset of PostgreSQL
     operations. This class overrides SQL templates and methods to work within
     DSQL's constraints.
     """
 
     # Use DSQL's async index creation syntax.
-    sql_create_index = (
-        "CREATE INDEX ASYNC %(name)s ON %(table)s%(using)s "
-        "(%(columns)s)%(include)s%(extra)s%(condition)s"
-    )
+    sql_create_index = "CREATE INDEX ASYNC %(name)s ON %(table)s%(using)s (%(columns)s)%(include)s%(extra)s%(condition)s"
 
     # Create unique constraints as unique indexes instead of using "ALTER TABLE".
     sql_create_unique = "CREATE UNIQUE INDEX ASYNC %(name)s ON %(table)s (%(columns)s)"
@@ -44,9 +41,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     sql_delete_unique = "DROP INDEX %(name)s CASCADE"
 
     # Remove constraint management from default updates.
-    sql_update_with_default = (
-        "UPDATE %(table)s SET %(column)s = %(default)s WHERE %(column)s IS NULL"
-    )
+    sql_update_with_default = "UPDATE %(table)s SET %(column)s = %(default)s WHERE %(column)s IS NULL"
 
     def __enter__(self):
         super().__enter__()
@@ -89,9 +84,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     def _index_columns(self, table, columns, col_suffixes, opclasses):
         # Aurora DSQL doesn't support PostgreSQL opclasses.
-        return BaseDatabaseSchemaEditor._index_columns(
-            self, table, columns, col_suffixes, opclasses
-        )
+        return BaseDatabaseSchemaEditor._index_columns(self, table, columns, col_suffixes, opclasses)
 
     def _create_like_index_sql(self, model, field):
         # Aurora DSQL doesn't support LIKE indexes which use postgres
