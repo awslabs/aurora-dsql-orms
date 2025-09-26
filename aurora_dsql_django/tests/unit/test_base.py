@@ -1,7 +1,22 @@
 import unittest
+import uuid
 from unittest.mock import patch, MagicMock
-from aurora_dsql_django.base import get_aws_connection_params, DatabaseWrapper
+
+import django
+from django.conf import settings
 from botocore.exceptions import BotoCoreError
+from django.core.exceptions import ValidationError
+from django.db import models
+
+from aurora_dsql_django.base import get_aws_connection_params, DatabaseWrapper
+from aurora_dsql_django.operations import DatabaseOperations
+
+if not settings.configured:
+    settings.configure(
+        USE_I18N=True,
+        DATABASES={'default': {'ENGINE': 'aurora_dsql_django'}},
+    )
+    django.setup()
 
 
 class TestAuroraDSQLBackend(unittest.TestCase):
@@ -13,6 +28,9 @@ class TestAuroraDSQLBackend(unittest.TestCase):
             "user": "test-user",
             "name": "test-db"
         }
+
+        self.wrapper = DatabaseWrapper({})
+        self.ops = DatabaseOperations(connection=MagicMock())
 
     @patch('aurora_dsql_django.base.boto3.session.Session')
     def test_get_aws_connection_params_without_profile(self, mock_session):
@@ -105,19 +123,17 @@ class TestAuroraDSQLBackend(unittest.TestCase):
             get_aws_connection_params(self.base_params.copy())
 
     def test_database_wrapper_data_types(self):
-        wrapper = DatabaseWrapper({})
-        self.assertEqual(wrapper.data_types['BigAutoField'], "uuid")
-        self.assertEqual(wrapper.data_types['AutoField'], "uuid")
-        self.assertEqual(wrapper.data_types['DateTimeField'], "timestamptz")
+        self.assertEqual(self.wrapper.data_types['BigAutoField'], "uuid")
+        self.assertEqual(self.wrapper.data_types['AutoField'], "uuid")
+        self.assertEqual(self.wrapper.data_types['DateTimeField'], "timestamptz")
 
     def test_database_wrapper_data_types_suffix(self):
-        wrapper = DatabaseWrapper({})
         self.assertEqual(
-            wrapper.data_types_suffix['BigAutoField'],
+            self.wrapper.data_types_suffix['BigAutoField'],
             "DEFAULT gen_random_uuid()")
-        self.assertEqual(wrapper.data_types_suffix['SmallAutoField'], "")
+        self.assertEqual(self.wrapper.data_types_suffix['SmallAutoField'], "")
         self.assertEqual(
-            wrapper.data_types_suffix['AutoField'],
+            self.wrapper.data_types_suffix['AutoField'],
             "DEFAULT gen_random_uuid()")
 
     @patch('aurora_dsql_django.base.get_aws_connection_params')
@@ -164,6 +180,105 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         with wrapper.constraint_checks_disabled():
             # This context manager should not raise any exception
             pass
+
+    def test_autofield_rel_db_type_returns_uuid(self):
+        """Test that AutoField rel_db_type returns uuid for foreign keys."""
+        autofield = models.AutoField()
+        bigautofield = models.BigAutoField()
+
+        self.assertEqual(autofield.rel_db_type(self.wrapper), 'uuid')
+        self.assertEqual(bigautofield.rel_db_type(self.wrapper), 'uuid')
+
+    def test_autofield_get_prep_value_preserves_uuid(self):
+        """Test that AutoField get_prep_value doesn't convert UUIDs to int."""
+        autofield = models.AutoField()
+        bigautofield = models.BigAutoField()
+
+        test_uuid = uuid.uuid4()
+
+        # Should preserve UUID values.
+        self.assertEqual(autofield.get_prep_value(test_uuid), test_uuid)
+        self.assertEqual(bigautofield.get_prep_value(test_uuid), test_uuid)
+
+        # Should preserve None, which tells Django to use database default.
+        self.assertIsNone(autofield.get_prep_value(None))
+        self.assertIsNone(bigautofield.get_prep_value(None))
+
+    def test_operations_cast_data_types(self):
+        """Test that operations class maps AutoFields to uuid for casting."""
+        self.assertEqual(self.ops.cast_data_types['AutoField'], 'uuid')
+        self.assertEqual(self.ops.cast_data_types['BigAutoField'], 'uuid')
+
+    def test_autofield_to_python_uuid_conversion(self):
+        """Test that AutoField.to_python converts UUID strings to UUID objects."""
+        autofield = models.AutoField()
+        bigautofield = models.BigAutoField()
+
+        # Test with valid UUID string.
+        uuid_string = "8fcc0dd2-1d96-4428-a619-f0e43996dc19"
+        
+        result_auto = autofield.to_python(uuid_string)
+        result_big = bigautofield.to_python(uuid_string)
+        
+        # Should convert to UUID objects.
+        self.assertIsInstance(result_auto, uuid.UUID)
+        self.assertIsInstance(result_big, uuid.UUID)
+        self.assertEqual(str(result_auto), uuid_string)
+        self.assertEqual(str(result_big), uuid_string)
+
+    def test_autofield_to_python_with_uuid_object(self):
+        """Test that AutoField.to_python handles existing UUID objects."""
+        autofield = models.AutoField()
+        bigautofield = models.BigAutoField()
+        
+        uuid_obj = uuid.UUID("8fcc0dd2-1d96-4428-a619-f0e43996dc19")
+        result_auto = autofield.to_python(uuid_obj)
+        result_big = bigautofield.to_python(uuid_obj)
+        
+        self.assertEqual(result_auto, uuid_obj)
+        self.assertEqual(result_big, uuid_obj)
+
+    def test_autofield_to_python_with_none(self):
+        """Test that AutoField.to_python handles None values."""
+        autofield = models.AutoField()
+        bigautofield = models.BigAutoField()
+        
+        result_auto = autofield.to_python(None)
+        result_big = bigautofield.to_python(None)
+        
+        self.assertIsNone(result_auto)
+        self.assertIsNone(result_big)
+
+    def test_autofield_to_python_invalid_uuid_error(self):
+        """Test that AutoField.to_python raises ValidationError for invalid UUIDs."""
+        autofield = models.AutoField()
+        bigautofield = models.BigAutoField()
+
+        invalid_uuid_string = "not-a-uuid"
+
+        with self.assertRaises(ValidationError):
+            autofield.to_python(invalid_uuid_string)
+
+        with self.assertRaises(ValidationError):
+            bigautofield.to_python(invalid_uuid_string)
+
+    def test_autofield_to_python_non_uuid_type_error(self):
+        """Test that AutoField.to_python raises ValidationError for non-uuid-compatible types."""
+        autofield = models.AutoField()
+
+        with self.assertRaises(ValidationError):
+            autofield.to_python(123)
+
+    def test_autofield_error_message_content(self):
+        """Test that AutoField validation errors contain correct UUID message."""
+        autofield = models.AutoField()
+        
+        with self.assertRaises(ValidationError) as cm:
+            autofield.to_python(123)
+        
+        error_message = str(cm.exception.messages[0])
+        self.assertIn("must be a valid UUID", error_message)
+        self.assertIn("123", error_message)
 
 
 if __name__ == '__main__':

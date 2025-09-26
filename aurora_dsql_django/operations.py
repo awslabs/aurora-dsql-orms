@@ -31,3 +31,12 @@ class DatabaseOperations(operations.DatabaseOperations):
     def deferrable_sql(self):
         # Deferrable constraints aren't supported:
         return ""
+
+    def integer_field_range(self, internal_type):
+        """
+        Override to handle UUIDField which doesn't have integer ranges.
+        """
+        if internal_type == "UUIDField":
+            # Skip validation.
+            return None, None
+        return super().integer_field_range(internal_type)

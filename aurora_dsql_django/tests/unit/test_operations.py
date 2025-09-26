@@ -1,13 +1,21 @@
 import unittest
+from unittest.mock import MagicMock
+import django
+from django.conf import settings
+
+# Required before importing DatabaseOperations.
+if not settings.configured:
+    settings.configure()
+    django.setup()
+
 from aurora_dsql_django.operations import DatabaseOperations
 
 
 class TestDatabaseOperations(unittest.TestCase):
 
     def setUp(self):
-        # DatabaseOperations usually requires a connection object, but for these tests,
-        # we can pass None as we're only checking static attributes and methods
-        self.ops = DatabaseOperations(None)
+        mock_connection = MagicMock()
+        self.ops = DatabaseOperations(mock_connection)
 
     def test_cast_data_types(self):
         expected_cast_data_types = {
@@ -48,6 +56,25 @@ class TestDatabaseOperations(unittest.TestCase):
         self.assertEqual(
             self.ops.cast_data_types['SmallAutoField'],
             'smallint')
+
+    def test_integer_field_range_for_uuid(self):
+        """Test that UUIDField returns None for integer field range."""
+        result = self.ops.integer_field_range('UUIDField')
+        self.assertEqual(result, (None, None))
+
+    def test_integer_field_range_for_integer_field(self):
+        """Test that IntegerField returns normal integer ranges."""
+        result = self.ops.integer_field_range('IntegerField')
+        self.assertIsNotNone(result[0], "No min provided")
+        self.assertIsNotNone(result[1], "No max provided")
+        self.assertTrue(result[0] <= result[1], "min > max")
+
+    def test_integer_field_range_for_big_integer_field(self):
+        """Test that BigIntegerField returns normal integer ranges."""
+        result = self.ops.integer_field_range('BigIntegerField')
+        self.assertIsNotNone(result[0], "No min provided")
+        self.assertIsNotNone(result[1], "No max provided")
+        self.assertTrue(result[0] <= result[1], "min > max")
 
 
 if __name__ == '__main__':

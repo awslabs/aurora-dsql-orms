@@ -19,10 +19,15 @@ N seconds. This module extends the base wrapper to handle this case.
 """
 
 import logging
+import uuid
+
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
-
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.backends.postgresql import base
+from django.db.models.fields import Field
+from django.utils.translation import gettext_lazy
 
 from .creation import DatabaseCreation
 from .features import DatabaseFeatures
@@ -104,6 +109,47 @@ class DatabaseWrapper(base.DatabaseWrapper):
         SmallAutoField="",
         AutoField="DEFAULT gen_random_uuid()",
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._patch_autofields()
+
+    def _patch_autofields(self):
+        """
+        Patch AutoField classes to return UUID type for related fields.
+        This ensures ForeignKey fields that reference AutoFields are also UUIDs.
+        """
+
+        def uuid_rel_db_type(self, connection):
+            return "uuid"
+
+        def uuid_get_prep_value(self, value):
+            """Override get_prep_value to prevent int() conversion of UUIDs."""
+            return Field.get_prep_value(self, value)
+
+        def uuid_to_python(self, value):
+            """Convert provided value to a UUID where possible."""
+            if value is None or isinstance(value, uuid.UUID):
+                return value
+            if isinstance(value, str):
+                try:
+                    return uuid.UUID(value)
+                except ValueError:
+                    pass
+
+            raise ValidationError(
+                self.error_messages["invalid"],
+                code="invalid",
+                params={"value": value},
+            )
+
+        for field_class in [models.AutoField, models.BigAutoField]:
+            field_class.rel_db_type = uuid_rel_db_type
+            field_class.get_prep_value = uuid_get_prep_value
+            field_class.to_python = uuid_to_python
+            field_class.default_error_messages = {
+                "invalid": gettext_lazy("'%(value)s' value must be a valid UUID."),
+            }
 
     SchemaEditorClass = DatabaseSchemaEditor
     creation_class = DatabaseCreation
