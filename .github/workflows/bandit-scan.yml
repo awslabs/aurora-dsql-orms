@@ -27,7 +27,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        # TODO: workflow to test for python 3.8 or more
+        # TODO: workflow to test for python 3.9 or more
         python-version: '3.10'
 
     - name: Install uv

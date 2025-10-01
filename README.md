@@ -20,7 +20,7 @@ Aurora DSQL Django adapter needs boto3 to work. Follow the Boto3 [installation g
 
 ### Required Python versions
 
-aurora_dsql_django requires Python 3.8 or later. 
+aurora_dsql_django requires Python 3.9 or later.
 
 Please see the link below for more detail to install Python:
 

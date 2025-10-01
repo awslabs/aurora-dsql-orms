@@ -41,7 +41,6 @@ jobs:
       matrix:
         # Run test for every Python and Django version we intend to support.
         python-version:
-          - '3.8'
           - '3.9'
           - '3.10'
           - '3.11'
@@ -55,12 +54,6 @@ jobs:
           - '>=5.2,<5.3'
         exclude:
           # Django 5.0+ requires Python 3.10+
-          - python-version: '3.8'
-            django-version: '>=5.0,<5.1'
-          - python-version: '3.8'
-            django-version: '>=5.1,<5.2'
-          - python-version: '3.8'
-            django-version: '>=5.2,<5.3'
           - python-version: '3.9'
             django-version: '>=5.0,<5.1'
           - python-version: '3.9'
