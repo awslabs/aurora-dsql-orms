@@ -1,8 +1,7 @@
 [project]
 name = "aurora_dsql_django"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Aurora DSQL adapter for Django"
-readme = "README.md"
 license = {text = "Apache License 2.0"}
 authors = [{name = "Amazon Web Services"}]
 requires-python = ">=3.8"

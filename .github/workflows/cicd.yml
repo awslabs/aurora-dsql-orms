@@ -1,5 +1,8 @@
 name: CI/CD
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ version-0 ]
@@ -14,6 +17,17 @@ on:
         type: string
 
 jobs:
+  validate-build:
+    name: Validate build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+    - name: Build
+      run: uv build
+
   integration-tests:
     name: Python v${{ matrix.python-version }} - Django ${{ matrix.django-version }}
     runs-on: ubuntu-latest
