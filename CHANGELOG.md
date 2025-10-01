@@ -1,3 +1,19 @@
+<a id="v0.2.1"></a>
+# [v0.2.1](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.1) - 2025-10-01
+
+This release fixes the relative links shown on the PyPI project page. There should be no library behavior change.
+
+## What's Changed
+* Update changelog for v0.2.0 by [@github-actions](https://github.com/github-actions)[bot] in [#68](https://github.com/awslabs/aurora-dsql-django/pull/68)
+* Replace relative links in markdown files during build by [@danielfrankcom](https://github.com/danielfrankcom) in [#69](https://github.com/awslabs/aurora-dsql-django/pull/69)
+* Add content type to PyPI description by [@danielfrankcom](https://github.com/danielfrankcom) in [#72](https://github.com/awslabs/aurora-dsql-django/pull/72)
+
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-django/compare/v0.2.0...v0.2.1
+
+[Changes][v0.2.1]
+
+
 <a id="v0.2.0"></a>
 # [v0.2.0](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.0) - 2025-09-29
 
@@ -70,6 +86,7 @@ Initial version of the [Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/) Dj
 [Changes][v0.1.0]
 
 
+[v0.2.1]: https://github.com/awslabs/aurora-dsql-django/compare/v0.2.0...v0.2.1
 [v0.2.0]: https://github.com/awslabs/aurora-dsql-django/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/awslabs/aurora-dsql-django/tree/v0.1.0
 
