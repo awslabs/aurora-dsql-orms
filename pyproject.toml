@@ -2,7 +2,7 @@
 name = "aurora_dsql_django"
 dynamic = ["version", "readme"]
 description = "Aurora DSQL adapter for Django"
-license = {text = "Apache License 2.0"}
+license-files = ["LICENSE"]
 authors = [{name = "Amazon Web Services"}]
 requires-python = ">=3.9"
 dependencies = [
@@ -11,7 +11,6 @@ dependencies = [
 ]
 classifiers = [
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
