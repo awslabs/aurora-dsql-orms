@@ -1,3 +1,20 @@
+<a id="v0.3.0"></a>
+# [v0.3.0](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.3.0) - 2025-10-01
+
+This release removes support for Python 3.8, which is end of life according to [python.org](https://devguide.python.org/versions/).
+
+## What's Changed
+* Update changelog for v0.2.1 by [@github-actions](https://github.com/github-actions)[bot] in [#73](https://github.com/awslabs/aurora-dsql-django/pull/73)
+* Clone whole repo for tag metadata by [@danielfrankcom](https://github.com/danielfrankcom) in [#70](https://github.com/awslabs/aurora-dsql-django/pull/70)
+* Remove Python 3.8 support by [@danielfrankcom](https://github.com/danielfrankcom) in [#74](https://github.com/awslabs/aurora-dsql-django/pull/74)
+* Fix license deprecation warnings by [@danielfrankcom](https://github.com/danielfrankcom) in [#75](https://github.com/awslabs/aurora-dsql-django/pull/75)
+
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-django/compare/v0.2.1...v0.3.0
+
+[Changes][v0.3.0]
+
+
 <a id="v0.2.1"></a>
 # [v0.2.1](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.1) - 2025-10-01
 
@@ -86,6 +103,7 @@ Initial version of the [Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/) Dj
 [Changes][v0.1.0]
 
 
+[v0.3.0]: https://github.com/awslabs/aurora-dsql-django/compare/v0.2.1...v0.3.0
 [v0.2.1]: https://github.com/awslabs/aurora-dsql-django/compare/v0.2.0...v0.2.1
 [v0.2.0]: https://github.com/awslabs/aurora-dsql-django/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/awslabs/aurora-dsql-django/tree/v0.1.0
