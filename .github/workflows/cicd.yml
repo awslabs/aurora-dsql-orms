@@ -1,7 +1,6 @@
 name: CI/CD
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -33,6 +32,8 @@ jobs:
   integration-tests:
     name: Python v${{ matrix.python-version }} - Django ${{ matrix.django-version }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
     strategy:
       # If we run more than one job at a time, we will have to have one cluster
       # for each flavor of the job. Otherwise they will interfere with each other
@@ -60,14 +61,7 @@ jobs:
             django-version: '>=5.1,<5.2'
           - python-version: '3.9'
             django-version: '>=5.2,<5.3'
-    permissions:
-      id-token: write
-      contents: read
-      # Explicitly set permissions, following the principle of least privilege
-      actions: read
-      checks: write
-      pull-requests: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v5

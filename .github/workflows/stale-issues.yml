@@ -1,16 +1,17 @@
 name: "Close stale issues"
 
+permissions: {}
+
 # Controls when the action will run.
 on:
   schedule:
   - cron: "0 0 * * *"
 
-permissions: {}
 jobs:
   cleanup:
     permissions:
-      issues: write # to label, comment and close issues
-      pull-requests: write # to label, comment and close pull requests
+      issues: write # required to label, comment and close issues
+      pull-requests: write # required to label, comment and close pull requests
 
     runs-on: ubuntu-latest
     name: Stale issue job

@@ -1,4 +1,7 @@
 name: HandleStaleDiscussions
+
+permissions: {}
+
 on:
   schedule:
     - cron: '0 */4 * * *'
@@ -10,7 +13,7 @@ jobs:
     name: Handle stale discussions
     runs-on: ubuntu-latest
     permissions:
-      discussions: write
+      discussions: write # required by aws-github-ops/handle-stale-discussions
     steps:
       - name: Stale discussions action
         uses: aws-github-ops/handle-stale-discussions@v1

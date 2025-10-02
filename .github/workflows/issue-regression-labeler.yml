@@ -1,13 +1,17 @@
 # Apply potential regression label on issues
 name: issue-regression-label
+
+permissions: {}
+
 on:
   issues:
     types: [opened, edited]
+
 jobs:
   add-regression-label:
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      issues: write # required to label issues
     steps:
     - name: Fetch template body
       id: check_regression

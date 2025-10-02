@@ -1,12 +1,15 @@
 name: Closed Issue Message
+
+permissions: {}
+
 on:
     issues:
        types: [closed]
-permissions: {}
+
 jobs:
     auto_comment:
         permissions:
-          issues: write # to comment on issues
+          issues: write # required by aws-actions/closed-issue-message
         runs-on: ubuntu-latest
         steps:
         - uses: aws-actions/closed-issue-message@v2
