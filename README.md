@@ -3,7 +3,7 @@
 [![GitHub](https://img.shields.io/badge/github-awslabs/aurora--dsql--django-blue?logo=github)](https://github.com/awslabs/aurora-dsql-django)
 [![License](https://img.shields.io/badge/license-Apache--2.0-brightgreen)]([LICENSE](https://github.com/awslabs/aurora-dsql-django/blob/main/LICENSE))
 [![PyPI - Version](https://img.shields.io/pypi/v/aurora-dsql-django)](https://pypi.org/project/aurora-dsql-django)
-[![Discord chat](https://img.shields.io/discord/500028886025895936.svg?logo=discord)](https://discord.com/invite/nEF6ksFWru)
+[![Discord chat](https://img.shields.io/discord/1435027294837276802.svg?logo=discord)](https://discord.com/invite/nEF6ksFWru)
 
 This is the adapter for enabling development of Django applications using Aurora DSQL.
 
