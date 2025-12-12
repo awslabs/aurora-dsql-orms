@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/com.aws.aurora.dsql.feature_1.0.0.qualifier.jar" id="com.aws.aurora.dsql.feature" version="1.0.0.qualifier"/>
+</site>

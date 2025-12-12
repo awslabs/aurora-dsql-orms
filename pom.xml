@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.amazon.dsql</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>com.aws.aurora.dsql</module>
+        <module>com.aws.aurora.dsql.ui</module>
+        <module>com.aws.aurora.dsql.feature</module>
+        <module>com.aws.aurora.dsql.updatesite</module>
+    </modules>
+
+    <repositories>
+        <repository>
+            <id>dbeaver</id>
+            <layout>p2</layout>
+            <url>https://dbeaver.io/update/ce/latest/</url>
+        </repository>
+        <repository>
+            <id>eclipse-2024-09</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/eclipse/updates/4.33/</url>
+        </repository>
+        <repository>
+            <id>orbit</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-09/</url>
+        </repository>
+        <repository>
+            <id>gef</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/tools/gef/classic/releases/latest/</url>
+        </repository>
+        <repository>
+            <id>eclipse-platform</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/eclipse/updates/4.33/R-4.33-202409030240/</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-maven-plugin</artifactId>
+                <version>4.0.7</version>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>sign</id>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <keystore>/tmp/myKeystore.jks</keystore>
+                    <alias>devex-key</alias>
+                    <storepass>${keystore.password}</storepass>
+                    <!--<keypass>${key.password}</keypass>-->
+                    <tsa>http://timestamp.digicert.com</tsa>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

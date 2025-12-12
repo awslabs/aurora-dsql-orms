@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="com.aws.aurora.dsql.feature" version="0.0.0">
+      <category name="aurora.dsql"/>
+   </feature>
+   <category-def name="aurora.dsql" label="Aurora DSQL Connector"/>
+</site>

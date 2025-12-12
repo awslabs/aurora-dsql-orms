@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+
+<plugin>
+    <extension point="org.jkiss.dbeaver.dataSourceView">
+        <view
+                id="org.jkiss.dbeaver.ext.dsql.dataSourceWizardView"
+                dataSource="aurora:dsql"
+                targetID="org.jkiss.dbeaver.ext.ui.newConnectionWizard"
+                label="%dsql.dialog.connection.header"
+                class="com.aws.aurora.dsql.ui.views.DSQLConnectionPage"
+                icon="platform:/plugin/com.aws.aurora.dsql/icons/dsql_icon.png">
+        </view>
+        <view
+                id="org.jkiss.dbeaver.ext.dsql.dataSourceEditorView"
+                dataSource="aurora:dsql"
+                targetID="org.jkiss.dbeaver.ext.ui.editConnectionDialog"
+                label="%dsql.dialog.connection.header"
+                class="com.aws.aurora.dsql.ui.views.DSQLConnectionPage"
+                icon="platform:/plugin/com.aws.aurora.dsql/icons/dsql_icon.png">
+        </view>
+    </extension>
+</plugin>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<target name="DBeaver Target" sequenceNumber="1">
+
+    <locations>
+        <!-- DBeaver p2 repository -->
+        <location includeAllPlatforms="false"
+                  includeConfigurePhase="true"
+                  includeMode="planner"
+                  type="InstallableUnit">
+            <unit id="org.jkiss.dbeaver.core.feature.feature.group" version="24.0.0" />
+            <unit id="org.jkiss.dbeaver.ext.postgresql.feature.feature.group" version="0.0.0"/>
+            <repository location="https://dbeaver.io/update/latest/" />
+        </location>
+    </locations>
+
+</target>
