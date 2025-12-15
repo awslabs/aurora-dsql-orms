@@ -27,7 +27,7 @@ jobs:
     needs: wait-for-ci
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -49,7 +49,7 @@ jobs:
       pull-requests: write # required by rhysd/changelog-from-release
     steps:
       - name: Checkout default branch for changelog
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ env.DEFAULT_BRANCH }}
