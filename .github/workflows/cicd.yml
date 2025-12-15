@@ -122,7 +122,7 @@ jobs:
         cat coverage.xml || echo "coverage.xml not found"
 
     - name: Archive code coverage results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: code-coverage-report-${{ github.job }}-${{ strategy.job-index }}
         path: coverage.xml
