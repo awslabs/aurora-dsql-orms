@@ -46,14 +46,30 @@ Features:
 4. Click **Test Connection** to verify the Aurora DSQL connection works 
 5. Click **Finish**
 
+## Troubleshooting
+
+### Missing Driver Error
+
+If you see a missing driver icon or connection errors, the Aurora DSQL (Community Plugin) may not be installed in your current DBeaver version.
+
+* Creating a new connection with the missing driver: 
+
+   ![Missing Driver Icon](assets/missing_driver_icon.png)
+
+* Attempting to connect without the driver: 
+
+   ![Error Dialog](assets/error_dialog.png)
+
+**Cause:** When multiple DBeaver versions are installed, connection settings are shared but drivers are installed per application.
+
+**Solution:** Reinstall the Aurora DSQL (Community plugin) by following the installation steps above.
+
 ## Developer 
 
 ### Prerequisites
 - Apache Maven: 3.9.11 or later
-- Get a copy of the self-signed Java Key Store (myKeystore.jks) file (Temporary Signing Method)
-- Place the myKeystore.jks in /tmp/
 
-1. Run ```mvn clean package  -Dkeystore.password=[JKS_PASSWORD]```
+1. Run ```mvn clean package```
 2. The local repo is located in the folder ```software.aws.aurora.dsql.dbeaver.updatesite > target > repository``` 
 3. Follow the installation instructions above and use the local repo location instead of the URL. 
 
