@@ -8,12 +8,29 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <modules>
-        <module>software.aws.aurora.dsql.dbeaver</module>
-        <module>software.aws.aurora.dsql.dbeaver.ui</module>
-        <module>software.aws.aurora.dsql.dbeaver.feature</module>
-        <module>software.aws.aurora.dsql.dbeaver.updatesite</module>
-    </modules>
+    <profiles>
+        <profile>
+            <id>jars</id>
+            <modules>
+                <module>software.aws.aurora.dsql.dbeaver</module>
+                <module>software.aws.aurora.dsql.dbeaver.ui</module>
+            </modules>
+        </profile>
+        
+        <profile>
+            <id>feature</id>
+            <modules>
+                <module>software.aws.aurora.dsql.dbeaver.feature</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>packaging</id>
+            <modules>
+                <module>software.aws.aurora.dsql.dbeaver.updatesite</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <repositories>
         <repository>
@@ -50,26 +67,6 @@
                 <artifactId>tycho-maven-plugin</artifactId>
                 <version>4.0.7</version>
                 <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jarsigner-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>sign</id>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <keystore>/tmp/myKeystore.jks</keystore>
-                    <alias>devex-key</alias>
-                    <storepass>${keystore.password}</storepass>
-                    <!--<keypass>${key.password}</keypass>-->
-                    <tsa>http://timestamp.digicert.com</tsa>
-                </configuration>
             </plugin>
         </plugins>
     </build>

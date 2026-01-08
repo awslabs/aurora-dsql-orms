@@ -16,6 +16,14 @@ Features:
 - **AWS Credentials**: Configured AWS credentials for IAM authentication
 - **Java**: JRE 21 or later (included with DBeaver 24.3.5+)
 
+
+## Windows Installation
+Windows users may encounter issues downloading the Aurora DSQL Connector for JDBC driver from Maven Central. To resolve this:
+1. Run DBeaver as "Administrator" 
+2. Uncheck this setting - Windows > Preferences > Connections > "Use Windows Trust store"
+
+Then proceed with the installation steps below.
+
 ## Installation
 
 1. Open DBeaver
@@ -69,9 +77,11 @@ If you see a missing driver icon or connection errors, the Aurora DSQL (Communit
 ### Prerequisites
 - Apache Maven: 3.9.11 or later
 
-1. Run ```mvn clean package```
-2. The local repo is located in the folder ```software.aws.aurora.dsql.dbeaver.updatesite > target > repository``` 
-3. Follow the installation instructions above and use the local repo location instead of the URL. 
+1. Run ```mvn clean install -P jars```
+2. Run ```mvn clean install -P feature```
+3. Run ```mvn clean package -P packaging```
+4. The local repo is located in the folder ```software.aws.aurora.dsql.dbeaver.updatesite > target > repository``` 
+5. Follow the installation instructions above and use the local repo location instead of the URL. 
 
 ## Security
 
