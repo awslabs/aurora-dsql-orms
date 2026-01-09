@@ -3,8 +3,7 @@
 ## Bootstrap the Django App
 ### Pre-requisites
 - Provision a Aurora DSQL cluster and note the hostname
-- Python version >=3.9 must have been installed
-- aws-sdk for python version >=3.x.y
+- Python version >=3.10 must have been installed
 
 ### Bootstrap Django app
 1. Create a new directory named `django_aurora_dsql_example` and change to the new directory
@@ -19,8 +18,6 @@
       django
       psycopg[binary]
       aurora_dsql_django
-      boto3>=1.35.74
-      botocore>=1.35.74
       ```
    b. Create a [python virtual environment](https://docs.python.org/3/library/venv.html)
       and activate it.
@@ -124,7 +121,6 @@
          'ENGINE': 'aurora_dsql_django', # This is the custom database adapter for Aurora DSQL
          'OPTIONS': {
                'sslmode': 'require',
-               'region': 'us-east-2',
          }
       }
    }

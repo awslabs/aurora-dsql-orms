@@ -24,7 +24,8 @@ class TestAuroraDSQLAdapter(TestCase):
 
         self.assertEqual(params["host"], os.environ.get("CLUSTER_ENDPOINT", None))
         self.assertEqual(params["user"], "admin")
-        self.assertIn("password", params)
+        # Password is set by the connector during connect(), not in get_connection_params()
+        self.assertEqual(params["application_name"], "django")
 
         # Test database connection
         with self.connection.cursor() as cursor:
@@ -34,9 +35,10 @@ class TestAuroraDSQLAdapter(TestCase):
             cursor.execute("COMMIT")
             self.assertEqual(result[0], 1)
 
-    def test_aws_connection_params(self):
-        result = self.connection.get_connection_params()
-        self.assertIn("password", result)
+    def test_application_name_set(self):
+        """Test that application_name is properly set for tracking."""
+        params = self.connection.get_connection_params()
+        self.assertEqual(params["application_name"], "django")
 
     def test_table_creation(self):
         with self.connection.cursor() as cursor:

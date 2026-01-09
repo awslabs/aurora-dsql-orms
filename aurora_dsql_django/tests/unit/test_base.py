@@ -3,12 +3,11 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import django
-from botocore.exceptions import BotoCoreError
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from aurora_dsql_django.base import DatabaseWrapper, get_aws_connection_params
+from aurora_dsql_django.base import DatabaseWrapper, _prepare_connection_params
 from aurora_dsql_django.operations import DatabaseOperations
 
 if not settings.configured:
@@ -19,92 +18,49 @@ if not settings.configured:
     django.setup()
 
 
+class TestPrepareConnectionParams(unittest.TestCase):
+    """Tests for the _prepare_connection_params function."""
+
+    def test_sets_application_name(self):
+        params = {"host": "test-host", "user": "admin"}
+        result = _prepare_connection_params(params)
+        self.assertEqual(result["application_name"], "django")
+
+    def test_sets_sslrootcert_for_verify_full(self):
+        params = {"host": "test-host", "user": "admin", "sslmode": "verify-full"}
+        result = _prepare_connection_params(params)
+        self.assertEqual(result["sslrootcert"], "system")
+
+    def test_preserves_custom_sslrootcert(self):
+        params = {"host": "test-host", "user": "admin", "sslmode": "verify-full", "sslrootcert": "/path/to/cert.pem"}
+        result = _prepare_connection_params(params)
+        self.assertEqual(result["sslrootcert"], "/path/to/cert.pem")
+
+    def test_no_sslrootcert_for_require_mode(self):
+        params = {"host": "test-host", "user": "admin", "sslmode": "require"}
+        result = _prepare_connection_params(params)
+        self.assertNotIn("sslrootcert", result)
+
+    def test_preserves_user(self):
+        params = {"host": "test-host", "user": "admin"}
+        result = _prepare_connection_params(params)
+        self.assertEqual(result["user"], "admin")
+
+    def test_preserves_profile(self):
+        params = {"host": "test-host", "user": "admin", "profile": "my-profile"}
+        result = _prepare_connection_params(params)
+        self.assertEqual(result["profile"], "my-profile")
+
+    def test_preserves_token_duration_secs(self):
+        params = {"host": "test-host", "user": "admin", "token_duration_secs": 900}
+        result = _prepare_connection_params(params)
+        self.assertEqual(result["token_duration_secs"], 900)
+
+
 class TestAuroraDSQLBackend(unittest.TestCase):
     def setUp(self):
-        self.base_params = {"host": "test-host", "region": "us-west-2", "user": "test-user", "name": "test-db"}
-
         self.wrapper = DatabaseWrapper({})
         self.ops = DatabaseOperations(connection=MagicMock())
-
-    @patch("aurora_dsql_django.base.boto3.session.Session")
-    def test_get_aws_connection_params_without_profile(self, mock_session):
-        mock_client = MagicMock()
-        mock_session.return_value.client.return_value = mock_client
-        mock_client.generate_db_connect_auth_token.return_value = "test-token"
-
-        result = get_aws_connection_params(self.base_params.copy())
-
-        mock_session.assert_called_once_with()
-        mock_session.return_value.client.assert_called_once_with("dsql", region_name="us-west-2")
-        mock_client.generate_db_connect_auth_token.assert_called_once_with("test-host", "us-west-2")
-        self.assertEqual(result["password"], "test-token")
-        self.assertNotIn("region", result)
-
-    @patch("aurora_dsql_django.base.boto3.session.Session")
-    def test_get_aws_connection_params_with_admin_user(self, mock_session):
-        mock_client = MagicMock()
-        mock_session.return_value.client.return_value = mock_client
-        mock_client.generate_db_connect_admin_auth_token.return_value = "admin-token"
-        self.base_params["user"] = "admin"
-        result = get_aws_connection_params(self.base_params.copy())
-
-        mock_session.assert_called_once_with()
-        mock_session.return_value.client.assert_called_once_with("dsql", region_name="us-west-2")
-        mock_client.generate_db_connect_admin_auth_token.assert_called_once_with("test-host", "us-west-2")
-        self.assertEqual(result["password"], "admin-token")
-        self.assertNotIn("region", result)
-        self.base_params["user"] = "test-user"
-
-    @patch("aurora_dsql_django.base.boto3.session.Session")
-    def test_get_aws_connection_params_with_admin_user_and_expires_in(self, mock_session):
-        mock_client = MagicMock()
-        mock_session.return_value.client.return_value = mock_client
-        mock_client.generate_db_connect_admin_auth_token.return_value = "admin-token-with-expires-in"
-        self.base_params["user"] = "admin"
-        self.base_params["expires_in"] = 10
-        result = get_aws_connection_params(self.base_params.copy())
-
-        mock_session.assert_called_once_with()
-        mock_session.return_value.client.assert_called_once_with("dsql", region_name="us-west-2")
-        mock_client.generate_db_connect_admin_auth_token.assert_called_once_with("test-host", "us-west-2", 10)
-        self.assertEqual(result["password"], "admin-token-with-expires-in")
-        self.assertNotIn("expires_in", result)
-        self.assertNotIn("region", result)
-        self.base_params["user"] = "test-user"
-        self.base_params["expires_in"] = None
-
-    @patch("aurora_dsql_django.base.boto3.session.Session")
-    def test_get_aws_connection_params_with_non_admin_user_and_expires_in(self, mock_session):
-        mock_client = MagicMock()
-        mock_session.return_value.client.return_value = mock_client
-        mock_client.generate_db_connect_auth_token.return_value = "test-token-with-expires-in"
-        self.base_params["expires_in"] = 10000
-
-        result = get_aws_connection_params(self.base_params.copy())
-
-        mock_session.assert_called_once_with()
-        mock_session.return_value.client.assert_called_once_with("dsql", region_name="us-west-2")
-        mock_client.generate_db_connect_auth_token.assert_called_once_with("test-host", "us-west-2", 10000)
-        self.assertEqual(result["password"], "test-token-with-expires-in")
-        self.assertNotIn("expires_in", result)
-        self.assertNotIn("region", result)
-        self.base_params["expires_in"] = None
-
-    @patch("aurora_dsql_django.base.boto3.session.Session")
-    def test_get_aws_connection_params_with_profile(self, mock_session):
-        params = self.base_params.copy()
-        params["aws_profile"] = "test-profile"
-
-        get_aws_connection_params(params)
-
-        mock_session.assert_called_once_with(profile_name="test-profile")
-
-    @patch("aurora_dsql_django.base.boto3.session.Session")
-    def test_get_aws_connection_params_error_handling(self, mock_session):
-        mock_session.return_value.client.side_effect = BotoCoreError()
-
-        with self.assertRaises(BotoCoreError):
-            get_aws_connection_params(self.base_params.copy())
 
     def test_database_wrapper_data_types(self):
         self.assertEqual(self.wrapper.data_types["BigAutoField"], "uuid")
@@ -116,27 +72,49 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         self.assertEqual(self.wrapper.data_types_suffix["SmallAutoField"], "")
         self.assertEqual(self.wrapper.data_types_suffix["AutoField"], "DEFAULT gen_random_uuid()")
 
-    @patch("aurora_dsql_django.base.get_aws_connection_params")
-    def test_database_wrapper_get_connection_params(self, mock_get_aws_params):
-        mock_get_aws_params.return_value = {"password": "test-token", "port": 5432}
+    @patch("aurora_dsql_django.base._prepare_connection_params")
+    def test_database_wrapper_get_connection_params(self, mock_prepare_params):
+        mock_prepare_params.return_value = {"host": "test-host", "port": 5432, "application_name": "django"}
 
-        # Mock the super().get_connection_params() call
         with patch("django.db.backends.postgresql.base.DatabaseWrapper.get_connection_params") as mock_super:
-            mock_super.return_value = {"user": "test-user", "name": "test-db"}
+            mock_super.return_value = {"host": "test-host", "user": "admin"}
 
             wrapper = DatabaseWrapper({})
             result = wrapper.get_connection_params()
 
-        # Check that get_aws_connection_params was called
-        mock_get_aws_params.assert_called_once()
-
-        # Check the final result
-        self.assertEqual(result, {"password": "test-token", "port": 5432})
-        self.assertNotIn("user", result)
-        self.assertNotIn("name", result)
-
-        # Verify that super().get_connection_params() was called
+        mock_prepare_params.assert_called_once()
         mock_super.assert_called_once()
+        self.assertEqual(result["application_name"], "django")
+
+    @patch("aurora_dsql_django.base.is_psycopg3", True)
+    @patch("aurora_dsql_django.base.dsql_connector")
+    def test_get_new_connection_psycopg3(self, mock_connector):
+        mock_connection = MagicMock()
+        mock_connector.DSQLConnection.connect.return_value = mock_connection
+
+        wrapper = DatabaseWrapper({"OPTIONS": {}})
+        conn_params = {"host": "test-host", "user": "admin", "application_name": "django"}
+
+        result = wrapper.get_new_connection(conn_params)
+
+        mock_connector.DSQLConnection.connect.assert_called_once_with(**conn_params)
+        self.assertEqual(result, mock_connection)
+
+    @patch("aurora_dsql_django.base.is_psycopg3", False)
+    @patch("aurora_dsql_django.base.dsql_connector")
+    @patch("psycopg2.extras.register_default_jsonb")
+    def test_get_new_connection_psycopg2(self, mock_register_jsonb, mock_connector):
+        mock_connection = MagicMock()
+        mock_connector.connect.return_value = mock_connection
+
+        wrapper = DatabaseWrapper({"OPTIONS": {}})
+        conn_params = {"host": "test-host", "user": "admin", "application_name": "django"}
+
+        result = wrapper.get_new_connection(conn_params)
+
+        mock_connector.connect.assert_called_once_with(**conn_params)
+        mock_register_jsonb.assert_called_once()
+        self.assertEqual(result, mock_connection)
 
     def test_check_constraints(self):
         wrapper = DatabaseWrapper({})
@@ -304,7 +282,6 @@ class TestAuroraDSQLBackend(unittest.TestCase):
                 "NAME": "test_db",
                 "OPTIONS": {
                     "sslmode": "require",
-                    "region": "us-east-1",
                 },
             }
         )
@@ -312,7 +289,6 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         # Should add DISABLE_SERVER_SIDE_CURSORS while preserving other options
         self.assertTrue(wrapper.settings_dict["DISABLE_SERVER_SIDE_CURSORS"])
         self.assertEqual(wrapper.settings_dict["OPTIONS"]["sslmode"], "require")
-        self.assertEqual(wrapper.settings_dict["OPTIONS"]["region"], "us-east-1")
 
 
 if __name__ == "__main__":

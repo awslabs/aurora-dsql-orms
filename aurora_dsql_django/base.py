@@ -13,20 +13,21 @@
 # and limitations under the License.
 
 """
-This is a wrapper around the Django's base postgres database API.
-In case of Aurora DSQL, password is a SigV4 token which must be rotated every
-N seconds. This module extends the base wrapper to handle this case.
+Aurora DSQL adapter for Django.
+
+This module extends Django's PostgreSQL backend to work with Aurora DSQL,
+using the aurora-dsql-python-connector for automatic IAM authentication.
 """
 
 import logging
 import uuid
 
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.backends.postgresql import base
+from django.db.backends.postgresql.psycopg_any import IsolationLevel, is_psycopg3
 from django.db.models.fields import Field
+from django.utils.asyncio import async_unsafe
 from django.utils.translation import gettext_lazy
 
 from .creation import DatabaseCreation
@@ -36,57 +37,42 @@ from .schema import DatabaseSchemaEditor
 
 logger = logging.getLogger(__name__)
 
+# Import the appropriate connector based on psycopg version
+try:
+    import aurora_dsql_psycopg as dsql_connector
+except ImportError:
+    import aurora_dsql_psycopg2 as dsql_connector
 
-def get_aws_connection_params(params):
+
+def _prepare_connection_params(params):
     """
-    Get connection parameters to establish a connection to the Aurora DSQL
-    cluster. Uses AWS SDK to generate the password token and sets it in the
-    connection parameters.
+    Prepare connection parameters for the Aurora DSQL connector.
+
+    Sets defaults for DSQL connections.
 
     Args:
-        params (dict): Parameter dictionary that client sets in DATABASES variable
+        params (dict): Connection parameters from Django settings
 
     Returns:
-        dict: returns a dictionary of connection parameters
+        dict: Parameters ready for the DSQL connector
     """
-    region = params.pop("region", None)
-    hostname = params.get("host")
-    user = params.get("user")
+    # Set default sslrootcert to system certs if using verify-full
     sslmode = params.get("sslmode", None)
     sslrootcert = params.get("sslrootcert", None)
     if sslrootcert is None and sslmode == "verify-full":
         params["sslrootcert"] = "system"
-    expires_in = params.pop("expires_in", None)
-    aws_profile = params.pop("aws_profile", None)
 
-    try:
-        session = boto3.session.Session(profile_name=aws_profile) if aws_profile else boto3.session.Session()
-        client = session.client("dsql", region_name=region)
-
-        # Set correct IAM Auth token
-        is_admin = user == "admin"
-        has_expires_in = expires_in is not None
-        if is_admin and has_expires_in:
-            params["password"] = client.generate_db_connect_admin_auth_token(hostname, region, expires_in)
-        elif is_admin and not has_expires_in:
-            params["password"] = client.generate_db_connect_admin_auth_token(hostname, region)
-        elif not is_admin and has_expires_in:
-            params["password"] = client.generate_db_connect_auth_token(hostname, region, expires_in)
-        else:
-            params["password"] = client.generate_db_connect_auth_token(hostname, region)
-
-        params.setdefault("port", 5432)
-
-    except (BotoCoreError, ClientError) as e:
-        logger.error("Failed to generate DB auth token: %s", str(e))
-        raise
+    # Add application_name for tracking (connector will format as django:aurora-dsql-python-psycopg/<version>)
+    params["application_name"] = "django"
 
     return params
 
 
 class DatabaseWrapper(base.DatabaseWrapper):
     """
-    A wrapper class that adapts the Django base API for Aurora DSQL
+    A wrapper class that adapts the Django PostgreSQL backend for Aurora DSQL.
+
+    Uses aurora-dsql-python-connector for automatic IAM authentication.
     """
 
     vendor = "dsql"
@@ -158,7 +144,43 @@ class DatabaseWrapper(base.DatabaseWrapper):
 
     def get_connection_params(self):
         params = super().get_connection_params()
-        return get_aws_connection_params(params)
+        return _prepare_connection_params(params)
+
+    @async_unsafe
+    def get_new_connection(self, conn_params):
+        """
+        Create a new connection to Aurora DSQL using the connector.
+
+        The connector handles IAM authentication automatically.
+        """
+        options = self.settings_dict["OPTIONS"]
+        isolation_level_value = options.get("isolation_level")
+
+        if isolation_level_value is None:
+            self.isolation_level = IsolationLevel.READ_COMMITTED
+        else:
+            try:
+                self.isolation_level = IsolationLevel(isolation_level_value)
+            except ValueError:
+                raise ImproperlyConfigured(
+                    f"Invalid transaction isolation level {isolation_level_value} "
+                    f"specified. Use one of the psycopg.IsolationLevel values."
+                )
+
+        if is_psycopg3:
+            connection = dsql_connector.DSQLConnection.connect(**conn_params)
+        else:
+            connection = dsql_connector.connect(**conn_params)
+
+        if isolation_level_value is not None:
+            connection.isolation_level = self.isolation_level
+
+        if not is_psycopg3:
+            import psycopg2.extras
+
+            psycopg2.extras.register_default_jsonb(conn_or_curs=connection, loads=lambda x: x)
+
+        return connection
 
     def check_constraints(self, table_names=None):
         """

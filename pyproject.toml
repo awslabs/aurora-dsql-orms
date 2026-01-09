@@ -4,15 +4,13 @@ dynamic = ["version", "readme"]
 description = "Aurora DSQL adapter for Django"
 license-files = ["LICENSE"]
 authors = [{name = "Amazon Web Services"}]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "boto3>=1.35.74,<2",
-    "botocore>=1.35.74,<2",
+    "aurora-dsql-python-connector>=0.1.0",
 ]
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -59,7 +57,7 @@ include = ["aurora_dsql_django*"]
 
 [tool.ruff]
 indent-width = 4
-target-version = "py38"
+target-version = "py310"
 
 # Aligns with flake8 check in CI/CD workflow.
 line-length = 127

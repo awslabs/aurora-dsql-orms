@@ -6,6 +6,8 @@ if cluster_endpoint is None:
     sys.exit("CLUSTER_ENDPOINT environment variable is not set")
 
 # Override with our test-specific settings
+# Note: The aurora-dsql-python-connector automatically extracts the region
+# from the cluster endpoint hostname, so no need to specify it in OPTIONS.
 DATABASES = {
     "default": {
         "HOST": cluster_endpoint,
@@ -15,8 +17,6 @@ DATABASES = {
         "PORT": "5432",
         "OPTIONS": {
             "sslmode": "verify-full",
-            "region": "us-east-1",
-            "expires_in": 5,
         },
     }
 }

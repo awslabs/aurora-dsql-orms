@@ -41,8 +41,8 @@ jobs:
       max-parallel: 1
       matrix:
         # Run test for every Python and Django version we intend to support.
+        # Python 3.10+ required by aurora-dsql-python-connector
         python-version:
-          - '3.9'
           - '3.10'
           - '3.11'
           - '3.12'
@@ -53,14 +53,6 @@ jobs:
           - '>=5.0,<5.1'
           - '>=5.1,<5.2'
           - '>=5.2,<5.3'
-        exclude:
-          # Django 5.0+ requires Python 3.10+
-          - python-version: '3.9'
-            django-version: '>=5.0,<5.1'
-          - python-version: '3.9'
-            django-version: '>=5.1,<5.2'
-          - python-version: '3.9'
-            django-version: '>=5.2,<5.3'
 
     steps:
     - name: Checkout code
@@ -83,7 +75,6 @@ jobs:
     - name: Setup dependencies
       run: |
         uv sync --extra test --extra dev
-        uv run python -c "import boto3; print(boto3.__version__)"
         echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
 
     # Install specific Django version for matrix testing, skip for 'default' to verify pyproject.toml version

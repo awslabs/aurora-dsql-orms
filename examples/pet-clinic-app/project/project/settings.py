@@ -71,7 +71,7 @@ DATABASES = {
         "USER": "admin",
         "NAME": "postgres",
         "ENGINE": "aurora_dsql_django",
-        "OPTIONS": {"sslmode": "require", "region": "us-east-1"},
+        "OPTIONS": {"sslmode": "require"},
     }
 }
 

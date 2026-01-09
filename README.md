@@ -17,13 +17,9 @@ Aurora DSQL adapter for Django supports Django 4.2+ with the following versions:
 - Django 5.1.x
 - Django 5.2.x (LTS)
 
-### Boto3
-
-Aurora DSQL Django adapter needs boto3 to work. Follow the Boto3 [installation guide](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html) to install Boto3
-
 ### Required Python versions
 
-aurora_dsql_django requires Python 3.9 or later.
+aurora_dsql_django requires Python 3.10 or later.
 
 Please see the link below for more detail to install Python:
 
@@ -56,19 +52,22 @@ is show below
             'ENGINE': 'aurora_dsql_django',
             'OPTIONS': {
                 'sslmode': 'require',
-                'region': 'us-east-2',
-                # (optional) Defaults to 'default' profile if nothing is set
-                'aws_profile': 'user aws custom profile name' 
-                # (optional) Default is 900 seconds i.e., 15 mins 
-                'expires_in': <token expiry time time in seconds> 
-                # (optional) If sslmode is 'verify-full' then use sslrootcert
-                # variable to set the path to server root certificate
-                # If no path is provided, the adapter looks into system certs
-                # NOTE: Do not use it with 'sslmode': 'require'
-                'sslrootcert': '<root certificate path>'
+                # (optional) AWS profile name for credentials
+                # 'profile': 'my-aws-profile',
+                # (optional) Token duration in seconds (default: 900)
+                # 'token_duration_secs': 900,
             }
         }
     }
+```
+
+If you need certificate verification, use `'sslmode': 'verify-full'` with `'sslrootcert'`:
+
+```python
+'OPTIONS': {
+    'sslmode': 'verify-full',
+    'sslrootcert': '/path/to/cert.pem',  # or omit to use system certs
+}
 ```
 
 For more info follow the [Aurora DSQL with Django example](examples/pet-clinic-app/README.md)
