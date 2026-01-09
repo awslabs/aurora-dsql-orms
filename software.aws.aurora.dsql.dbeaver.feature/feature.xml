@@ -193,7 +193,7 @@
    </license>
 
    <plugin
-         id="plugin"
+         id="community-plugin"
          version="1.0.0.qualifier"/>
 
    <plugin

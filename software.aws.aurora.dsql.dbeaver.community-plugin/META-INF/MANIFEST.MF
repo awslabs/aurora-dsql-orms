@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Aurora DSQL Driver
-Bundle-SymbolicName: plugin;singleton:=true
+Bundle-SymbolicName: community-plugin;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: AWS
 Bundle-RequiredExecutionEnvironment: JavaSE-21

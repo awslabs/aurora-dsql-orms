@@ -9,7 +9,7 @@
                 targetID="org.jkiss.dbeaver.ext.ui.newConnectionWizard"
                 label="%dsql.dialog.connection.header"
                 class="software.aws.aurora.dsql.dbeaver.ui.views.DSQLConnectionPage"
-                icon="platform:/plugin/software.aws.aurora.dsql.dbeaver/icons/dsql_icon.png">
+                icon="platform:/plugin/software.aws.aurora.dsql.dbeaver.community-plugin/icons/dsql_icon.png">
         </view>
         <view
                 id="org.jkiss.dbeaver.ext.dsql.dataSourceEditorView"
@@ -17,7 +17,7 @@
                 targetID="org.jkiss.dbeaver.ext.ui.editConnectionDialog"
                 label="%dsql.dialog.connection.header"
                 class="software.aws.aurora.dsql.dbeaver.ui.views.DSQLConnectionPage"
-                icon="platform:/plugin/software.aws.aurora.dsql.dbeaver/icons/dsql_icon.png">
+                icon="platform:/plugin/software.aws.aurora.dsql.dbeaver.community-plugin/icons/dsql_icon.png">
         </view>
     </extension>
 </plugin>

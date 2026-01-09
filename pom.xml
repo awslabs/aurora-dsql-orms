@@ -12,7 +12,7 @@
         <profile>
             <id>jars</id>
             <modules>
-                <module>software.aws.aurora.dsql.dbeaver.plugin</module>
+                <module>software.aws.aurora.dsql.dbeaver.community-plugin</module>
                 <module>software.aws.aurora.dsql.dbeaver.ui</module>
                 <module>software.aws.aurora.dsql.dbeaver.feature</module>
             </modules>
