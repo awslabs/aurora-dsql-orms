@@ -58,7 +58,6 @@ keystore.properties
 *.class
 
 # Package files
-*.jar
 *.war
 *.ear
 *.nar
