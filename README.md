@@ -78,8 +78,7 @@ If you see a missing driver icon or connection errors, the Aurora DSQL (Communit
 - Apache Maven: 3.9.11 or later
 
 1. Run ```mvn clean install -P jars```
-2. Run ```mvn clean install -P feature```
-3. Run ```mvn clean package -P packaging```
+2. Run ```mvn clean package -P packaging```
 4. The local repo is located in the folder ```software.aws.aurora.dsql.dbeaver.updatesite > target > repository``` 
 5. Follow the installation instructions above and use the local repo location instead of the URL. 
 

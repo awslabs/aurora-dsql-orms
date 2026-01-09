@@ -14,16 +14,9 @@
             <modules>
                 <module>software.aws.aurora.dsql.dbeaver</module>
                 <module>software.aws.aurora.dsql.dbeaver.ui</module>
-            </modules>
-        </profile>
-        
-        <profile>
-            <id>feature</id>
-            <modules>
                 <module>software.aws.aurora.dsql.dbeaver.feature</module>
             </modules>
         </profile>
-
         <profile>
             <id>packaging</id>
             <modules>
@@ -65,7 +58,7 @@
             <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>tycho-maven-plugin</artifactId>
-                <version>4.0.7</version>
+                <version>5.0.1</version>
                 <extensions>true</extensions>
             </plugin>
         </plugins>
