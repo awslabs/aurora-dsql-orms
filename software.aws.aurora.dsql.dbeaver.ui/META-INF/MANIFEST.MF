@@ -1,10 +1,10 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Ui
-Bundle-SymbolicName: software.aws.aurora.dsql.dbeaver.ui;singleton:=true
+Bundle-SymbolicName: ui;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: AWS
-Automatic-Module-Name: software.aws.aurora.dsql.dbeaver.ui
+Automatic-Module-Name: ui
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-Activator: software.aws.aurora.dsql.dbeaver.ui.DSQLActivator
 Bundle-ActivationPolicy: lazy
