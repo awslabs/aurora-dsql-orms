@@ -8,7 +8,7 @@ Automatic-Module-Name: ui
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-Activator: software.aws.aurora.dsql.dbeaver.ui.DSQLActivator
 Bundle-ActivationPolicy: lazy
-Require-Bundle: software.aws.aurora.dsql.dbeaver,
+Require-Bundle: plugin,
  org.eclipse.core.runtime,
  org.jkiss.dbeaver.model,
  org.jkiss.dbeaver.registry,
