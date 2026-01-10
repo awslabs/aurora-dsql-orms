@@ -66,11 +66,11 @@ If you see a missing driver icon or connection errors, the Aurora DSQL (Communit
 
 * Creating a new connection with the missing driver: 
 
-   ![Missing Driver Icon](https://github.com/awslabs/aurora-dsql-dbeaver-plugin/blob/main/assets/missing_driver_icon.png)
+   ![Missing Driver Icon](https://raw.githubusercontent.com/awslabs/aurora-dsql-dbeaver-plugin/refs/heads/main/assets/missing_driver_icon.png)
 
 * Attempting to connect without the driver: 
 
-   ![Error Dialog](https://github.com/awslabs/aurora-dsql-dbeaver-plugin/blob/main/assets/error_dialog.png)
+   ![Error Dialog](https://raw.githubusercontent.com/awslabs/aurora-dsql-dbeaver-plugin/refs/heads/main/assets/error_dialog.png)
 
 **Cause:** When multiple DBeaver versions are installed, connection settings are shared but drivers are installed per application.
 
