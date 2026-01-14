@@ -1,0 +1,92 @@
+[project]
+name = "aurora-dsql-tortoise-orm"
+dynamic = ["version"]
+description = "Aurora DSQL adapter for Tortoise ORM"
+license-files = ["LICENSE"]
+authors = [{name = "Amazon Web Services"}]
+
+requires-python = ">=3.10"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+dependencies = [
+    "aurora-dsql-python-connector",
+]
+
+[project.optional-dependencies]
+asyncpg = ["tortoise-orm[asyncpg]>=0.25"]
+psycopg = ["tortoise-orm[psycopg]>=0.25"]
+
+[dependency-groups]
+dev = [
+    "aerich[toml]>=0.9.2",
+    "hatch-vcs",
+    "hatchling",
+    "pip",
+    "pre-commit",
+    "pyright",
+    "pytest",
+    "pytest-asyncio",
+    "python-dotenv",
+    "ruff",
+    "tortoise-orm[asyncpg]>=0.25",
+    "tortoise-orm[psycopg]>=0.25",
+]
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "aurora_dsql_tortoise/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aurora_dsql_tortoise"]
+
+[project.scripts]
+example = "example.example:run"
+test = "tests:run"
+integration = "tests.integration:run"
+unit = "tests.unit:run"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+extend-select = [
+    "E",      # https://docs.astral.sh/ruff/rules/#error-e
+    "F",      # https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "FA",     # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+    "I",      # https://docs.astral.sh/ruff/rules/#isort-i
+    "RUF100", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "UP",     # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "W",      # https://docs.astral.sh/ruff/rules/#warning-w
+]
+
+[tool.pyright]
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "use_schemas: mark test to generate schemas before running",
+]
+
+[tool.aerich]
+tortoise_orm = "example.tortoise_config.TORTOISE_ORM"
+location = "./example/migrations"
+src_folder = "./."
