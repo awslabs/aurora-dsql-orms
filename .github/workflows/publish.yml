@@ -33,7 +33,7 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v5
       - run: uv build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: distributions
           path: dist/
