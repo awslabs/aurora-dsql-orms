@@ -23,6 +23,7 @@ class DSQLModel(Model):
     ) -> tuple[Self, bool]:
         """DSQL-compatible update_or_create using OCC instead of SELECT FOR UPDATE."""
         # This code is based on Tortoise ORM
+        # Copyright (c) Andrey Bondar & Nickolas Grigoriadis & long2ice
         # Modifications: Copyright (c) Amazon.com, Inc. or its affiliates.
         # License to Modifications: Apache 2.0
         # Source: https://github.com/tortoise/tortoise-orm/blob/1d2400bb3daff7b1aa34884062ca0e936ea214b2/tortoise/models.py#L1165

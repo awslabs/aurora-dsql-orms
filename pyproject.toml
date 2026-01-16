@@ -30,6 +30,7 @@ dev = [
     "hatch-vcs",
     "hatchling",
     "pip",
+    "pip-licenses",
     "pre-commit",
     "pyright",
     "pytest",
