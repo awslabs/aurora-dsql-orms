@@ -30,7 +30,7 @@ dev = [
     "bandit>=1.9.3",
     "django>=4.2",
     "flake8",
-    "pip>=24.3.1,<25.0.0",
+    "pip>=24.3.1,<26.0.0",
     "psycopg",
     "psycopg2-binary",
     "pytest-cov",
