@@ -52,7 +52,7 @@ class TestPrepareConnectionParams(unittest.TestCase):
         self.assertEqual(result["profile"], "my-profile")
 
     def test_preserves_token_duration_secs(self):
-        params = {"host": "test-host", "user": "admin", "token_duration_secs": 900}
+        params = {"host": "test-host", "user": "admin", "token_duration_secs": 900}  # nosec B105
         result = _prepare_connection_params(params)
         self.assertEqual(result["token_duration_secs"], 900)
 

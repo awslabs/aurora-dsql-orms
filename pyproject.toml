@@ -25,25 +25,29 @@ classifiers = [
 [project.urls]
 Repository = "https://github.com/awslabs/aurora-dsql-django"
 
-[project.optional-dependencies]
-test = [
-    "pytest>=8",
-    "django>=4.2",
-    "wheel",
-    "psycopg2-binary",
-    "psycopg",
-    "pytest-cov",
-]
+[dependency-groups]
 dev = [
+    "bandit>=1.9.3",
+    "django>=4.2",
     "flake8",
+    "pip>=24.3.1,<25.0.0",
+    "psycopg",
+    "psycopg2-binary",
+    "pytest-cov",
+    "pytest>=8",
     "ruff",
+    "setuptools-scm>=8",
+    "setuptools>=61.0",
+    "wheel",
+]
+docs = [
     "Sphinx>=7.1.0,<8.0.0",
     "docutils>=0.18.0,<0.21.0",
-    "pip>=24.3.1,<25.0.0",
     "guzzle_sphinx_theme~=0.7.11",
-    "setuptools>=61.0",
-    "setuptools-scm>=8"
 ]
+
+[tool.uv]
+default-groups = ["dev", "docs"]
 
 [build-system]
 requires = ["setuptools>=61.0", "setuptools-scm>=8"]

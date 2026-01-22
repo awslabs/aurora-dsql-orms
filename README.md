@@ -84,7 +84,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then:
 ```
 $ git clone https://github.com/awslabs/aurora-dsql-django
 $ cd aurora-dsql-django
-$ uv sync --extra test --extra dev
+$ uv sync
 ```
 
 `uv` will automatically install the correct Python version and manage the virtual environment.
@@ -109,7 +109,7 @@ $ pytest -v aurora_dsql_django/tests/integration/
 Sphinx is used for documentation. You can generate HTML locally with the following:
 
 ```
-$ uv sync --extra test --extra dev
+$ uv sync
 $ uv run sphinx-build docs/source build
 ```
 

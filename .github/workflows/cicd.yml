@@ -74,7 +74,7 @@ jobs:
 
     - name: Setup dependencies
       run: |
-        uv sync --extra test --extra dev
+        uv sync
         echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
 
     # Install specific Django version for matrix testing, skip for 'default' to verify pyproject.toml version
