@@ -1,6 +1,6 @@
 [project]
 name = "aurora-dsql-tortoise-orm"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Aurora DSQL adapter for Tortoise ORM"
 license-files = ["LICENSE"]
 authors = [{name = "Amazon Web Services"}]
@@ -50,6 +50,8 @@ source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "aurora_dsql_tortoise/_version.py"
+
+[tool.hatch.metadata.hooks.custom]
 
 [tool.hatch.build.targets.wheel]
 packages = ["aurora_dsql_tortoise"]
