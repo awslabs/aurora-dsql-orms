@@ -6,7 +6,6 @@ def test_public_api():
     import aurora_dsql_tortoise
 
     assert set(aurora_dsql_tortoise.__all__) == {
-        "DSQLModel",
         "register_backends",
         "register_asyncpg",
         "register_psycopg",

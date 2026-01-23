@@ -34,16 +34,6 @@ This document describes how the Aurora DSQL adapter for Tortoise ORM modifies st
 
 **Why this is necessary:** Aurora DSQL transactions can contain only one DDL statement. Attempting to run multiple DDL statements in a single transaction will fail.
 
-## DSQLModel uses optimistic concurrency for update_or_create
-
-**Behavior:** `DSQLModel.update_or_create()` uses a standard query instead of `SELECT FOR UPDATE`.
-
-**Impact:**
-- Concurrent updates may result in optimistic concurrency control (OCC) conflicts
-- Applications should handle potential retry scenarios for high-contention workloads
-
-**Why this is necessary:** Aurora DSQL does not support `SELECT FOR UPDATE` locking. The adapter relies on DSQL's built-in optimistic concurrency control instead.
-
 ## Aerich compatibility patches
 
 When `aurora_dsql_tortoise.aerich_compat` is included in your models, the following patches are applied:

@@ -12,7 +12,7 @@ from tests.conftest import BACKENDS
 
 class BulkItem(Model):
     id = fields.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = fields.CharField(max_length=100)
+    name = fields.CharField(max_length=100, unique=True)
     value = fields.IntField(default=0)
 
     class Meta:
@@ -50,3 +50,15 @@ class TestBulkOperations:
         items = [BulkItem(name=f"Item{i}") for i in range(10)]
         await BulkItem.bulk_create(items, batch_size=3)
         assert await BulkItem.all().count() == 10
+
+    async def test_bulk_create_on_conflict_update(self, backend):
+        """Test bulk_create with on_conflict for atomic upsert."""
+        await BulkItem.bulk_create([BulkItem(name="upsert", value=1)])
+        await BulkItem.bulk_create(
+            [BulkItem(name="upsert", value=2)],
+            on_conflict=["name"],
+            update_fields=["value"],
+        )
+        item = await BulkItem.get(name="upsert")
+        assert item.value == 2
+        assert await BulkItem.filter(name="upsert").count() == 1

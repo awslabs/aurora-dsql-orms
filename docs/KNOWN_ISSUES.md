@@ -29,20 +29,30 @@ await MyModel.filter(id=some_id).select_for_update().first()
 
 **Root Cause:** Aurora DSQL does not support `SELECT FOR UPDATE` row locking.
 
-**Workaround:** Use `DSQLModel` which provides DSQL-compatible alternatives:
+**Workaround:** Aurora DSQL uses optimistic concurrency control (OCC) instead of pessimistic locking. Remove `select_for_update()` calls and handle potential `SerializationFailure` errors with retry logic.
+
+## update_or_create not supported
+
+**Issue:** Calling `update_or_create()` fails.
+
+**Root Cause:** The Tortoise ORM `update_or_create()` implementation uses `SELECT FOR UPDATE`, which Aurora DSQL does not support.
+
+**Workaround:** Use `bulk_create` with `on_conflict` for atomic upserts:
 
 ```python
-from aurora_dsql_tortoise import DSQLModel
+class Item(Model):
+    name = fields.CharField(max_length=100, unique=True)  # unique constraint required
+    value = fields.CharField(max_length=100)
 
-class MyModel(DSQLModel):
-    # ... fields ...
-
-# update_or_create works without SELECT FOR UPDATE
-obj, created = await MyModel.update_or_create(
-    name="test",
-    defaults={"value": "updated"}
+# Atomic upsert using ON CONFLICT
+await Item.bulk_create(
+    [Item(name="test", value="new_value")],
+    on_conflict=["name"],
+    update_fields=["value"],
 )
 ```
+
+Note: `bulk_create` does not return `(instance, created)`. Fetch the row afterward if needed.
 
 ## Foreign key constraints not enforced
 

@@ -79,17 +79,15 @@ UUID primary keys are recommended for optimal performance with Aurora DSQL:
 ```python
 import uuid
 from tortoise import fields
-from aurora_dsql_tortoise import DSQLModel
+from tortoise.models import Model
 
-class Owner(DSQLModel):
+class Owner(Model):
     id = fields.UUIDField(primary_key=True, default=uuid.uuid4)
     name = fields.CharField(max_length=100)
 
     class Meta:
         table = "owner"
 ```
-
-`DSQLModel` provides DSQL-compatible implementations of methods like `update_or_create()` that avoid unsupported features such as `SELECT FOR UPDATE`. You can also extend `tortoise.models.Model` directly if you don't need these compatibility fixes.
 
 ### Aerich Migrations
 
