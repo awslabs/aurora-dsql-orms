@@ -43,7 +43,7 @@ jobs:
     with:
       workflow_name: sqlalchemy-dialect
     secrets:
-      AWS_IAM_ROLE: ${{ secrets.PYTHON_IAM_ROLE }}
+      AWS_IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
       id-token: write
 
@@ -101,6 +101,6 @@ jobs:
       cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
       region: ${{ needs.create-cluster.outputs.region }}
     secrets:
-      AWS_IAM_ROLE: ${{ secrets.PYTHON_IAM_ROLE }}
+      AWS_IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
       id-token: write
