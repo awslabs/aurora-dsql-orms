@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aurora-dsql-sqlalchemy"
+dynamic = ["version"]
+description = "Amazon Aurora DSQL dialect for SQLAlchemy"
+authors = [{name = "Amazon Web Services"}]
+license = {text = "Apache License 2.0"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "sqlalchemy>=2.0.0",
+    "aurora-dsql-python-connector>=0.1.0"
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13"
+]
+
+[project.urls]
+Repository = "https://github.com/awslabs/aurora-dsql-sqlalchemy"
+
+[project.optional-dependencies]
+psycopg2 = ["psycopg2-binary>=2.9.0"]
+psycopg = ["psycopg[binary]>=3.2.0"]
+
+[project.entry-points."sqlalchemy.dialects"]
+# The default dialect uses psycopg (psycopg3) 
+auroradsql = "aurora_dsql_sqlalchemy.psycopg:AuroraDSQLDialect_psycopg"
+"auroradsql.psycopg2" = "aurora_dsql_sqlalchemy.psycopg2:AuroraDSQLDialect_psycopg2"
+# Note: psyscopg (psycopg3) 
+"auroradsql.psycopg" = "aurora_dsql_sqlalchemy.psycopg:AuroraDSQLDialect_psycopg"
+
+[dependency-groups]
+dev = [
+    "hatch-vcs",
+    "pre-commit",
+    "pyright",
+    "pytest",
+    "pytest-cov",
+    "python-dotenv",
+    "ruff",
+]
+psycopg2 = ["psycopg2-binary>=2.9.0"]
+psycopg = ["psycopg[binary]>=3.2.0"]
+
+[tool.uv]
+default-groups = ["dev", "psycopg2", "psycopg"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "aurora_dsql_sqlalchemy/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aurora_dsql_sqlalchemy"]
+
+[tool.pytest.ini_options]
+addopts = "-v  -r chars -s"
+python_files = ["test/*test_*.py"]
+testpaths = ["test"]
+markers = ["backend: SQLAlchemy test requiring database backend"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+extend-select = [
+    "E",      # https://docs.astral.sh/ruff/rules/#error-e
+    "F",      # https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "FA",     # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+    "I",      # https://docs.astral.sh/ruff/rules/#isort-i
+    "RUF100", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "UP",     # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "W",      # https://docs.astral.sh/ruff/rules/#warning-w
+]
+exclude = [
+    ".git",
+    ".venv",
+    "build",
+    "dist",
+    "aurora_dsql_sqlalchemy/_version.py",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/examples/pet-clinic-app"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "gitleaks/gitleaks-action"

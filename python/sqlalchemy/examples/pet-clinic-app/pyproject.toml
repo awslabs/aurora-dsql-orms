@@ -1,0 +1,15 @@
+[project]
+name = "pet-clinic-app"
+version = "0.0.1"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+testpaths = ["test"]
+
+[project.optional-dependencies]
+# Dependencies required to run the example and tests
+run = ["aurora-dsql-sqlalchemy", "pytest"]
+psycopg2 = ["psycopg2-binary>=2.9.0"]
+psycopg = ["psycopg[binary]>=3.2.0"]

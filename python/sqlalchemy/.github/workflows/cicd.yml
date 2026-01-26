@@ -1,0 +1,84 @@
+name: SQLAlchemy Dialect integration tests
+
+permissions: {}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  create-cluster:
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: sqlalchemy-dialect
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.PYTHON_IAM_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
+  dialect-test:
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1 # limit to 1 since we have 1 dsql cluster
+      matrix:
+        # Run test for every python version we intend to support.
+        version: ["3.10", "3.11", "3.12", "3.13"]
+        driver: ["psycopg2", "psycopg"]
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+    env:
+      SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.PYTHON_IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.version }}
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Download Amazon Root Cert for SSL
+        run: wget -O "$SSL_CERT_FILE" https://www.amazontrust.com/repository/AmazonRootCA1.pem
+
+      - name: Run integration tests for SQL Alchemy
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          CLUSTER_USER: admin
+          DRIVER: ${{ matrix.driver }}
+        run: |
+          echo "$GITHUB_WORKSPACE" >> "$GITHUB_PATH"
+          uv run pytest -v test/
+
+      - name: Run integration tests for SQL Alchemy Pet Clinic Example
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          CLUSTER_USER: admin
+          DRIVER: ${{ matrix.driver }}
+        run: |
+          echo "$GITHUB_WORKSPACE" >> "$GITHUB_PATH"
+          uv run pytest -v examples/pet-clinic-app/test/
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, dialect-test]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.PYTHON_IAM_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
