@@ -7,13 +7,7 @@ on:
     branches: [ version-0 ]
   pull_request:
     branches: [ version-0 ]
-  # Give us a button to allow running the workflow on demand for testing.
   workflow_dispatch:
-    inputs:
-      tags:
-        description: 'Manual Workflow Run'
-        required: false
-        type: string
 
 jobs:
   validate-build:
@@ -29,8 +23,18 @@ jobs:
     - name: Build
       run: uv build
 
+  create-cluster:
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: django-integ
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
   integration-tests:
     name: Python v${{ matrix.python-version }} - Django ${{ matrix.django-version }}
+    needs: create-cluster
     runs-on: ubuntu-latest
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -70,7 +74,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v5
       with:
         role-to-assume: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
-        aws-region: us-east-1
+        aws-region: ${{ needs.create-cluster.outputs.region }}
 
     - name: Setup dependencies
       run: |
@@ -121,7 +125,18 @@ jobs:
     - name: Run integration tests
       env:
         DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
-        CLUSTER_ENDPOINT: ${{ secrets.CLUSTER_ENDPOINT }}
+        CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
       run: |
         uv run pytest -v aurora_dsql_django/tests/integration/
-        
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, integration-tests]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
