@@ -16,14 +16,13 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
+dependencies = [
+    "aurora-dsql-python-connector",
+]
 
 [project.urls]
 Repository = "https://github.com/awslabs/aurora-dsql-orms"
 Documentation = "https://github.com/awslabs/aurora-dsql-orms/tree/main/python/tortoise-orm"
-
-dependencies = [
-    "aurora-dsql-python-connector",
-]
 
 [project.optional-dependencies]
 asyncpg = ["tortoise-orm[asyncpg]>=0.25"]
