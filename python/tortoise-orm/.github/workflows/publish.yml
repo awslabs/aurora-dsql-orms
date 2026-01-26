@@ -1,0 +1,90 @@
+name: Publish
+
+permissions: {}
+
+on:
+  release:
+    types: [published]
+
+env:
+  DEFAULT_BRANCH: main
+
+jobs:
+  wait-for-ci:
+    name: Wait for CI/CD to pass
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI/CD workflow
+        uses: lewagon/wait-on-check-action@v1.4.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          running-workflow-name: "Wait for CI/CD to pass"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  build:
+    name: Build distribution packages
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+      - run: uv build
+      - uses: actions/upload-artifact@v6
+        with:
+          name: distributions
+          path: dist/
+
+  update-changelog:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # required by rhysd/changelog-from-release
+      pull-requests: write # required by rhysd/changelog-from-release
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.DEFAULT_BRANCH }}
+      - uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pull_request: true
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs: [build, update-changelog]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/aurora-dsql-tortoise-orm
+    permissions:
+      id-token: write # required by pypa/gh-action-pypi-publish
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: publish-to-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/aurora-dsql-tortoise-orm
+    permissions:
+      id-token: write # required by pypa/gh-action-pypi-publish
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

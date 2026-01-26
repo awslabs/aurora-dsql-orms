@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+node_modules/
+.env
+.DS_Store
+aurora_dsql_tortoise/_version.py
