@@ -1,0 +1,49 @@
+name: Release SQLAlchemy
+
+permissions: {}
+
+on:
+  push:
+    tags:
+      - 'python/sqlalchemy/v*'
+
+defaults:
+  run:
+    working-directory: python/sqlalchemy
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Build distribution packages
+        run: uv build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-sqlalchemy-dist
+          path: python/sqlalchemy/dist/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/aurora-dsql-sqlalchemy
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-sqlalchemy-dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

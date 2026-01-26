@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "aurora-dsql-sqlalchemy"
-dynamic = ["version"]
+version = "1.1.0"
 description = "Amazon Aurora DSQL dialect for SQLAlchemy"
 authors = [{name = "Amazon Web Services"}]
 license = {text = "Apache License 2.0"}
@@ -25,7 +25,8 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/awslabs/aurora-dsql-sqlalchemy"
+Repository = "https://github.com/awslabs/aurora-dsql-orms"
+Documentation = "https://github.com/awslabs/aurora-dsql-orms/tree/main/python/sqlalchemy"
 
 [project.optional-dependencies]
 psycopg2 = ["psycopg2-binary>=2.9.0"]
@@ -40,7 +41,6 @@ auroradsql = "aurora_dsql_sqlalchemy.psycopg:AuroraDSQLDialect_psycopg"
 
 [dependency-groups]
 dev = [
-    "hatch-vcs",
     "pre-commit",
     "pyright",
     "pytest",
@@ -53,12 +53,6 @@ psycopg = ["psycopg[binary]>=3.2.0"]
 
 [tool.uv]
 default-groups = ["dev", "psycopg2", "psycopg"]
-
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.build.hooks.vcs]
-version-file = "aurora_dsql_sqlalchemy/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["aurora_dsql_sqlalchemy"]

@@ -1,6 +1,7 @@
 [project]
 name = "aurora-dsql-tortoise-orm"
-dynamic = ["version", "readme"]
+version = "0.1.1"
+readme = "README.md"
 description = "Aurora DSQL adapter for Tortoise ORM"
 license-files = ["LICENSE"]
 authors = [{name = "Amazon Web Services"}]
@@ -16,6 +17,10 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 
+[project.urls]
+Repository = "https://github.com/awslabs/aurora-dsql-orms"
+Documentation = "https://github.com/awslabs/aurora-dsql-orms/tree/main/python/tortoise-orm"
+
 dependencies = [
     "aurora-dsql-python-connector",
 ]
@@ -27,7 +32,6 @@ psycopg = ["tortoise-orm[psycopg]>=0.25"]
 [dependency-groups]
 dev = [
     "aerich[toml]>=0.9.2",
-    "hatch-vcs",
     "hatchling",
     "pip",
     "pip-licenses",
@@ -42,16 +46,8 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.build.hooks.vcs]
-version-file = "aurora_dsql_tortoise/_version.py"
-
-[tool.hatch.metadata.hooks.custom]
 
 [tool.hatch.build.targets.wheel]
 packages = ["aurora_dsql_tortoise"]
