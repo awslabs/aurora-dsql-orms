@@ -1,6 +1,7 @@
 name: SQLAlchemy CI
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   push:
@@ -66,7 +67,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.PYTHON_IAM_ROLE }}
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           aws-region: ${{ needs.create-cluster.outputs.region }}
 
       - uses: astral-sh/setup-uv@v5

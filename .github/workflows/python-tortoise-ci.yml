@@ -1,6 +1,7 @@
 name: Tortoise ORM CI
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   push:

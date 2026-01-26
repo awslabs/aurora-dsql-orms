@@ -1,6 +1,7 @@
 name: Release SQLAlchemy
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   push:

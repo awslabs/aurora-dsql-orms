@@ -1,6 +1,7 @@
 name: Release Tortoise ORM
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   push:
