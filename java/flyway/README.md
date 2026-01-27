@@ -215,6 +215,14 @@ flyway.migrate();
 - Check AWS credentials are configured
 - Tokens expire after 15 minutes; ensure fresh credentials
 
+### "change conflicts with another transaction, please retry" (OC000)
+
+This is an optimistic concurrency control (OCC) conflict. Aurora DSQL uses OCC instead of locks, and conflicts are detected at commit time. This error is rare during migrations since they typically run single-threaded.
+
+If you encounter this error, simply re-run `flyway migrate`. Flyway migrations are idempotent - already-applied migrations will be skipped.
+
+For more information, see [Concurrency control in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html).
+
 ## Requirements
 
 - Java 17+

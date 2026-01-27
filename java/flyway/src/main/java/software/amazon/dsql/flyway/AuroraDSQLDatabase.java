@@ -14,27 +14,9 @@ import java.sql.Connection;
 
 /**
  * Aurora DSQL database implementation for Flyway.
- * 
- * <p>Extends PostgreSQL database support with DSQL-specific behavior:</p>
- * <ul>
- *   <li>Disables DDL transactions (DSQL requires one DDL per transaction)</li>
- *   <li>Uses {@link AuroraDSQLConnection} to skip SET ROLE commands</li>
- *   <li>Uses {@link AuroraDSQLSchema} for DSQL-compatible table handling</li>
- *   <li>Provides DSQL-compatible schema history table creation script</li>
- * </ul>
- * 
- * <h2>DSQL Limitations</h2>
- * <p>When writing migrations for Aurora DSQL, be aware of these constraints:</p>
- * <ul>
- *   <li>Use {@code CREATE INDEX ASYNC} instead of {@code CREATE INDEX}</li>
- *   <li>Foreign key constraints are not supported</li>
- *   <li>SERIAL/BIGSERIAL types are not supported - use UUID with gen_random_uuid()</li>
- *   <li>TRUNCATE is not supported - use DELETE FROM</li>
- *   <li>Array types (TEXT[], INTEGER[]) are not supported - use TEXT</li>
- *   <li>Maximum 3,000 rows per transaction</li>
- *   <li>ALTER TABLE ADD CONSTRAINT is not supported - define constraints inline</li>
- *   <li>FOR UPDATE requires equality predicates on the key</li>
- * </ul>
+ *
+ * <p>Extends PostgreSQL with DSQL-specific behavior: disables DDL transactions,
+ * uses inline PRIMARY KEY constraints, and separates DDL from DML operations.</p>
  */
 public class AuroraDSQLDatabase extends PostgreSQLDatabase {
 

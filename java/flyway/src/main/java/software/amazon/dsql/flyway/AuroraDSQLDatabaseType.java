@@ -15,25 +15,13 @@ import java.sql.SQLException;
 
 /**
  * Flyway database type for Amazon Aurora DSQL.
- * 
- * <p>Extends PostgreSQL support to handle the aws-dsql JDBC URL prefix
- * and work around DSQL-specific limitations:</p>
- * <ul>
- *   <li>SET ROLE not supported (uses IAM authentication)</li>
- *   <li>One DDL statement per transaction</li>
- *   <li>No foreign key constraints</li>
- *   <li>CREATE INDEX must use ASYNC keyword</li>
- * </ul>
- * 
- * <p>This plugin is discovered via Java SPI (ServiceLoader) when the JAR
- * is on the classpath. Register in META-INF/services/org.flywaydb.core.extensibility.Plugin</p>
- * 
- * <p><b>Important:</b> The Aurora DSQL JDBC Connector transforms URLs from
- * {@code jdbc:aws-dsql:postgresql://...} to {@code jdbc:postgresql://...} internally.
- * We detect DSQL connections by checking both the original URL format AND by
- * detecting DSQL endpoints in the hostname (*.dsql.*.on.aws).</p>
- * 
- * @see <a href="https://docs.aws.amazon.com/aurora-dsql/latest/userguide/">Aurora DSQL Documentation</a>
+ *
+ * <p>Extends PostgreSQL support to handle {@code jdbc:aws-dsql:} URLs and DSQL-specific
+ * behaviors. Discovered via Java SPI when the JAR is on the classpath.</p>
+ *
+ * <p>The Aurora DSQL JDBC Connector transforms URLs from {@code jdbc:aws-dsql:postgresql://}
+ * to {@code jdbc:postgresql://} internally. We detect DSQL by both URL prefix and endpoint
+ * pattern (*.dsql.*.on.aws).</p>
  */
 public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
 

@@ -16,32 +16,9 @@ import java.util.logging.Logger;
 
 /**
  * Aurora DSQL connection implementation for Flyway.
- * 
- * <p>Overrides PostgreSQL connection behavior for DSQL compatibility:</p>
- * <ul>
- *   <li>{@link #doRestoreOriginalState()} - Skips SET ROLE (not supported by DSQL)</li>
- *   <li>{@link #lock(Table, Callable)} - Bypasses advisory locks and handles DDL/DML separation</li>
- *   <li>{@link #getSchema(String)} - Returns DSQL-compatible schema</li>
- * </ul>
- * 
- * <h2>Why SET ROLE Fails</h2>
- * <p>Aurora DSQL uses IAM authentication exclusively. The database role is
- * determined by the IAM credentials used to generate the authentication token.
- * Unlike standard PostgreSQL where you can switch roles within a session,
- * DSQL connections are bound to a single role for their lifetime.</p>
- * 
- * <h2>Why Advisory Locks Fail</h2>
- * <p>Aurora DSQL doesn't support PostgreSQL advisory lock functions like
- * {@code pg_try_advisory_xact_lock}. We bypass locking entirely since DSQL's
- * optimistic concurrency control provides sufficient protection for typical
- * single-threaded migration scenarios.</p>
- * 
- * <h2>DDL/DML Separation</h2>
- * <p>Aurora DSQL does not allow DDL and DML in the same transaction. The
- * {@link #lock(Table, Callable)} method handles this by committing after
- * DDL operations before DML operations run.</p>
- * 
- * @see <a href="https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html">DSQL PostgreSQL Compatibility</a>
+ *
+ * <p>Overrides PostgreSQL connection behavior: skips SET ROLE (DSQL uses IAM auth),
+ * bypasses advisory locks (DSQL uses OCC), and returns DSQL-compatible schemas.</p>
  */
 public class AuroraDSQLConnection extends PostgreSQLConnection {
 
@@ -52,43 +29,21 @@ public class AuroraDSQLConnection extends PostgreSQLConnection {
     }
 
     /**
-     * Restores the connection to its original state after migrations.
-     * 
-     * <p>Overridden to skip SET ROLE which DSQL doesn't support.</p>
+     * Skips SET ROLE restoration - DSQL uses IAM authentication where role is fixed.
      */
     @Override
     protected void doRestoreOriginalState() throws SQLException {
-        // Intentionally empty - do NOT call SET ROLE
-        // Aurora DSQL uses IAM authentication where the role is fixed at connection time
         LOG.fine("Skipping SET ROLE restoration (not supported by Aurora DSQL)");
     }
 
-    /**
-     * Returns a DSQL-compatible schema.
-     */
     @Override
     public Schema getSchema(String name) {
         return new AuroraDSQLSchema(jdbcTemplate, (AuroraDSQLDatabase) database, name);
     }
 
     /**
-     * Executes the callable without acquiring an advisory lock.
-     * 
-     * <p>Aurora DSQL doesn't support PostgreSQL advisory locks ({@code pg_try_advisory_xact_lock}).
-     * We execute the callable directly without locking. This is safe because:</p>
-     * <ul>
-     *   <li>DSQL provides strong consistency via optimistic concurrency control</li>
-     *   <li>Flyway migrations are typically run single-threaded</li>
-     *   <li>Concurrent migration attempts will fail-fast on conflicts</li>
-     * </ul>
-     * 
-     * <p><b>Warning:</b> For production deployments with concurrent migration attempts,
-     * use external coordination (e.g., distributed locks via DynamoDB) or ensure
-     * only one migration process runs at a time.</p>
-     * 
-     * @param table the schema history table (unused - no locking performed)
-     * @param callable the operation to execute
-     * @return the result of the callable
+     * Executes the callable without advisory locks (not supported by DSQL).
+     * DSQL's optimistic concurrency control handles conflicts.
      */
     @Override
     public <T> T lock(Table table, Callable<T> callable) {

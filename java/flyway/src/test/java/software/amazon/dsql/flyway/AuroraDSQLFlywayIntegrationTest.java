@@ -178,7 +178,7 @@ class AuroraDSQLFlywayIntegrationTest {
                             "AND constraint_type = 'UNIQUE'");
             assertTrue(rs.next(), "UNIQUE constraint should exist");
 
-            // CREATE VIEW (V8)
+            // CREATE VIEW (repeatable migration R__)
             rs = stmt.executeQuery(
                     "SELECT table_name FROM information_schema.views " +
                             "WHERE table_schema = '" + mainSchema + "' " +
@@ -230,14 +230,14 @@ class AuroraDSQLFlywayIntegrationTest {
             assertTrue(rs.next());
             assertEquals(3, rs.getInt(1), "Should have 3 categories");
 
-            // UPDATE (V9)
+            // UPDATE (V8)
             rs = stmt.executeQuery(
                     "SELECT status FROM " + mainSchema + ".flyway_test_users " +
                             "WHERE email = 'test@example.com'");
             assertTrue(rs.next());
             assertEquals("verified", rs.getString(1), "Status should be updated");
 
-            // DELETE (V9)
+            // DELETE (V8)
             rs = stmt.executeQuery(
                     "SELECT COUNT(*) FROM " + mainSchema + ".flyway_test_users " +
                             "WHERE email = 'delete_me@example.com'");
