@@ -254,9 +254,11 @@ flyway.migrate();
 
 ### Token/Authentication Errors
 
+The Aurora DSQL JDBC Connector automatically handles IAM token generation and refresh. If you encounter authentication errors:
+
 - Verify IAM permissions include `dsql:DbConnectAdmin`
-- Check AWS credentials are configured
-- Tokens expire after 15 minutes; ensure fresh credentials
+- Check AWS credentials are configured (environment variables, IAM role, or credentials file)
+- Ensure the AWS region is correctly set
 
 ### "change conflicts with another transaction, please retry" (OC000)
 

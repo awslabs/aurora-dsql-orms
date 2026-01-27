@@ -1,4 +1,4 @@
--- V9: Test UPDATE and DELETE operations
+-- V8: Test UPDATE and DELETE operations
 
 -- Update existing record
 UPDATE flyway_test_users
