@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'software.amazon.dsql'
-version = System.getenv('PROJECT_VERSION') ?: '1.0.0-SNAPSHOT'
+version = '1.0.0'
 
 repositories {
     mavenCentral()
@@ -35,9 +35,6 @@ dependencies {
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
     withJavadocJar()
     withSourcesJar()
 }
@@ -50,9 +47,8 @@ javadoc {
 jar {
     manifest {
         attributes(
-            'Implementation-Title': 'Aurora DSQL Flyway Support',
-            'Implementation-Version': version,
-            'Implementation-Vendor': 'Amazon Web Services'
+                'Implementation-Title': 'Aurora DSQL Flyway Support',
+                'Implementation-Version': version
         )
     }
 }
@@ -87,9 +83,9 @@ publishing {
                 url = 'https://github.com/awslabs/aurora-dsql-orms'
                 inceptionYear = '2025'
 
-                scm {
-                    url = 'https://github.com/awslabs/aurora-dsql-orms'
-                    connection = 'scm:git:git://github.com/awslabs/aurora-dsql-orms.git'
+                scm{
+                    url = 'https://github.com/awslabs/aurora-dsql-orms/tree/main'
+                    connection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-orms.git'
                     developerConnection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-orms.git'
                 }
 
