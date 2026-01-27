@@ -31,9 +31,29 @@ jobs:
           name: python-sqlalchemy-dist
           path: python/sqlalchemy/dist/
 
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/aurora-dsql-sqlalchemy
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-sqlalchemy-dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
   publish-to-pypi:
     name: Publish to PyPI
-    needs: build
+    needs: publish-to-testpypi
     runs-on: ubuntu-latest
     environment:
       name: pypi
