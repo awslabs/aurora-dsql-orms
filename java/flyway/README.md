@@ -88,7 +88,7 @@ Be aware of these per-transaction limits when writing migrations:
 - Maximum 10 MiB data size
 - Maximum 5 minutes duration
 
-For more information on Aurora DSQL capabilities, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/).
+For a complete list of PostgreSQL features not available in Aurora DSQL, see [Unsupported PostgreSQL features](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html) in the Aurora DSQL documentation.
 
 ## Docker Setup
 
