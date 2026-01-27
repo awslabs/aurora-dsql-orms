@@ -162,9 +162,9 @@ async def test_profile_setting_used_for_credentials(backend: str, monkeypatch):
     )
     await assert_connection_works()
 
-    assert (
-        captured_profile == test_profile
-    ), f"Expected profile '{test_profile}' to be passed to boto3.Session, got '{captured_profile}'"
+    assert captured_profile == test_profile, (
+        f"Expected profile '{test_profile}' to be passed to boto3.Session, got '{captured_profile}'"
+    )
 
 
 @pytest.mark.asyncio
@@ -192,9 +192,9 @@ async def test_profile_url_parameter_used_for_credentials(backend: str, monkeypa
     )
     await assert_connection_works()
 
-    assert (
-        captured_profile == test_profile
-    ), f"Expected profile '{test_profile}' to be passed to boto3.Session, got '{captured_profile}'"
+    assert captured_profile == test_profile, (
+        f"Expected profile '{test_profile}' to be passed to boto3.Session, got '{captured_profile}'"
+    )
 
 
 @pytest.mark.asyncio

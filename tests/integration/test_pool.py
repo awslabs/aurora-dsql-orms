@@ -94,9 +94,9 @@ async def test_established_connection_usable_after_token_expiry(backend: str):
     await wait_for_expiry(token_duration_secs)
     session_id_after = await get_session_id()
 
-    assert (
-        session_id_before == session_id_after
-    ), "Established connection should remain usable after token expiry"
+    assert session_id_before == session_id_after, (
+        "Established connection should remain usable after token expiry"
+    )
 
 
 @pytest.mark.asyncio
@@ -139,9 +139,9 @@ async def test_connection_recycled_after_pool_lifetime_expiry(backend: str):
     # This query gets a fresh connection
     session_id_after = await get_session_id()
 
-    assert (
-        session_id_before != session_id_after
-    ), "Connection should be recycled after pool lifetime expiry"
+    assert session_id_before != session_id_after, (
+        "Connection should be recycled after pool lifetime expiry"
+    )
 
 
 @pytest.mark.asyncio

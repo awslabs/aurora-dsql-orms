@@ -7,17 +7,25 @@ repos:
         args:
           - --license-filepath=LICENSE_HEADER.txt
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.3
+  - repo: local
     hooks:
       - id: ruff
-        args: [--fix]
-      - id: ruff-format
+        name: ruff
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
 
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.407
-    hooks:
+      - id: ruff-format
+        name: ruff-format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+
       - id: pyright
+        name: pyright
+        entry: uv run pyright
+        language: system
+        types: [python]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8

@@ -45,6 +45,6 @@ class TestTransactions:
         async with in_transaction():
             await conn.execute_script("CREATE TABLE test_ddl_tx (id UUID PRIMARY KEY, val TEXT)")
         result = await conn.execute_query(
-            "SELECT table_name FROM information_schema.tables " "WHERE table_name = 'test_ddl_tx'"
+            "SELECT table_name FROM information_schema.tables WHERE table_name = 'test_ddl_tx'"
         )
         assert len(result[1]) == 1
