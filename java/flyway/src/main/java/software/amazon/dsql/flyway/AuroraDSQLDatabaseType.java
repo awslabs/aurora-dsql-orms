@@ -21,13 +21,12 @@ import java.sql.SQLException;
  *
  * <p>The Aurora DSQL JDBC Connector transforms URLs from {@code jdbc:aws-dsql:postgresql://}
  * to {@code jdbc:postgresql://} internally. We detect DSQL by both URL prefix and endpoint
- * pattern (*.dsql.*.on.aws).</p>
+ * pattern (*.dsql.*). This supports both public endpoints and PrivateLink endpoints.</p>
  */
 public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
 
-    // Pattern to detect DSQL endpoints: *.dsql.<region>.on.aws
+    // Pattern to detect DSQL endpoints (supports both public and PrivateLink endpoints)
     private static final String DSQL_ENDPOINT_PATTERN = ".dsql.";
-    private static final String DSQL_ENDPOINT_SUFFIX = ".on.aws";
 
     @Override
     public String getName() {
@@ -44,10 +43,8 @@ public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
         // Also detect DSQL by endpoint pattern in the URL
         // The DSQL JDBC connector transforms jdbc:aws-dsql:postgresql://... to jdbc:postgresql://...
         // but the hostname still contains the DSQL endpoint pattern
-        // Example: jdbc:postgresql://abc123.dsql.us-east-1.on.aws:5432/postgres
-        if (url.startsWith("jdbc:postgresql://") && 
-            url.contains(DSQL_ENDPOINT_PATTERN) && 
-            url.contains(DSQL_ENDPOINT_SUFFIX)) {
+        // Supports both public (*.dsql.<region>.on.aws) and PrivateLink endpoints
+        if (url.startsWith("jdbc:postgresql://") && url.contains(DSQL_ENDPOINT_PATTERN)) {
             return true;
         }
         
@@ -67,7 +64,7 @@ public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
         // Check if this is a DSQL connection by examining the connection URL
         try {
             String url = connection.getMetaData().getURL();
-            if (url != null && url.contains(DSQL_ENDPOINT_PATTERN) && url.contains(DSQL_ENDPOINT_SUFFIX)) {
+            if (url != null && url.contains(DSQL_ENDPOINT_PATTERN)) {
                 return true;
             }
         } catch (SQLException e) {

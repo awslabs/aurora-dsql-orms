@@ -56,6 +56,16 @@ class AuroraDSQLDatabaseTypeTest {
     }
 
     @Test
+    @DisplayName("Should handle PrivateLink endpoints")
+    void handlesPrivateLinkEndpoints() {
+        // PrivateLink endpoints may have different suffixes
+        assertTrue(databaseType.handlesJDBCUrl(
+            "jdbc:postgresql://abc123.dsql.us-east-1.vpce.amazonaws.com:5432/postgres"));
+        assertTrue(databaseType.handlesJDBCUrl(
+            "jdbc:aws-dsql:postgresql://abc123.dsql.us-east-1.vpce.amazonaws.com:5432/postgres"));
+    }
+
+    @Test
     @DisplayName("Should NOT handle standard jdbc:postgresql:// URL to localhost")
     void doesNotHandleStandardPostgresqlUrl() {
         assertFalse(databaseType.handlesJDBCUrl(

@@ -260,17 +260,9 @@ The Aurora DSQL JDBC Connector automatically handles IAM token generation and re
 - Check AWS credentials are configured (environment variables, IAM role, or credentials file)
 - Ensure the AWS region is correctly set
 
-### "change conflicts with another transaction, please retry" (OC000)
-
-This is an optimistic concurrency control (OCC) conflict. Aurora DSQL uses OCC instead of locks, and conflicts are detected at commit time. This error is rare during migrations since they typically run single-threaded.
-
-If you encounter this error, simply re-run `flyway migrate`. Flyway migrations are idempotent - already-applied migrations will be skipped.
-
-For more information, see [Concurrency control in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html).
-
 ## Requirements
 
-- Java 17+
+- Java 21+
 - Flyway 11.3+
 - Aurora DSQL JDBC Connector 1.3.0+
 - PostgreSQL JDBC Driver 42.7.x
