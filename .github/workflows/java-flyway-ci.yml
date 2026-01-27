@@ -1,0 +1,90 @@
+name: Flyway CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'java/flyway/**'
+      - '.github/workflows/java-flyway-ci.yml'
+      - '.github/workflows/dsql-cluster-*.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'java/flyway/**'
+      - '.github/workflows/java-flyway-ci.yml'
+      - '.github/workflows/dsql-cluster-*.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: java/flyway
+
+jobs:
+  build:
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: maven
+
+      - name: Build and run unit tests
+        run: mvn clean verify -DskipITs
+
+  create-cluster:
+    needs: build
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: flyway-adapter
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write
+
+  integration-test:
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: maven
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Run integration tests
+        env:
+          DSQL_CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          AWS_REGION: ${{ needs.create-cluster.outputs.region }}
+        run: mvn verify -P integration-test
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, integration-test]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write

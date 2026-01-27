@@ -4,6 +4,7 @@
 # IDE
 .vscode/
 .idea/
+*.iml
 
 # Python
 __pycache__/
@@ -16,11 +17,19 @@ build/
 venv/
 *.egg
 
+# Java
+target/
+*.jar
+*.class
+*.log
+dependency-reduced-pom.xml
+
 # Coverage
 .coverage
 .coverage.*
 htmlcov/
 coverage.xml
+jacoco.exec
 
 # Testing
 .pytest_cache/
