@@ -17,7 +17,9 @@ This monorepo contains ORM and database tool adapters for [Amazon Aurora DSQL](h
 
 ### Java
 
-*Coming soon*
+| Package | Description | Maven Central | Version |
+|---------|-------------|---------------|---------|
+| [aurora-dsql-flyway-support](./java/flyway/) | Flyway database plugin for Aurora DSQL | *Coming soon* | 1.0.0 |
 
 ## Installation
 
@@ -31,12 +33,15 @@ pip install aurora-dsql-sqlalchemy
 pip install aurora-dsql-tortoise-orm
 ```
 
+For Java adapters, see the individual adapter documentation for Maven/Gradle installation instructions.
+
 ## Documentation
 
 See the README in each adapter's directory for detailed usage instructions:
 
 - [SQLAlchemy adapter documentation](./python/sqlalchemy/README.md)
 - [Tortoise ORM adapter documentation](./python/tortoise-orm/README.md)
+- [Flyway adapter documentation](./java/flyway/README.md)
 
 ## Versioning
 
