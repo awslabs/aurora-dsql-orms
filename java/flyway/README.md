@@ -46,90 +46,78 @@ flyway migrate
 
 ## Writing DSQL-Compatible Migrations
 
-Aurora DSQL has specific constraints you must follow in your migration scripts.
+When writing Flyway migrations for Aurora DSQL, follow these patterns:
 
-### Supported Operations
+### Primary Keys
+
+Use UUID with `gen_random_uuid()` for primary keys:
 
 ```sql
--- Use UUID for primary keys
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) NOT NULL
+    email VARCHAR(255) NOT NULL,
+    name VARCHAR(255)
 );
-
--- Use CREATE INDEX ASYNC (required for DSQL)
-CREATE INDEX ASYNC idx_users_email ON users(email);
-
--- Use DELETE for removing data
-DELETE FROM users WHERE status = 'inactive';
 ```
 
-### Unsupported Operations
+### Index Creation
+
+Use `CREATE INDEX ASYNC` for all indexes:
 
 ```sql
--- SERIAL/BIGSERIAL not supported - use UUID instead
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY
-);
+CREATE INDEX ASYNC idx_users_email ON users(email);
+```
 
--- Synchronous indexes not supported - use ASYNC
-CREATE INDEX idx_users_email ON users(email);
+See [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) for details.
 
--- TRUNCATE not supported - use DELETE FROM
-TRUNCATE TABLE users;
+### Data Modification
 
--- Foreign keys not supported
-CREATE TABLE orders (
-    user_id UUID REFERENCES users(id)
-);
+Use standard INSERT, UPDATE, and DELETE statements:
 
--- Array types not supported
-CREATE TABLE tags (
-    values TEXT[]
-);
+```sql
+INSERT INTO users (email, name) VALUES ('user@example.com', 'Test User');
+UPDATE users SET name = 'Updated Name' WHERE email = 'user@example.com';
+DELETE FROM users WHERE email = 'user@example.com';
 ```
 
 ### Transaction Limits
 
-- Maximum 3,000 rows per transaction
-- Maximum 10 MiB data size per transaction
-- Maximum 5 minutes per transaction
+Be aware of these per-transaction limits when writing migrations:
+
+- Maximum 3,000 rows
+- Maximum 10 MiB data size
+- Maximum 5 minutes duration
+
+For more information on Aurora DSQL capabilities, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/).
 
 ## Docker Setup
 
+Example Dockerfile for running Flyway migrations against Aurora DSQL:
+
 ```dockerfile
-ARG FLYWAY_VERSION=11.3
-
-# Stage 1: Download dependencies
-FROM maven:3.9-eclipse-temurin-17 AS deps
-WORKDIR /build
-
-RUN echo '<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion>\
-<groupId>com.example</groupId><artifactId>deps</artifactId><version>1.0.0</version>\
-<dependencies>\
-<dependency><groupId>software.amazon.dsql</groupId><artifactId>aurora-dsql-jdbc-connector</artifactId><version>1.3.0</version></dependency>\
-<dependency><groupId>software.amazon.dsql</groupId><artifactId>aurora-dsql-flyway-support</artifactId><version>1.0.0</version></dependency>\
-<dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><version>42.7.2</version></dependency>\
-</dependencies></project>' > pom.xml
-
-RUN mvn dependency:copy-dependencies -DoutputDirectory=/build/drivers
-
-# Stage 2: Flyway image
-FROM flyway/flyway:${FLYWAY_VERSION}
+FROM flyway/flyway:11.3
 
 USER root
+
+# Remove bundled PostgreSQL driver (we'll use the one from DSQL connector)
 RUN rm -f /flyway/lib/postgresql-*.jar /flyway/drivers/postgresql-*.jar
 
-COPY --from=deps /build/drivers/*.jar /flyway/drivers/
+# Copy required JARs (download these from Maven Central)
+COPY ./drivers/*.jar /flyway/drivers/
+
+# Copy your migration scripts
+COPY ./migrations/ /flyway/sql/
 
 ENV FLYWAY_LOCATIONS=filesystem:sql
 ENV FLYWAY_CONNECT_RETRIES=60
-ENV FLYWAY_POSTGRESQL_TRANSACTIONAL_LOCK=false
-
-COPY ./migrations/ /flyway/sql/
 
 ENTRYPOINT ["flyway", "migrate"]
 ```
+
+Required JARs in `./drivers/`:
+- `aurora-dsql-flyway-support-1.0.0.jar`
+- `aurora-dsql-jdbc-connector-1.3.0.jar` (and its transitive dependencies)
+- `postgresql-42.7.2.jar`
 
 ## IAM Configuration
 
