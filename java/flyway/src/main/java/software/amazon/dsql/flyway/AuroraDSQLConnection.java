@@ -52,10 +52,9 @@ public class AuroraDSQLConnection extends PostgreSQLConnection {
             return callable.call();
         } catch (SQLException e) {
             throw new FlywaySqlException("Unable to execute migration", e);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-            }
             throw new RuntimeException("Unable to execute migration", e);
         }
     }

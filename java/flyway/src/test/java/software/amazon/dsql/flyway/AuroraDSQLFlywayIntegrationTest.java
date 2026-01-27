@@ -12,6 +12,7 @@ import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -191,22 +192,30 @@ class AuroraDSQLFlywayIntegrationTest {
     @Order(5)
     @DisplayName("CREATE INDEX ASYNC creates index")
     void testAsyncIndex() throws Exception {
-        try (Connection conn = DriverManager.getConnection(jdbcUrl, "admin", null);
-             Statement stmt = conn.createStatement()) {
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, "admin", null)) {
+            String sql = "SELECT indexname FROM pg_indexes WHERE schemaname = ? AND indexname = ?";
 
-            // Wait for async index (max 30 seconds)
+            // Wait for async index with exponential backoff (max ~30 seconds total)
             boolean indexExists = false;
-            for (int i = 0; i < 30 && !indexExists; i++) {
-                ResultSet rs = stmt.executeQuery(
-                        "SELECT indexname FROM pg_indexes " +
-                                "WHERE schemaname = '" + mainSchema + "' " +
-                                "AND indexname = 'idx_flyway_test_users_email'");
-                indexExists = rs.next();
+            long sleepMs = 500;
+            long totalWaitMs = 0;
+            long maxWaitMs = 30000;
+
+            while (!indexExists && totalWaitMs < maxWaitMs) {
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, mainSchema);
+                    pstmt.setString(2, "idx_flyway_test_users_email");
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        indexExists = rs.next();
+                    }
+                }
                 if (!indexExists) {
-                    Thread.sleep(1000);
+                    Thread.sleep(sleepMs);
+                    totalWaitMs += sleepMs;
+                    sleepMs = Math.min(sleepMs * 2, 4000); // Cap at 4 seconds
                 }
             }
-            assertTrue(indexExists, "Async index should be created");
+            assertTrue(indexExists, "Async index should be created within " + maxWaitMs + "ms");
         }
     }
 
