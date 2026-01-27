@@ -44,6 +44,49 @@ flyway.driver=software.amazon.dsql.jdbc.DSQLConnector
 flyway migrate
 ```
 
+## Programmatic Usage
+
+For Java applications, you can configure Flyway programmatically:
+
+```java
+Flyway flyway = Flyway.configure()
+    .dataSource(
+        "jdbc:aws-dsql:postgresql://<CLUSTER_ID>.dsql.<REGION>.on.aws:5432/postgres",
+        "admin",
+        null)  // Password is null - IAM auth is automatic
+    .locations("classpath:db/migration")
+    .load();
+
+flyway.migrate();
+```
+
+For production applications with connection pooling, use HikariCP:
+
+```java
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+HikariConfig config = new HikariConfig();
+config.setJdbcUrl("jdbc:aws-dsql:postgresql://<CLUSTER_ID>.dsql.<REGION>.on.aws:5432/postgres");
+config.setUsername("admin");
+config.setMaximumPoolSize(10);
+config.setConnectionTimeout(30000);
+
+HikariDataSource dataSource = new HikariDataSource(config);
+
+Flyway flyway = Flyway.configure()
+    .dataSource(dataSource)
+    .locations("classpath:db/migration")
+    .load();
+
+flyway.migrate();
+```
+
+The Aurora DSQL JDBC Connector automatically handles:
+- IAM authentication token generation and refresh
+- SSL/TLS configuration with certificate verification
+- Connection URL transformation
+
 ## Writing DSQL-Compatible Migrations
 
 When writing Flyway migrations for Aurora DSQL, follow these patterns:
