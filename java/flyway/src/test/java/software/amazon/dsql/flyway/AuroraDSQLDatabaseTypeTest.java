@@ -58,11 +58,11 @@ class AuroraDSQLDatabaseTypeTest {
     @Test
     @DisplayName("Should handle PrivateLink endpoints")
     void handlesPrivateLinkEndpoints() {
-        // PrivateLink endpoints may have different suffixes
+        // PrivateLink endpoints use .dsql-<id> pattern (e.g., .dsql-fnh4)
         assertTrue(databaseType.handlesJDBCUrl(
-            "jdbc:postgresql://abc123.dsql.us-east-1.vpce.amazonaws.com:5432/postgres"));
+            "jdbc:postgresql://abc123.dsql-fnh4.us-east-1.on.aws:5432/postgres"));
         assertTrue(databaseType.handlesJDBCUrl(
-            "jdbc:aws-dsql:postgresql://abc123.dsql.us-east-1.vpce.amazonaws.com:5432/postgres"));
+            "jdbc:aws-dsql:postgresql://abc123.dsql-fnh4.us-east-1.on.aws:5432/postgres"));
     }
 
     @Test

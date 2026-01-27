@@ -25,8 +25,11 @@ import java.sql.SQLException;
  */
 public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
 
-    // Pattern to detect DSQL endpoints (supports both public and PrivateLink endpoints)
-    private static final String DSQL_ENDPOINT_PATTERN = ".dsql.";
+    // Patterns to detect DSQL endpoints
+    // Public endpoints: <cluster-id>.dsql.<region>.on.aws
+    // PrivateLink endpoints: <cluster-id>.dsql-fnh4.<region>.on.aws
+    private static final String DSQL_PUBLIC_PATTERN = ".dsql.";
+    private static final String DSQL_PRIVATELINK_PATTERN = ".dsql-";
 
     @Override
     public String getName() {
@@ -43,8 +46,9 @@ public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
         // Also detect DSQL by endpoint pattern in the URL
         // The DSQL JDBC connector transforms jdbc:aws-dsql:postgresql://... to jdbc:postgresql://...
         // but the hostname still contains the DSQL endpoint pattern
-        // Supports both public (*.dsql.<region>.on.aws) and PrivateLink endpoints
-        if (url.startsWith("jdbc:postgresql://") && url.contains(DSQL_ENDPOINT_PATTERN)) {
+        // Supports both public (*.dsql.<region>.on.aws) and PrivateLink (*.dsql-*) endpoints
+        if (url.startsWith("jdbc:postgresql://") && 
+            (url.contains(DSQL_PUBLIC_PATTERN) || url.contains(DSQL_PRIVATELINK_PATTERN))) {
             return true;
         }
         
@@ -64,7 +68,7 @@ public class AuroraDSQLDatabaseType extends PostgreSQLDatabaseType {
         // Check if this is a DSQL connection by examining the connection URL
         try {
             String url = connection.getMetaData().getURL();
-            if (url != null && url.contains(DSQL_ENDPOINT_PATTERN)) {
+            if (url != null && (url.contains(DSQL_PUBLIC_PATTERN) || url.contains(DSQL_PRIVATELINK_PATTERN))) {
                 return true;
             }
         } catch (SQLException e) {
