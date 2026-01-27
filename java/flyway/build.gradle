@@ -1,0 +1,141 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.19.0'
+}
+
+group = 'software.amazon.dsql'
+version = System.getenv('PROJECT_VERSION') ?: '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Flyway Core - provided by Flyway runtime
+    compileOnly 'org.flywaydb:flyway-core:11.3.0'
+    compileOnly 'org.flywaydb:flyway-database-postgresql:11.3.0'
+
+    // PostgreSQL JDBC Driver - provided by runtime
+    compileOnly 'org.postgresql:postgresql:42.7.2'
+
+    // Testing - Unit Tests
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Testing - Integration Tests (need actual Flyway and DSQL dependencies)
+    testImplementation 'org.flywaydb:flyway-core:11.3.0'
+    testImplementation 'org.flywaydb:flyway-database-postgresql:11.3.0'
+    testImplementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.3.0'
+    testImplementation 'software.amazon.awssdk:dsql:2.33.8'
+    testImplementation 'org.postgresql:postgresql:42.7.2'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Aurora DSQL Flyway Support',
+            'Implementation-Version': version,
+            'Implementation-Vendor': 'Amazon Web Services'
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+    exclude '**/*IntegrationTest.class'
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests against live Aurora DSQL cluster'
+    group = 'verification'
+
+    useJUnitPlatform()
+    include '**/*IntegrationTest.class'
+
+    systemProperty 'dsql.cluster.endpoint', System.getenv('DSQL_CLUSTER_ENDPOINT') ?: ''
+    systemProperty 'dsql.region', System.getenv('AWS_REGION') ?: ''
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'software.amazon.dsql'
+            artifactId = 'aurora-dsql-flyway-support'
+
+            from components.java
+
+            pom {
+                name = 'Aurora DSQL Flyway Support'
+                description = 'Flyway database support for Amazon Aurora DSQL'
+                url = 'https://github.com/awslabs/aurora-dsql-orms'
+                inceptionYear = '2025'
+
+                scm {
+                    url = 'https://github.com/awslabs/aurora-dsql-orms'
+                    connection = 'scm:git:git://github.com/awslabs/aurora-dsql-orms.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-orms.git'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'aws-aurora-dsql'
+                        name = 'Aurora DSQL Team'
+                        organization = 'Amazon Web Services'
+                        organizationUrl = 'https://aws.amazon.com'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+if ('UPLOAD'.equals(System.getenv('JRELEASER_MAVENCENTRAL_STAGE'))) {
+    jreleaser {
+        signing {
+            active = 'ALWAYS'
+            armored = true
+        }
+        deploy {
+            maven {
+                mavenCentral {
+                    sonatype {
+                        active = 'ALWAYS'
+                        url = 'https://central.sonatype.com/api/v1/publisher'
+                        stagingRepository('build/staging-deploy')
+                    }
+                }
+            }
+        }
+    }
+}

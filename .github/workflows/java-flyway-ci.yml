@@ -34,10 +34,12 @@ jobs:
         with:
           java-version: '21'
           distribution: 'corretto'
-          cache: maven
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build and run unit tests
-        run: mvn clean verify -DskipITs
+        run: ./gradlew build
 
   create-cluster:
     needs: build
@@ -63,7 +65,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'corretto'
-          cache: maven
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -72,10 +76,11 @@ jobs:
           aws-region: ${{ needs.create-cluster.outputs.region }}
 
       - name: Run integration tests
+        working-directory: java/flyway
         env:
           DSQL_CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
           AWS_REGION: ${{ needs.create-cluster.outputs.region }}
-        run: mvn verify -P integration-test
+        run: ./gradlew integrationTest
 
   delete-cluster:
     if: always() && needs.create-cluster.result == 'success'

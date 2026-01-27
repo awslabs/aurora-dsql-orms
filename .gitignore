@@ -23,6 +23,7 @@ target/
 *.class
 *.log
 dependency-reduced-pom.xml
+.gradle/
 
 # Coverage
 .coverage
