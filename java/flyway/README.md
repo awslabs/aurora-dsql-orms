@@ -8,28 +8,62 @@ This plugin enables [Flyway](https://flywaydb.org/) database migrations to work 
 
 - Recognizes `jdbc:aws-dsql:` JDBC URLs
 - Bypasses `SET ROLE` commands (DSQL uses IAM authentication)
-- Handles one-DDL-per-transaction requirement
 - Bypasses advisory locks (DSQL uses optimistic concurrency control)
 - Properly drops views before tables during `flyway clean`
 
-## Quick Start
+## Installation
 
-### 1. Add the Plugin JAR
+The plugin is available on [Maven Central](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-flyway-support).
 
-Copy the JAR to your Flyway installation:
+### Maven
 
-```bash
-cp aurora-dsql-flyway-support-1.0.0.jar /flyway/drivers/
+```xml
+<dependency>
+    <groupId>software.amazon.dsql</groupId>
+    <artifactId>aurora-dsql-flyway-support</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
-### 2. Add Required Dependencies
+### Gradle
 
-Ensure these JARs are also in `/flyway/drivers/`:
+```groovy
+implementation 'software.amazon.dsql:aurora-dsql-flyway-support:1.0.0'
+```
 
-- `aurora-dsql-jdbc-connector-1.3.0.jar` (and its transitive dependencies)
-- `postgresql-42.7.2.jar`
+You'll also need these dependencies:
 
-### 3. Configure Flyway
+```xml
+<!-- Aurora DSQL JDBC Connector -->
+<dependency>
+    <groupId>software.amazon.dsql</groupId>
+    <artifactId>aurora-dsql-jdbc-connector</artifactId>
+    <version>1.3.0</version>
+</dependency>
+
+<!-- Flyway -->
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+    <version>11.3.0</version>
+</dependency>
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
+    <version>11.3.0</version>
+</dependency>
+
+<!-- PostgreSQL JDBC Driver -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.2</version>
+</dependency>
+```
+
+## Quick Start
+
+### 1. Configure Flyway
 
 ```properties
 # flyway.conf
@@ -38,7 +72,7 @@ flyway.user=admin
 flyway.driver=software.amazon.dsql.jdbc.DSQLConnector
 ```
 
-### 4. Run Migrations
+### 2. Run Migrations
 
 ```bash
 flyway migrate
@@ -135,18 +169,55 @@ For a complete list of PostgreSQL features not available in Aurora DSQL, see [Un
 
 ## Docker Setup
 
-Example Dockerfile for running Flyway migrations against Aurora DSQL:
+Use a multi-stage Docker build to download all dependencies automatically:
 
 ```dockerfile
+# Stage 1: Download dependencies using Maven
+FROM maven:3.9-eclipse-temurin-21 AS deps
+
+WORKDIR /deps
+
+# Create a minimal pom.xml to download dependencies
+RUN echo '<?xml version="1.0" encoding="UTF-8"?>\n\
+<project xmlns="http://maven.apache.org/POM/4.0.0"\n\
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n\
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">\n\
+    <modelVersion>4.0.0</modelVersion>\n\
+    <groupId>deps</groupId>\n\
+    <artifactId>flyway-dsql-deps</artifactId>\n\
+    <version>1.0.0</version>\n\
+    <dependencies>\n\
+        <dependency>\n\
+            <groupId>software.amazon.dsql</groupId>\n\
+            <artifactId>aurora-dsql-flyway-support</artifactId>\n\
+            <version>1.0.0</version>\n\
+        </dependency>\n\
+        <dependency>\n\
+            <groupId>software.amazon.dsql</groupId>\n\
+            <artifactId>aurora-dsql-jdbc-connector</artifactId>\n\
+            <version>1.3.0</version>\n\
+        </dependency>\n\
+        <dependency>\n\
+            <groupId>org.postgresql</groupId>\n\
+            <artifactId>postgresql</artifactId>\n\
+            <version>42.7.2</version>\n\
+        </dependency>\n\
+    </dependencies>\n\
+</project>' > pom.xml
+
+# Download all dependencies (including transitive)
+RUN mvn dependency:copy-dependencies -DoutputDirectory=/deps/drivers -DincludeScope=runtime
+
+# Stage 2: Flyway with DSQL support
 FROM flyway/flyway:11.3
 
 USER root
 
-# Remove bundled PostgreSQL driver (we'll use the one from DSQL connector)
+# Remove bundled PostgreSQL driver (we use the one from DSQL connector)
 RUN rm -f /flyway/lib/postgresql-*.jar /flyway/drivers/postgresql-*.jar
 
-# Copy required JARs (download these from Maven Central)
-COPY ./drivers/*.jar /flyway/drivers/
+# Copy downloaded dependencies
+COPY --from=deps /deps/drivers/*.jar /flyway/drivers/
 
 # Copy your migration scripts
 COPY ./migrations/ /flyway/sql/
@@ -157,10 +228,23 @@ ENV FLYWAY_CONNECT_RETRIES=60
 ENTRYPOINT ["flyway", "migrate"]
 ```
 
-Required JARs in `./drivers/`:
-- `aurora-dsql-flyway-support-1.0.0.jar`
-- `aurora-dsql-jdbc-connector-1.3.0.jar` (and its transitive dependencies)
-- `postgresql-42.7.2.jar`
+Build and run:
+
+```bash
+# Build the image
+docker build -t flyway-dsql .
+
+# Run migrations
+docker run --rm \
+  -e AWS_REGION=us-east-1 \
+  -e AWS_ACCESS_KEY_ID \
+  -e AWS_SECRET_ACCESS_KEY \
+  -e AWS_SESSION_TOKEN \
+  -e FLYWAY_URL="jdbc:aws-dsql:postgresql://<CLUSTER_ID>.dsql.<REGION>.on.aws:5432/postgres" \
+  -e FLYWAY_USER=admin \
+  -e FLYWAY_DRIVER=software.amazon.dsql.jdbc.DSQLConnector \
+  flyway-dsql
+```
 
 ## IAM Configuration
 
@@ -187,23 +271,23 @@ For EKS/IRSA, ensure these environment variables are set:
 ## Building from Source
 
 ```bash
-mvn clean package
+./gradlew build
 ```
 
-Output: `target/aurora-dsql-flyway-support-1.0.0-SNAPSHOT.jar`
+Output: `build/libs/aurora-dsql-flyway-support-1.0.0.jar`
 
 ### Running Tests
 
 Unit tests:
 ```bash
-mvn test
+./gradlew test
 ```
 
 Integration tests (requires DSQL cluster):
 ```bash
 export DSQL_CLUSTER_ENDPOINT=<cluster-id>.dsql.<region>.on.aws
 export AWS_REGION=<region>
-mvn verify -P integration-test
+./gradlew integrationTest
 ```
 
 ## Troubleshooting
