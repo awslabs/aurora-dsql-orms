@@ -11,6 +11,7 @@ import org.flywaydb.core.internal.jdbc.StatementInterceptor;
 import org.flywaydb.database.postgresql.PostgreSQLDatabase;
 
 import java.sql.Connection;
+import java.util.logging.Logger;
 
 /**
  * Aurora DSQL database implementation for Flyway.
@@ -20,10 +21,14 @@ import java.sql.Connection;
  */
 public class AuroraDSQLDatabase extends PostgreSQLDatabase {
 
+    private static final Logger LOG = Logger.getLogger(AuroraDSQLDatabase.class.getName());
+    private static final String PLUGIN_VERSION = "1.0.0";
+
     public AuroraDSQLDatabase(Configuration configuration,
                               JdbcConnectionFactory jdbcConnectionFactory,
                               StatementInterceptor statementInterceptor) {
         super(configuration, jdbcConnectionFactory, statementInterceptor);
+        LOG.info("Using Aurora DSQL Flyway Support v" + PLUGIN_VERSION);
     }
 
     @Override
