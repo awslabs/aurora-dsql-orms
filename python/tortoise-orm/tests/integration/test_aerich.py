@@ -211,9 +211,9 @@ async def test_aerich_add_model_and_downgrade_last(migration_dir, backend):
     # Downgrade and verify table is removed.
     await command.downgrade(version=-1, delete=False)
     conn = Tortoise.get_connection("default")
-    assert not await table_exists(
-        conn, "second_model"
-    ), "second_model should be dropped after downgrade"
+    assert not await table_exists(conn, "second_model"), (
+        "second_model should be dropped after downgrade"
+    )
     assert await table_exists(conn, "existing_model"), "existing_model should still exist"
 
 
@@ -380,9 +380,9 @@ async def test_aerich_ordering_by_version_not_uuid(migration_dir, backend):
 
     # first() should return "1_older" (highest version), not "fff..." (highest UUID).
     first = await Aerich.all().first()
-    assert (
-        first is not None and first.version == "1_newer.py"
-    ), f"Should order by version not UUID, got: {first}"
+    assert first is not None and first.version == "1_newer.py", (
+        f"Should order by version not UUID, got: {first}"
+    )
 
 
 @pytest.mark.asyncio

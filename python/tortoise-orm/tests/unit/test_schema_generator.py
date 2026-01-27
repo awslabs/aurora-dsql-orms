@@ -72,6 +72,6 @@ async def test_schema_uses_async_index_creation(initialized_models, generator_cl
     generator = generator_cls(_create_mock_client())
     schema_sql = generator.get_create_schema_sql(safe=True)
 
-    assert (
-        "CREATE INDEX ASYNC" in schema_sql
-    ), f"Schema should use ASYNC index creation:\n{schema_sql}"
+    assert "CREATE INDEX ASYNC" in schema_sql, (
+        f"Schema should use ASYNC index creation:\n{schema_sql}"
+    )
