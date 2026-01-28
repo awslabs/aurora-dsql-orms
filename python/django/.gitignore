@@ -16,6 +16,7 @@ __pycache__/
 /.cache
 /.pytest_cache
 /.mypy_cache
+/aurora_dsql_django/_version.py
 
 /doc/_apidoc/
 /build

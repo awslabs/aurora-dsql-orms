@@ -39,3 +39,4 @@ jacoco.exec
 # Environment
 .env
 .env.local
+node_modules/

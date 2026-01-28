@@ -23,24 +23,41 @@ defaults:
     working-directory: python/tortoise-orm
 
 jobs:
-  lint:
-    name: Lint
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-      - name: Install dependencies
-        run: uv sync
-      - name: Run ruff
-        run: uv run ruff check .
-      - name: Run pyright
-        run: uv run pyright
+      - name: Check lock file
+        run: uv lock --check
+      - name: Build package
+        run: uv build
+
+  check-attribution:
+    name: Check Attribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Generate and compare attribution
+        run: |
+          uv run pip-licenses \
+            --from=mixed \
+            --with-url \
+            --with-license-file \
+            --with-notice-file \
+            --no-license-path \
+            --format=json \
+            --packages tortoise-orm aerich \
+            > THIRD_PARTY_GENERATED.json
+          diff THIRD_PARTY.json THIRD_PARTY_GENERATED.json || \
+            (echo "THIRD_PARTY.json is out of date." && exit 1)
 
   unit-tests:
     name: Unit Tests (Python ${{ matrix.python-version }})
-    needs: lint
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:

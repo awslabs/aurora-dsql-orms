@@ -1,0 +1,4 @@
+[tools]
+uv = "latest"
+shellcheck = "latest"
+java = "corretto-17"

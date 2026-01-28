@@ -23,23 +23,19 @@ defaults:
     working-directory: python/sqlalchemy
 
 jobs:
-  lint:
-    name: Lint
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-      - name: Install dependencies
-        run: uv sync
-      - name: Run ruff
-        run: uv run ruff check .
-      - name: Run pyright
-        run: uv run pyright
+      - name: Check lock file
+        run: uv lock --check
+      - name: Build package
+        run: uv build
 
   create-cluster:
-    needs: lint
+    needs: build
     uses: ./.github/workflows/dsql-cluster-create.yml
     with:
       workflow_name: sqlalchemy-dialect
