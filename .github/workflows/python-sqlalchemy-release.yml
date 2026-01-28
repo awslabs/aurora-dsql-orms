@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     tags:
-      - 'python/sqlalchemy/v*'
+      - "python/sqlalchemy/v*"
 
 defaults:
   run:

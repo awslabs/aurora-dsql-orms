@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     tags:
-      - 'python/tortoise-orm/v*'
+      - "python/tortoise-orm/v*"
 
 defaults:
   run:
