@@ -66,9 +66,9 @@ connections should be used where possible to ensure data security during transmi
 
    ```
    # Clone the entire repository
-   git clone https://github.com/awslabs/aurora-dsql-sqlalchemy.git
+   git clone https://github.com/awslabs/aurora-dsql-orms.git
    # Change to the specific directory
-   cd aurora-dsql-sqlalchemy/examples/pet-clinic-app
+   cd aurora-dsql-orms/python/sqlalchemy/examples/pet-clinic-app
    ```
 
 2. Configure SSL certificates

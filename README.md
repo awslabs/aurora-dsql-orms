@@ -6,10 +6,10 @@ This monorepo contains ORM and database tool adapters for [Amazon Aurora DSQL](h
 
 ### Python
 
-| Package | Description | PyPI | Version |
-|---------|-------------|------|---------|
-| [aurora-dsql-sqlalchemy](./python/sqlalchemy/) | SQLAlchemy dialect for Aurora DSQL | [PyPI](https://pypi.org/project/aurora-dsql-sqlalchemy/) | 1.1.0 |
-| [aurora-dsql-tortoise-orm](./python/tortoise-orm/) | Tortoise ORM adapter for Aurora DSQL | [PyPI](https://pypi.org/project/aurora-dsql-tortoise-orm/) | 0.1.1 |
+| Package | Description | PyPI |
+|---------|-------------|------|
+| [aurora-dsql-sqlalchemy](./python/sqlalchemy/) | SQLAlchemy dialect for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-sqlalchemy)](https://pypi.org/project/aurora-dsql-sqlalchemy/) |
+| [aurora-dsql-tortoise-orm](./python/tortoise-orm/) | Tortoise ORM adapter for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-tortoise-orm)](https://pypi.org/project/aurora-dsql-tortoise-orm/) |
 
 ### TypeScript
 
@@ -17,9 +17,9 @@ This monorepo contains ORM and database tool adapters for [Amazon Aurora DSQL](h
 
 ### Java
 
-| Package | Description | Maven Central | Version |
-|---------|-------------|---------------|---------|
-| [aurora-dsql-flyway-support](./java/flyway/) | Flyway database plugin for Aurora DSQL | *Coming soon* | 1.0.0 |
+| Package | Description | Maven Central |
+|---------|-------------|---------------|
+| [aurora-dsql-flyway-support](./java/flyway/) | Flyway database plugin for Aurora DSQL | [![Maven Central](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-flyway-support)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-flyway-support) |
 
 ## Installation
 

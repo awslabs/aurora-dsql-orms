@@ -3,8 +3,8 @@
 ## Clone the repository
 
 ```bash
-git clone https://github.com/awslabs/aurora-dsql-sqlalchemy.git
-cd aurora-dsql-sqlalchemy
+git clone https://github.com/awslabs/aurora-dsql-orms.git
+cd aurora-dsql-orms/python/sqlalchemy
 ```
 
 ## Install `uv`

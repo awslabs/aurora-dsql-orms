@@ -1,6 +1,6 @@
 # Aurora DSQL Adapter for Tortoise ORM
 
-[![GitHub](https://img.shields.io/badge/github-awslabs/aurora--dsql--tortoise--orm-blue?logo=github)](https://github.com/awslabs/aurora-dsql-tortoise-orm)
+[![GitHub](https://img.shields.io/badge/github-awslabs/aurora--dsql--orms-blue?logo=github)](https://github.com/awslabs/aurora-dsql-orms)
 [![License](https://img.shields.io/badge/license-Apache--2.0-brightgreen)](LICENSE)
 [![PyPI - Version](https://img.shields.io/pypi/v/aurora-dsql-tortoise-orm)](https://pypi.org/project/aurora-dsql-tortoise-orm)
 [![Discord chat](https://img.shields.io/discord/1435027294837276802.svg?logo=discord)](https://discord.com/invite/nEF6ksFWru)
@@ -124,8 +124,8 @@ The compatibility module patches Aerich to:
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
 
 ```bash
-git clone https://github.com/awslabs/aurora-dsql-tortoise-orm
-cd aurora-dsql-tortoise-orm
+git clone https://github.com/awslabs/aurora-dsql-orms
+cd aurora-dsql-orms/python/tortoise-orm
 uv sync
 ```
 
@@ -150,7 +150,7 @@ uv run integration
 ## Getting Help
 
 - Open a support ticket with [AWS Support](http://docs.aws.amazon.com/awssupport/latest/user/getting-started.html)
-- Report bugs via [GitHub Issues](https://github.com/awslabs/aurora-dsql-tortoise-orm/issues/new)
+- Report bugs via [GitHub Issues](https://github.com/awslabs/aurora-dsql-orms/issues/new)
 
 ## Additional Resources
 
@@ -160,7 +160,7 @@ uv run integration
 
 ## Opening Issues
 
-If you encounter a bug, please search [existing issues](https://github.com/awslabs/aurora-dsql-tortoise-orm/issues) before opening a new one. GitHub issues are intended for bug reports and feature requests.
+If you encounter a bug, please search [existing issues](https://github.com/awslabs/aurora-dsql-orms/issues) before opening a new one. GitHub issues are intended for bug reports and feature requests.
 
 ## License
 
