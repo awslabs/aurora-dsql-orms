@@ -1,3 +1,21 @@
+<a id="0.1.2"></a>
+# [0.1.2](https://github.com/awslabs/aurora-dsql-tortoise-orm/releases/tag/0.1.2) - 2026-01-27
+
+This release publishes license information to PyPI as part of the package metadata for better visibility.
+
+## What's Changed
+* Update changelog for 0.1.1 by [@github-actions](https://github.com/github-actions)[bot] in [#26](https://github.com/awslabs/aurora-dsql-tortoise-orm/pull/26)
+* Use local hooks to keep versions synced with pyproject.toml by [@danielfrankcom](https://github.com/danielfrankcom) in [#19](https://github.com/awslabs/aurora-dsql-tortoise-orm/pull/19)
+* Add license classifier for PyPI by [@danielfrankcom](https://github.com/danielfrankcom) in [#27](https://github.com/awslabs/aurora-dsql-tortoise-orm/pull/27)
+
+## New Contributors
+* [@github-actions](https://github.com/github-actions)[bot] made their first contribution in [#26](https://github.com/awslabs/aurora-dsql-tortoise-orm/pull/26)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-tortoise-orm/compare/0.1.1...0.1.2
+
+[Changes][0.1.2]
+
+
 <a id="0.1.1"></a>
 # [0.1.1](https://github.com/awslabs/aurora-dsql-tortoise-orm/releases/tag/0.1.1) - 2026-01-23
 
@@ -48,6 +66,7 @@ Initial release of Aurora DSQL Adapter for Tortoise ORM.
 [Changes][0.1.0]
 
 
+[0.1.2]: https://github.com/awslabs/aurora-dsql-tortoise-orm/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/awslabs/aurora-dsql-tortoise-orm/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/awslabs/aurora-dsql-tortoise-orm/tree/0.1.0
 
