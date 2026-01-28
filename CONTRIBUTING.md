@@ -40,6 +40,25 @@ GitHub provides additional document on [forking a repository](https://help.githu
 [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
 
 
+## Development Setup
+
+### Prerequisites
+
+If you use [mise](https://mise.jdx.dev/), the `.mise.toml` file will automatically install the required tools (uv, Java, etc.).
+
+Otherwise, install [uv](https://docs.astral.sh/uv/getting-started/installation/) for Python package management.
+
+### Pre-commit Hooks
+
+This repository uses pre-commit hooks to ensure code quality. Install them with:
+
+```bash
+uvx pre-commit install
+```
+
+This will run linting, formatting, and other checks automatically before each commit.
+
+
 ## Finding contributions to work on
 Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any 'help wanted' issues is a great place to start.
 

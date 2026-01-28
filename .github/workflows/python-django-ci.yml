@@ -23,21 +23,6 @@ defaults:
     working-directory: python/django
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-      - name: Install dependencies
-        run: uv sync
-      - name: Run ruff format check
-        run: uv run ruff format --check .
-      - name: Run ruff lint
-        run: uv run ruff check .
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -46,11 +31,13 @@ jobs:
         with:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v5
+      - name: Check lock file
+        run: uv lock --check
       - name: Build package
         run: uv build
 
   create-cluster:
-    needs: [lint, build]
+    needs: build
     uses: ./.github/workflows/dsql-cluster-create.yml
     with:
       workflow_name: django-adapter
