@@ -10,7 +10,7 @@ on:
         type: string
         description: "Name of the calling workflow (used for cluster naming)"
     secrets:
-      AWS_IAM_ROLE:
+      IAM_ROLE:
         required: true
     outputs:
       cluster-id:
@@ -44,7 +44,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Create cluster
