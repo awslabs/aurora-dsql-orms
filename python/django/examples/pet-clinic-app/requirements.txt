@@ -1,0 +1,5 @@
+django
+psycopg[binary]
+boto3>=1.35.74
+botocore>=1.35.74
+aurora_dsql_django

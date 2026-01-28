@@ -1,0 +1,102 @@
+name: Release
+
+permissions: {}
+
+on:
+  release:
+    types: [ published ]
+
+env:
+  DEFAULT_BRANCH: version-0
+
+jobs:
+  wait-for-ci:
+    name: Wait for CI/CD to pass
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI/CD workflow
+        uses: lewagon/wait-on-check-action@v1.5.0
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          check-regexp: 'Python v.*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  build:
+    name: Build distribution packages
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Build
+        run: uv build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v6
+        with:
+          name: distributions
+          path: dist/
+
+  update-changelog:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # required by rhysd/changelog-from-release
+    steps:
+      - name: Checkout default branch for changelog
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.DEFAULT_BRANCH }}
+
+      - name: Update changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pull_request: true
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/aurora-dsql-django
+    permissions:
+      id-token: write # required by pypa/gh-action-pypi-publish
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v7
+        with:
+          name: distributions
+          path: dist/
+      - name: Publish distribution packages to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs:
+      - publish-to-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/aurora-dsql-django
+    permissions:
+      id-token: write # required by pypa/gh-action-pypi-publish
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v7
+        with:
+          name: distributions
+          path: dist/
+      - name: Publish distribution packages to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

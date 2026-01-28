@@ -1,0 +1,137 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.19.0'
+}
+
+group = 'software.amazon.dsql'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.hibernate:hibernate-core:6.2.38.Final")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("software.amazon.awssdk:dsql:2.31.64")
+    testImplementation("software.amazon.awssdk:regions:2.31.64")
+    testImplementation("software.amazon.awssdk:aws-core:2.31.64")
+    testImplementation("org.postgresql:postgresql:42.7.2")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
+    testImplementation("org.hibernate.orm:hibernate-ant:6.2.38.Final")
+
+}
+
+
+// This is separated to ensure isolation in the Dialect configuration tests
+tasks.register('configurationTests', Test) {
+    useJUnitPlatform()
+    include '**/DialectConfiguration*Test.class'
+    forkEvery = 1  // Fork for each configuration test
+    systemProperty 'RUN_INTEGRATION', System.getenv('RUN_INTEGRATION') ?: 'FALSE'
+    systemProperty 'test.resources.dir', "${project.buildDir}/resources/test"
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty 'RUN_INTEGRATION', System.getenv('RUN_INTEGRATION') ?: 'FALSE'
+
+    // Exclude configuration tests from main test task, as they require isolation
+    exclude '**/DialectConfiguration*Test.class'
+
+    dependsOn configurationTests
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': 'AWS DSQL Hibernate',
+                'Implementation-Version': version
+        )
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'software.amazon.dsql'
+            artifactId = 'aurora-dsql-hibernate-dialect'
+
+            from components.java
+
+            pom {
+                name = 'Aurora DSQL Dialect for Hibernate'
+                description = 'Amazon Aurora DSQL dialect for Hibernate, enabling seamless integration between Hibernate ORM and Aurora DSQL.'
+                url = 'https://github.com/awslabs/aurora-dsql-hibernate'
+                inceptionYear = '2025'
+                scm{
+                    url = 'https://github.com/awslabs/aurora-dsql-hibernate/tree/main'
+                    connection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-hibernate.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-hibernate.git'
+                }
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                    license {
+                        name = 'GNU Lesser General Public License, version 2.1'
+                        url = 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'aws-aurora-dsql'
+                        name = 'Aurora DSQL Team'
+                        organization = 'Amazon Web Services'
+                        organizationUrl = 'https://aws.amazon.com'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+if ('UPLOAD'.equals(System.getenv('JRELEASER_MAVENCENTRAL_STAGE'))) {
+    jreleaser {
+        signing {
+            active = 'ALWAYS'
+            armored = true
+        }
+        deploy {
+            maven {
+                mavenCentral {
+                    sonatype {
+                        active = 'ALWAYS'
+                        url = 'https://central.sonatype.com/api/v1/publisher'
+                        stagingRepository('build/staging-deploy')
+                    }
+                }
+            }
+        }
+    }
+}

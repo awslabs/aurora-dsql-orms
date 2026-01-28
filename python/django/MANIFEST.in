@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+include NOTICE
+recursive-exclude aurora_dsql_django/tests *

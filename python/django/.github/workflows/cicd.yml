@@ -1,0 +1,142 @@
+name: CI/CD
+
+permissions: {}
+
+on:
+  push:
+    branches: [ version-0 ]
+  pull_request:
+    branches: [ version-0 ]
+  workflow_dispatch:
+
+jobs:
+  validate-build:
+    name: Validate build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+    - name: Build
+      run: uv build
+
+  create-cluster:
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: django-integ
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
+  integration-tests:
+    name: Python v${{ matrix.python-version }} - Django ${{ matrix.django-version }}
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+    strategy:
+      # If we run more than one job at a time, we will have to have one cluster
+      # for each flavor of the job. Otherwise they will interfere with each other
+      # These tests are quite fast. We don't need to have many clusters.
+      max-parallel: 1
+      matrix:
+        # Run test for every Python and Django version we intend to support.
+        # Python 3.10+ required by aurora-dsql-python-connector
+        python-version:
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+        django-version:
+          - 'default'
+          - '>=4.2,<4.3'
+          - '>=5.0,<5.1'
+          - '>=5.1,<5.2'
+          - '>=5.2,<5.3'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v5
+      with:
+        role-to-assume: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
+        aws-region: ${{ needs.create-cluster.outputs.region }}
+
+    - name: Setup dependencies
+      run: |
+        uv sync
+        echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
+
+    # Install specific Django version for matrix testing, skip for 'default' to verify pyproject.toml version
+    - name: Install Django ${{ matrix.django-version }}
+      if: matrix.django-version != 'default'
+      run: |
+        uv pip install "django${{ matrix.django-version }}"
+
+    - name: Print Django version
+      run: |
+        uv run python -c "import django; print(f'Django version: {django.get_version()}')"
+
+    - name: Lint with ruff
+      run: |
+        # Check code formatting
+        uv run ruff format --check .
+        # Run linting
+        uv run ruff check .
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.venv
+
+    - name: Run unit tests
+      env:
+        DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
+      run: |
+        uv run pytest --cov=aurora_dsql_django aurora_dsql_django/tests/unit/ --cov-report=xml
+
+    - name: Debug test results
+      if: always()
+      run: |
+        cat coverage.xml || echo "coverage.xml not found"
+
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v6
+      with:
+        name: code-coverage-report-${{ github.job }}-${{ strategy.job-index }}
+        path: coverage.xml
+
+    - name: Run integration tests
+      env:
+        DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
+        CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+      run: |
+        uv run pytest -v aurora_dsql_django/tests/integration/
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, integration-tests]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      AWS_IAM_ROLE: ${{ secrets.DJANGO_ADAPTER_INTEGRATION_TEST_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
