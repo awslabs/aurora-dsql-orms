@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="feature" version="1.0.0.qualifier">
+      <category name="aurora.dsql"/>
+   </feature>
+   <category-def name="aurora.dsql" label="Aurora DSQL Connector"/>
+</site>

@@ -1,0 +1,150 @@
+
+name: DBeaver Release - Create Update Site Repo PR
+
+on:
+  release:
+    types: [created]      # Runs when you create a GitHub release
+  workflow_dispatch:      # Runs when you manually click "Run workflow" button
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      
+      - name: Build JARs
+        run: mvn clean install -P jars
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_IAM_ROLE }}
+          aws-region: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_SIGNER_REGION }}
+      
+      - name: Upload JARs to S3
+        run: |
+          > uploaded_jars.txt
+          find . -path "*/target/*.jar" -type f -exec bash -c '
+            FILENAME=$(basename "$0")
+            if aws s3 cp "$0" "s3://$S3_UNSIGNED_BUCKET/$S3_SIGNER_FOLDERS/$FILENAME" --no-progress 2>&1 | grep -q "upload:"; then
+              VERSION_ID=$(aws s3api head-object --bucket "$S3_UNSIGNED_BUCKET" --key "$S3_SIGNER_FOLDERS/$FILENAME" --output json 2>/dev/null | jq -r ".VersionId")
+              echo "Uploaded: $FILENAME, VersionId: $VERSION_ID"
+              echo "$FILENAME|$VERSION_ID" >> uploaded_jars.txt
+            else
+              echo "Failed to upload: $FILENAME"
+            fi
+          ' {} \;
+        env:
+          S3_UNSIGNED_BUCKET: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_UNSIGNED_BUCKET }}
+          S3_SIGNER_FOLDERS: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_SIGNER_FOLDERS }}
+
+      - name: Get Job IDs from S3 tagging
+        run: |
+          > signed_jars.txt
+          while IFS='|' read -r FILENAME VERSION_ID; do
+            echo "Checking Job ID for $FILENAME with VersionId: $VERSION_ID"
+            for i in {1..3}; do
+              JOB_ID=$(aws s3api get-object-tagging --bucket "$S3_UNSIGNED_BUCKET" --key "$S3_SIGNER_FOLDERS/$FILENAME" --version-id "$VERSION_ID" 2>/dev/null | jq -r '.TagSet[] | select(.Key=="signer-job-id") | .Value')
+              if [ "$JOB_ID" != "null" ] && [ -n "$JOB_ID" ]; then
+                echo "Job ID for $FILENAME: $JOB_ID"
+                SIGNED_FILENAME="${FILENAME}-${JOB_ID}.jar"
+                echo "$SIGNED_FILENAME" >> signed_jars.txt
+                echo "Signed JAR will be: $SIGNED_FILENAME"
+                break
+              fi
+              echo "Retry $i/3: Will sleep for 5 seconds"
+              sleep 5
+            done
+            
+            if [ -z "$JOB_ID" ] || [ "$JOB_ID" = "null" ]; then
+              echo "Failed to retrieve job ID for $FILENAME"
+              exit 1
+            fi
+          done < uploaded_jars.txt
+        env:
+          S3_UNSIGNED_BUCKET: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_UNSIGNED_BUCKET }}
+          S3_SIGNER_FOLDERS: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_SIGNER_FOLDERS }}
+
+     
+      - name: Wait for signed JARs to exist in S3
+        run: |
+          while read -r SIGNED_FILENAME; do
+            echo "Waiting for: $SIGNED_FILENAME"
+            aws s3api wait object-exists --bucket "$S3_SIGNED_BUCKET" --key "$S3_SIGNER_FOLDERS/$SIGNED_FILENAME"
+            echo "Confirmed: $SIGNED_FILENAME exists"
+          done < signed_jars.txt
+        env:
+          S3_SIGNED_BUCKET: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_SIGNED_BUCKET }}
+          S3_SIGNER_FOLDERS: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_SIGNER_FOLDERS }}
+
+      - name: Download signed JARs from S3
+        run: |
+          mkdir -p signed
+          while read -r SIGNED_FILENAME; do
+            echo "Downloading: $SIGNED_FILENAME"
+            aws s3 cp "s3://$S3_SIGNED_BUCKET/$S3_SIGNER_FOLDERS/$SIGNED_FILENAME" "signed/$SIGNED_FILENAME"
+            echo "Downloaded to: signed/$SIGNED_FILENAME"
+          done < signed_jars.txt
+        env:
+          S3_SIGNED_BUCKET: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_SIGNED_BUCKET }}
+          S3_SIGNER_FOLDERS: ${{ secrets.AURORA_DSQL_DBEAVER_PLUGIN_S3_SIGNER_FOLDERS }}
+
+      - name: Install signed JARs to Maven
+        run: |
+          cd signed
+          for SIGNED_JAR in *.jar; do
+            ORIGINAL_NAME=$(echo "$SIGNED_JAR" | sed 's/-[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}\.jar$//')
+            NAME_NO_EXT=$(echo "$ORIGINAL_NAME" | sed 's/\.jar$//')
+            ARTIFACT_ID=$(echo "$NAME_NO_EXT" | sed 's/-[0-9].*//')
+            VERSION=$(echo "$NAME_NO_EXT" | sed "s/^$ARTIFACT_ID-//")
+            echo "Installing: $SIGNED_JAR as $ARTIFACT_ID:$VERSION"
+            mvn install:install-file -Dfile="./$SIGNED_JAR" -DgroupId=software.aws.aurora.dsql.dbeaver -DartifactId="$ARTIFACT_ID" -Dversion="$VERSION" -Dpackaging=jar
+          done
+        shell: bash
+
+      - name: Build Update Site Repo
+        run: mvn clean install -P packaging
+
+      - name: Copy to update-site directory
+        run: |
+          # Remove old files from update-site directory
+          rm -rf update-site/* 
+          cp -r software.aws.aurora.dsql.dbeaver.updatesite/target/repository/* update-site/
+
+      - name: Extract version from uploaded JARs
+        id: get_version
+        run: |
+          FIRST_JAR=$(head -1 uploaded_jars.txt | cut -d'|' -f1)
+          VERSION=$(echo "$FIRST_JAR" | sed 's/.*-\([0-9]\+\.[0-9]\+\.[0-9]\+\)-SNAPSHOT\.jar/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Plugin version: $VERSION"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update site repository with signed JARs v${{ steps.get_version.outputs.version }}
+          branch: update-site-v${{ steps.get_version.outputs.version }}
+          base: main
+          title: 'Release: Update site repository v${{ steps.get_version.outputs.version }}'
+          body: |
+            Automated PR with signed JARs and updated site repository.
+            
+            **Version:** ${{ steps.get_version.outputs.version }}
+            
+            Requires maintainer approval before merge.
+          add-paths: |
+            update-site/**

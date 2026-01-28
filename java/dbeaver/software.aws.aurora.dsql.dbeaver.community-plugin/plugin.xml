@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.jkiss.dbeaver.dataSourceProvider">
+      <datasource
+            id="aurora:dsql"
+            label="Amazon Aurora DSQL"
+            class="software.aws.aurora.dsql.dbeaver.DSQLDataSourceProvider"
+            description="Amazon Aurora DSQL Database"
+            icon="icons/dsql_icon.png"
+            parent="postgresql"
+            dialect="postgresql"
+            >
+         <drivers managable="true">
+            <driver
+                  id="aurora:dsql:jdbc"
+                  icon="icons/dsql_icon.png"
+                  iconBig="icons/dsql_icon_big.png"
+                  label="Aurora DSQL (Community Plugin)"
+                  class="software.amazon.dsql.jdbc.DSQLConnector"
+                  sampleURL="jdbc:aws-dsql:postgresql://{host}[:{port}]/[{database}]"
+                  defaultPort="5432"
+                  defaultDatabase="postgres"
+                  defaultUser="admin"
+                  defaultHost="{clusterid}.dsql.{region}.on.aws"
+                  webURL="https://docs.aws.amazon.com/aurora-dsql/"
+                  description="Amazon Aurora DSQL JDBC Driver">
+               <file type="jar" path="maven:/software.amazon.dsql:aurora-dsql-jdbc-connector:LATEST"/>
+               <parameter name="supports-references" value="true"/>
+               <parameter name="supports-indexes" value="true"/>
+               <property name="urlTemplate" value="jdbc:aws-dsql:postgresql://{host}:{port}/{database}"/>
+            </driver>
+         </drivers>
+      </datasource>
+   </extension>
+    <extension point="org.jkiss.dbeaver.networkHandler">
+        <handler
+                type="config"
+                id="postgre_ssl"
+                codeName="SSL"
+                label="%handler.ssl.name"
+                description="%handler.ssl.description"
+                desktop="false"
+                secured="false"
+                order="2"
+                handlerClass="org.jkiss.dbeaver.ext.postgresql.model.net.PostgreSSLHandlerImpl">
+            <propertyGroup label="SSL Settings">
+                <property id="ssl.ca.cert.value" label="CA Certificate" type="file" description="Choose CA certificate file" features="secured" length="MULTILINE"/>
+                <property id="ssl.client.cert.value" label="Client Certificate" type="file" description="Choose client certificate file" features="secured" length="MULTILINE"/>
+                <property id="ssl.client.key.value" label="Client Private Key" type="file" description="Choose client private key file" features="secured,password" length="MULTILINE"/>
+            </propertyGroup>
+            <propertyGroup label="Advanced SSL Settings">
+                <property id="sslMode" label="SSL Mode" type="string" description="SSL Mode" validValues="require,verify-ca,verify-full" defaultValue=""/>
+                <property id="sslFactory" label="SSL Factory" type="file" description="SSL Factory"/>
+            </propertyGroup>
+            <objectType name="software.aws.aurora.dsql.dbeaver.DSQLDataSourceProvider"/>
+        </handler>
+    </extension>
+</plugin>

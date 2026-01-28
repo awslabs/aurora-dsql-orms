@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>software.aws.aurora.dsql.dbeaver</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <profiles>
+        <profile>
+            <id>jars</id>
+            <modules>
+                <module>software.aws.aurora.dsql.dbeaver.community-plugin</module>
+                <module>software.aws.aurora.dsql.dbeaver.ui</module>
+                <module>software.aws.aurora.dsql.dbeaver.feature</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>packaging</id>
+            <modules>
+                <module>software.aws.aurora.dsql.dbeaver.updatesite</module>
+            </modules>
+        </profile>
+    </profiles>
+
+    <repositories>
+        <repository>
+            <id>dbeaver</id>
+            <layout>p2</layout>
+            <url>https://dbeaver.io/update/ce/latest/</url>
+        </repository>
+        <repository>
+            <id>eclipse-2024-09</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/eclipse/updates/4.33/</url>
+        </repository>
+        <repository>
+            <id>orbit</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-09/</url>
+        </repository>
+        <repository>
+            <id>gef</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/tools/gef/classic/releases/latest/</url>
+        </repository>
+        <repository>
+            <id>eclipse-platform</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/eclipse/updates/4.33/R-4.33-202409030240/</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-maven-plugin</artifactId>
+                <version>5.0.1</version>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
