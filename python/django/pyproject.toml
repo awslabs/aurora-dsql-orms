@@ -1,0 +1,76 @@
+[project]
+name = "aurora_dsql_django"
+dynamic = ["version", "readme"]
+description = "Aurora DSQL adapter for Django"
+license-files = ["LICENSE"]
+authors = [{name = "Amazon Web Services"}]
+requires-python = ">=3.10"
+dependencies = [
+    "aurora-dsql-python-connector>=0.1.0",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+]
+
+[project.urls]
+Repository = "https://github.com/awslabs/aurora-dsql-django"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.3",
+    "django>=4.2",
+    "flake8",
+    "pip>=24.3.1,<26.0.0",
+    "psycopg",
+    "psycopg2-binary",
+    "pytest-cov",
+    "pytest>=8",
+    "ruff",
+    "setuptools-scm>=8",
+    "setuptools>=61.0",
+    "wheel",
+]
+docs = [
+    "Sphinx>=7.1.0,<8.0.0",
+    "docutils>=0.18.0,<0.21.0",
+    "guzzle_sphinx_theme~=0.7.11",
+]
+
+[tool.uv]
+default-groups = ["dev", "docs"]
+
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aurora_dsql_django*"]
+
+[tool.ruff]
+indent-width = 4
+target-version = "py310"
+
+# Aligns with flake8 check in CI/CD workflow.
+line-length = 127
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
