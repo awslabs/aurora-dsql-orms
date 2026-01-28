@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'specialties')}">
+<body>
+
+<h2>Specialties</h2>
+
+<table id="specialties" class="table table-striped">
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="specialty : ${listSpecialties}">
+    <td th:text="${specialty.name}"></td>
+    <td>
+      <a th:href="@{/specialties/edit/{id}(id=${specialty.id})}" class="btn btn-default">Edit</a>
+      <a th:href="@{/specialties/delete/{id}(id=${specialty.id})}" class="btn btn-danger">Delete</a>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<a class="btn btn-default" th:href="@{/specialties/new}">Add Specialty</a>
+
+<div th:if="${totalPages > 1}">
+  <span>Pages:</span>
+  <span th:each="i: ${#numbers.sequence(1, totalPages)}">
+      <a th:if="${currentPage != i}" th:href="@{/specialties/list(page=${i})}">[[${i}]]</a>
+      <span th:unless="${currentPage != i}">[[${i}]]</span>
+  </span>
+</div>
+
+</body>
+</html>

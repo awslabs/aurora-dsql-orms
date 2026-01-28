@@ -1,0 +1,3 @@
+-- This file is intentionally left empty
+-- The gen_random_uuid function is now defined only in db/h2/schema.sql
+-- to avoid duplicate function definition errors
