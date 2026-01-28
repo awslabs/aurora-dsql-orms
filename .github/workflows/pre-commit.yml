@@ -25,4 +25,5 @@ jobs:
           java-version: "17"
           distribution: "corretto"
 
-      - uses: pre-commit/action@v3.0.1
+      - name: Run pre-commit
+        run: uvx pre-commit run --all-files
