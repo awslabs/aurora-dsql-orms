@@ -1,4 +1,4 @@
-name: Tortoise ORM CI
+name: Django CI
 
 permissions:
   contents: read
@@ -7,20 +7,20 @@ on:
   push:
     branches: [main]
     paths:
-      - 'python/tortoise-orm/**'
-      - '.github/workflows/python-tortoise-ci.yml'
+      - 'python/django/**'
+      - '.github/workflows/python-django-ci.yml'
       - '.github/workflows/dsql-cluster-*.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'python/tortoise-orm/**'
-      - '.github/workflows/python-tortoise-ci.yml'
+      - 'python/django/**'
+      - '.github/workflows/python-django-ci.yml'
       - '.github/workflows/dsql-cluster-*.yml'
   workflow_dispatch:
 
 defaults:
   run:
-    working-directory: python/tortoise-orm
+    working-directory: python/django
 
 jobs:
   lint:
@@ -33,37 +33,34 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: uv sync
-      - name: Run ruff
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+      - name: Run ruff lint
         run: uv run ruff check .
-      - name: Run pyright
-        run: uv run pyright
 
-  unit-tests:
-    name: Unit Tests (Python ${{ matrix.python-version }})
-    needs: lint
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v5
-      - run: uv python install ${{ matrix.python-version }}
-      - run: uv sync
-      - run: uv run unit
+      - name: Build package
+        run: uv build
 
   create-cluster:
-    needs: unit-tests
+    needs: [lint, build]
     uses: ./.github/workflows/dsql-cluster-create.yml
     with:
-      workflow_name: tortoise-orm
+      workflow_name: django-adapter
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
       id-token: write
 
   integration-tests:
-    name: Integration Tests (Python ${{ matrix.python-version }})
+    name: Python ${{ matrix.python-version }} - Django ${{ matrix.django-version }}
     needs: create-cluster
     runs-on: ubuntu-latest
     permissions:
@@ -72,13 +69,24 @@ jobs:
       max-parallel: 1
       fail-fast: true
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        django-version:
+          - 'default'
+          - '>=4.2,<4.3'
+          - '>=5.0,<5.1'
+          - '>=5.1,<5.2'
+          - '>=5.2,<5.3'
 
     steps:
       - uses: actions/checkout@v6
+
       - uses: astral-sh/setup-uv@v5
       - run: uv python install ${{ matrix.python-version }}
       - run: uv sync
+
+      - name: Install Django ${{ matrix.django-version }}
+        if: matrix.django-version != 'default'
+        run: uv pip install "django${{ matrix.django-version }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -86,10 +94,16 @@ jobs:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           aws-region: ${{ needs.create-cluster.outputs.region }}
 
+      - name: Run unit tests
+        env:
+          DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
+        run: uv run pytest aurora_dsql_django/tests/unit/
+
       - name: Run integration tests
         env:
+          DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: uv run integration
+        run: uv run pytest -v aurora_dsql_django/tests/integration/
 
   delete-cluster:
     if: always() && needs.create-cluster.result == 'success'

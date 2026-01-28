@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
 name = "aurora_dsql_django"
 dynamic = ["version", "readme"]
@@ -24,21 +28,21 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/awslabs/aurora-dsql-django"
+Repository = "https://github.com/awslabs/aurora-dsql-orms"
+Documentation = "https://github.com/awslabs/aurora-dsql-orms/tree/main/python/django"
 
 [dependency-groups]
 dev = [
     "bandit>=1.9.3",
     "django>=4.2",
     "flake8",
+    "hatch-vcs",
     "pip>=24.3.1,<26.0.0",
     "psycopg",
     "psycopg2-binary",
     "pytest-cov",
     "pytest>=8",
     "ruff",
-    "setuptools-scm>=8",
-    "setuptools>=61.0",
     "wheel",
 ]
 docs = [
@@ -50,15 +54,16 @@ docs = [
 [tool.uv]
 default-groups = ["dev", "docs"]
 
-[build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8"]
-build-backend = "setuptools.build_meta"
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = "python/django/v(?P<version>.*)"
+raw-options = { root = "../..", git_describe_command = ["git", "describe", "--tags", "--match", "python/django/v*"] }
 
-[tool.setuptools_scm]
+[tool.hatch.build.hooks.vcs]
+version-file = "aurora_dsql_django/_version.py"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["aurora_dsql_django*"]
+[tool.hatch.build.targets.wheel]
+packages = ["aurora_dsql_django"]
 
 [tool.ruff]
 indent-width = 4
@@ -66,6 +71,13 @@ target-version = "py310"
 
 # Aligns with flake8 check in CI/CD workflow.
 line-length = 127
+exclude = [
+    ".git",
+    ".venv",
+    "build",
+    "dist",
+    "aurora_dsql_django/_version.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]

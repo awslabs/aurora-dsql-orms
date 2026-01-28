@@ -78,12 +78,12 @@ publishing {
             pom {
                 name = 'Aurora DSQL Dialect for Hibernate'
                 description = 'Amazon Aurora DSQL dialect for Hibernate, enabling seamless integration between Hibernate ORM and Aurora DSQL.'
-                url = 'https://github.com/awslabs/aurora-dsql-hibernate'
+                url = 'https://github.com/awslabs/aurora-dsql-orms'
                 inceptionYear = '2025'
                 scm{
-                    url = 'https://github.com/awslabs/aurora-dsql-hibernate/tree/main'
-                    connection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-hibernate.git'
-                    developerConnection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-hibernate.git'
+                    url = 'https://github.com/awslabs/aurora-dsql-orms/tree/main/java/hibernate'
+                    connection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-orms.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/awslabs/aurora-dsql-orms.git'
                 }
                 licenses {
                     license {
