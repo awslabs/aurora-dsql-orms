@@ -15,60 +15,61 @@
  */
 package org.springframework.samples.petclinic.Specialty;
 
+import java.util.Collection;
+import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.CacheEvict;
-
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
- * Repository class for <code>Specialty</code> domain objects All method names are
- * compliant with Spring Data naming conventions so this interface can easily be extended
- * for Spring Data. See:
+ * Repository class for <code>Specialty</code> domain objects All method names are compliant with
+ * Spring Data naming conventions so this interface can easily be extended for Spring Data. See:
  * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation
  *
  * @author [Your Name]
  */
 public interface SpecialtyRepository extends Repository<Specialty, Integer> {
 
-	/**
-	 * Retrieve all <code>Specialty</code>s from the data store.
-	 * @return a <code>Collection</code> of <code>Specialty</code>s
-	 */
-	@Transactional(readOnly = true)
-	@Cacheable(value = "allSpecialties")
-	Collection<Specialty> findAll() throws DataAccessException;
+  /**
+   * Retrieve all <code>Specialty</code>s from the data store.
+   *
+   * @return a <code>Collection</code> of <code>Specialty</code>s
+   */
+  @Transactional(readOnly = true)
+  @Cacheable(value = "allSpecialties")
+  Collection<Specialty> findAll() throws DataAccessException;
 
-	/**
-	 * Retrieve all <code>Specialty</code>s from data store in Pages
-	 * @param pageable
-	 * @return
-	 * @throws DataAccessException
-	 */
-	@Transactional(readOnly = true)
-	Page<Specialty> findAll(Pageable pageable);
+  /**
+   * Retrieve all <code>Specialty</code>s from data store in Pages
+   *
+   * @param pageable
+   * @return
+   * @throws DataAccessException
+   */
+  @Transactional(readOnly = true)
+  Page<Specialty> findAll(Pageable pageable);
 
-	/**
-	 * Retrieve a <code>Specialty</code> from the data store by id.
-	 * @param id the id to search for
-	 * @return the <code>Specialty</code> if found
-	 */
-	@Transactional(readOnly = true)
-	@Cacheable(value = "specialty", key = "#id.toString()")
-	Specialty findById(UUID id);
+  /**
+   * Retrieve a <code>Specialty</code> from the data store by id.
+   *
+   * @param id the id to search for
+   * @return the <code>Specialty</code> if found
+   */
+  @Transactional(readOnly = true)
+  @Cacheable(value = "specialty", key = "#id.toString()")
+  Specialty findById(UUID id);
 
-	@CachePut(value = "specialty", key = "#result.id.toString()")
-	@CacheEvict(value = "allSpecialties", allEntries = true)
-	Specialty save(Specialty specialty);
+  @CachePut(value = "specialty", key = "#result.id.toString()")
+  @CacheEvict(value = "allSpecialties", allEntries = true)
+  Specialty save(Specialty specialty);
 
-	@CacheEvict(value = { "specialty", "allSpecialties" }, key = "#specialty.id.toString()")
-	void delete(Specialty specialty);
-
+  @CacheEvict(
+      value = {"specialty", "allSpecialties"},
+      key = "#specialty.id.toString()")
+  void delete(Specialty specialty);
 }

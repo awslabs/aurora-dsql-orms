@@ -18,67 +18,66 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 @Component
 public class TransactionRetryAspect {
 
-	private static final Logger logger = LoggerFactory.getLogger(TransactionRetryAspect.class);
+  private static final Logger logger = LoggerFactory.getLogger(TransactionRetryAspect.class);
 
-	@Autowired
-	private PlatformTransactionManager transactionManager;
+  @Autowired private PlatformTransactionManager transactionManager;
 
-	@Around("@annotation(org.springframework.transaction.annotation.Transactional)")
-	public Object retryOnLockConflict(ProceedingJoinPoint joinPoint) throws Throwable {
+  @Around("@annotation(org.springframework.transaction.annotation.Transactional)")
+  public Object retryOnLockConflict(ProceedingJoinPoint joinPoint) throws Throwable {
 
-		int maxRetries = 3;
-		boolean exponentialBackoff = false;
-		int retryCount = 0;
-		long waitTime = 1000; // Initial wait time of 1 second
+    int maxRetries = 3;
+    boolean exponentialBackoff = false;
+    int retryCount = 0;
+    long waitTime = 1000; // Initial wait time of 1 second
 
-		while (retryCount <= maxRetries) {
-			TransactionStatus status = null;
-			try {
-				logger.info("Accessing via TransactionRetryAspect");
+    while (retryCount <= maxRetries) {
+      TransactionStatus status = null;
+      try {
+        logger.info("Accessing via TransactionRetryAspect");
 
-				// Start a new transaction
-				DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-				def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-				status = transactionManager.getTransaction(def);
+        // Start a new transaction
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        status = transactionManager.getTransaction(def);
 
-				// Proceed with the method execution
-				Object result = joinPoint.proceed();
+        // Proceed with the method execution
+        Object result = joinPoint.proceed();
 
-				// Commit the transaction
-				transactionManager.commit(status);
+        // Commit the transaction
+        transactionManager.commit(status);
 
-				return result;
-			}
-			catch (ObjectOptimisticLockingFailureException | CannotAcquireLockException e) {
+        return result;
+      } catch (ObjectOptimisticLockingFailureException | CannotAcquireLockException e) {
 
-				// Rollback the transaction
-				if (status != null) {
-					transactionManager.rollback(status);
-				}
+        // Rollback the transaction
+        if (status != null) {
+          transactionManager.rollback(status);
+        }
 
-				retryCount++;
-				if (retryCount > maxRetries) {
-					logger.error("Failed to execute after {} attempts", maxRetries, e);
-					throw e;
-				}
+        retryCount++;
+        if (retryCount > maxRetries) {
+          logger.error("Failed to execute after {} attempts", maxRetries, e);
+          throw e;
+        }
 
-				logger.info("Retrying transaction due to {}. Attempt: {}", e.getClass().getSimpleName(), retryCount);
+        logger.info(
+            "Retrying transaction due to {}. Attempt: {}",
+            e.getClass().getSimpleName(),
+            retryCount);
 
-				if (exponentialBackoff) {
-					waitTime *= 2;
-				}
+        if (exponentialBackoff) {
+          waitTime *= 2;
+        }
 
-				try {
-					Thread.sleep(waitTime);
-				}
-				catch (InterruptedException ie) {
-					Thread.currentThread().interrupt();
-					throw new RuntimeException("Retry interrupted", ie);
-				}
-			}
-		}
+        try {
+          Thread.sleep(waitTime);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw new RuntimeException("Retry interrupted", ie);
+        }
+      }
+    }
 
-		throw new RuntimeException("Unexpected error in retry logic");
-	}
-
+    throw new RuntimeException("Unexpected error in retry logic");
+  }
 }

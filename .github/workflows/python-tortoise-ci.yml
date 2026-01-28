@@ -7,15 +7,15 @@ on:
   push:
     branches: [main]
     paths:
-      - 'python/tortoise-orm/**'
-      - '.github/workflows/python-tortoise-ci.yml'
-      - '.github/workflows/dsql-cluster-*.yml'
+      - "python/tortoise-orm/**"
+      - ".github/workflows/python-tortoise-ci.yml"
+      - ".github/workflows/dsql-cluster-*.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'python/tortoise-orm/**'
-      - '.github/workflows/python-tortoise-ci.yml'
-      - '.github/workflows/dsql-cluster-*.yml'
+      - "python/tortoise-orm/**"
+      - ".github/workflows/python-tortoise-ci.yml"
+      - ".github/workflows/dsql-cluster-*.yml"
   workflow_dispatch:
 
 defaults:

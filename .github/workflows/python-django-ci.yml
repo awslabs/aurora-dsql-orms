@@ -7,15 +7,15 @@ on:
   push:
     branches: [main]
     paths:
-      - 'python/django/**'
-      - '.github/workflows/python-django-ci.yml'
-      - '.github/workflows/dsql-cluster-*.yml'
+      - "python/django/**"
+      - ".github/workflows/python-django-ci.yml"
+      - ".github/workflows/dsql-cluster-*.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'python/django/**'
-      - '.github/workflows/python-django-ci.yml'
-      - '.github/workflows/dsql-cluster-*.yml'
+      - "python/django/**"
+      - ".github/workflows/python-django-ci.yml"
+      - ".github/workflows/dsql-cluster-*.yml"
   workflow_dispatch:
 
 defaults:
@@ -56,13 +56,13 @@ jobs:
       max-parallel: 1
       fail-fast: true
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         django-version:
-          - 'default'
-          - '>=4.2,<4.3'
-          - '>=5.0,<5.1'
-          - '>=5.1,<5.2'
-          - '>=5.2,<5.3'
+          - "default"
+          - ">=4.2,<4.3"
+          - ">=5.0,<5.1"
+          - ">=5.1,<5.2"
+          - ">=5.2,<5.3"
 
     steps:
       - uses: actions/checkout@v6

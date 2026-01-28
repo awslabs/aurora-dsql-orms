@@ -18,13 +18,12 @@ package org.springframework.samples.petclinic.service;
 
 import java.util.Collection;
 import java.util.UUID;
-
 import org.springframework.orm.ObjectRetrievalFailureException;
 import org.springframework.samples.petclinic.model.BaseEntity;
 
 /**
- * Utility methods for handling entities. Separate from the BaseEntity class mainly
- * because of dependency on the ORM-associated ObjectRetrievalFailureException.
+ * Utility methods for handling entities. Separate from the BaseEntity class mainly because of
+ * dependency on the ORM-associated ObjectRetrievalFailureException.
  *
  * @author Juergen Hoeller
  * @author Sam Brannen
@@ -33,22 +32,25 @@ import org.springframework.samples.petclinic.model.BaseEntity;
  */
 public abstract class EntityUtils {
 
-	/**
-	 * Look up the entity of the given class with the given id in the given collection.
-	 * @param entities the collection to search
-	 * @param entityClass the entity class to look up
-	 * @param entityId the entity id to look up
-	 * @return the found entity
-	 * @throws ObjectRetrievalFailureException if the entity was not found
-	 */
-	public static <T extends BaseEntity> T getById(Collection<T> entities, Class<T> entityClass, UUID entityId)
-			throws ObjectRetrievalFailureException {
-		for (T entity : entities) {
-			if (entity.getId() != null && entity.getId().equals(entityId) && entityClass.isInstance(entity)) {
-				return entity;
-			}
-		}
-		throw new ObjectRetrievalFailureException(entityClass, entityId);
-	}
-
+  /**
+   * Look up the entity of the given class with the given id in the given collection.
+   *
+   * @param entities the collection to search
+   * @param entityClass the entity class to look up
+   * @param entityId the entity id to look up
+   * @return the found entity
+   * @throws ObjectRetrievalFailureException if the entity was not found
+   */
+  public static <T extends BaseEntity> T getById(
+      Collection<T> entities, Class<T> entityClass, UUID entityId)
+      throws ObjectRetrievalFailureException {
+    for (T entity : entities) {
+      if (entity.getId() != null
+          && entity.getId().equals(entityId)
+          && entityClass.isInstance(entity)) {
+        return entity;
+      }
+    }
+    throw new ObjectRetrievalFailureException(entityClass, entityId);
+  }
 }
