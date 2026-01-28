@@ -2,14 +2,19 @@
 
 Flyway database plugin for [Amazon Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/).
 
-## Overview
+## DSQL-Specific Behavior
 
-This plugin enables [Flyway](https://flywaydb.org/) database migrations to work with Amazon Aurora DSQL by handling DSQL-specific behaviors:
+This plugin adapts Flyway for Aurora DSQL's distributed architecture:
 
-- Recognizes `jdbc:aws-dsql:` JDBC URLs
-- Bypasses `SET ROLE` commands (DSQL uses IAM authentication)
-- Bypasses advisory locks (DSQL uses optimistic concurrency control)
-- Properly drops views before tables during `flyway clean`
+- **One DDL per transaction**: Each schema change runs in its own transaction automatically
+- **IAM authentication**: Role-based access via IAM replaces PostgreSQL's `SET ROLE`
+- **Optimistic concurrency**: DSQL uses OCC instead of advisory locks. Run migrations from a single instance to avoid conflicts
+- **Async indexes required**: Use `CREATE INDEX ASYNC` in all migrations (see [Writing DSQL-Compatible Migrations](#writing-dsql-compatible-migrations))
+
+### Not Yet Supported
+
+- `flyway undo` (Flyway Teams feature) - untested with DSQL
+- `flyway baseline` - use `baselineOnMigrate=true` instead (see [Troubleshooting](#ddl-and-dml-are-not-supported-in-the-same-transaction))
 
 ## Installation
 
