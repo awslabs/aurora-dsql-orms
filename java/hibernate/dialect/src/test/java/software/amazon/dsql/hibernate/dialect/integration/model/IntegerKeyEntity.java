@@ -9,25 +9,24 @@ import jakarta.persistence.Id;
 @Entity
 public class IntegerKeyEntity {
 
-    @Id
-    private Integer id;
+  @Id private Integer id;
 
-    @Column(name = "name")
-    private String name;
+  @Column(name = "name")
+  private String name;
 
-    public Integer getId() {
-        return id;
-    }
+  public Integer getId() {
+    return id;
+  }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+  public void setId(Integer id) {
+    this.id = id;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 }

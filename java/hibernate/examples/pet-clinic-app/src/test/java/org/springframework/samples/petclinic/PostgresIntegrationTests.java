@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -47,94 +46,93 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.DockerClientFactory;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = { "spring.docker.compose.skip.in-tests=false", //
-		"spring.docker.compose.profiles.active=postgres" })
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {
+      "spring.docker.compose.skip.in-tests=false", //
+      "spring.docker.compose.profiles.active=postgres"
+    })
 @ActiveProfiles("postgres")
 @DisabledInNativeImage
 public class PostgresIntegrationTests {
 
-	@LocalServerPort
-	int port;
+  @LocalServerPort int port;
 
-	@Autowired
-	private VetRepository vets;
+  @Autowired private VetRepository vets;
 
-	@Autowired
-	private RestTemplateBuilder builder;
+  @Autowired private RestTemplateBuilder builder;
 
-	@BeforeAll
-	static void available() {
-		assumeTrue(DockerClientFactory.instance().isDockerAvailable(), "Docker not available");
-	}
+  @BeforeAll
+  static void available() {
+    assumeTrue(DockerClientFactory.instance().isDockerAvailable(), "Docker not available");
+  }
 
-	public static void main(String[] args) {
-		new SpringApplicationBuilder(PetClinicApplication.class) //
-			.profiles("postgres") //
-			.properties( //
-					"spring.docker.compose.profiles.active=postgres" //
-			) //
-			.listeners(new PropertiesLogger()) //
-			.run(args);
-	}
+  public static void main(String[] args) {
+    new SpringApplicationBuilder(PetClinicApplication.class) //
+        .profiles("postgres") //
+        .properties( //
+            "spring.docker.compose.profiles.active=postgres" //
+            ) //
+        .listeners(new PropertiesLogger()) //
+        .run(args);
+  }
 
-	@Test
-	void testFindAll() throws Exception {
-		vets.findAll();
-		vets.findAll(); // served from cache
-	}
+  @Test
+  void testFindAll() throws Exception {
+    vets.findAll();
+    vets.findAll(); // served from cache
+  }
 
-	@Test
-	void testOwnerDetails() {
-		RestTemplate template = builder.rootUri("http://localhost:" + port).build();
-		ResponseEntity<String> result = template.exchange(RequestEntity.get("/owners/1").build(), String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-	}
+  @Test
+  void testOwnerDetails() {
+    RestTemplate template = builder.rootUri("http://localhost:" + port).build();
+    ResponseEntity<String> result =
+        template.exchange(RequestEntity.get("/owners/1").build(), String.class);
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
 
-	static class PropertiesLogger implements ApplicationListener<ApplicationPreparedEvent> {
+  static class PropertiesLogger implements ApplicationListener<ApplicationPreparedEvent> {
 
-		private static final Log log = LogFactory.getLog(PropertiesLogger.class);
+    private static final Log log = LogFactory.getLog(PropertiesLogger.class);
 
-		private ConfigurableEnvironment environment;
+    private ConfigurableEnvironment environment;
 
-		private boolean isFirstRun = true;
+    private boolean isFirstRun = true;
 
-		@Override
-		public void onApplicationEvent(ApplicationPreparedEvent event) {
-			if (isFirstRun) {
-				environment = event.getApplicationContext().getEnvironment();
-				printProperties();
-			}
-			isFirstRun = false;
-		}
+    @Override
+    public void onApplicationEvent(ApplicationPreparedEvent event) {
+      if (isFirstRun) {
+        environment = event.getApplicationContext().getEnvironment();
+        printProperties();
+      }
+      isFirstRun = false;
+    }
 
-		public void printProperties() {
-			for (EnumerablePropertySource<?> source : findPropertiesPropertySources()) {
-				log.info("PropertySource: " + source.getName());
-				String[] names = source.getPropertyNames();
-				Arrays.sort(names);
-				for (String name : names) {
-					String resolved = environment.getProperty(name);
-					String value = source.getProperty(name).toString();
-					if (resolved.equals(value)) {
-						log.info(name + "=" + resolved);
-					}
-					else {
-						log.info(name + "=" + value + " OVERRIDDEN to " + resolved);
-					}
-				}
-			}
-		}
+    public void printProperties() {
+      for (EnumerablePropertySource<?> source : findPropertiesPropertySources()) {
+        log.info("PropertySource: " + source.getName());
+        String[] names = source.getPropertyNames();
+        Arrays.sort(names);
+        for (String name : names) {
+          String resolved = environment.getProperty(name);
+          String value = source.getProperty(name).toString();
+          if (resolved.equals(value)) {
+            log.info(name + "=" + resolved);
+          } else {
+            log.info(name + "=" + value + " OVERRIDDEN to " + resolved);
+          }
+        }
+      }
+    }
 
-		private List<EnumerablePropertySource<?>> findPropertiesPropertySources() {
-			List<EnumerablePropertySource<?>> sources = new LinkedList<>();
-			for (PropertySource<?> source : environment.getPropertySources()) {
-				if (source instanceof EnumerablePropertySource enumerable) {
-					sources.add(enumerable);
-				}
-			}
-			return sources;
-		}
-
-	}
-
+    private List<EnumerablePropertySource<?>> findPropertiesPropertySources() {
+      List<EnumerablePropertySource<?>> sources = new LinkedList<>();
+      for (PropertySource<?> source : environment.getPropertySources()) {
+        if (source instanceof EnumerablePropertySource enumerable) {
+          sources.add(enumerable);
+        }
+      }
+      return sources;
+    }
+  }
 }

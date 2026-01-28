@@ -16,6 +16,12 @@
 
 package org.springframework.samples.petclinic.vet;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.UUID;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,79 +39,65 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-/**
- * Test class for the {@link VetController}
- */
-
+/** Test class for the {@link VetController} */
 @WebMvcTest(VetController.class)
 @DisabledInNativeImage
 @DisabledInAotMode
 class VetControllerTests {
 
-	private static final UUID ONE = UUID.randomUUID();
+  private static final UUID ONE = UUID.randomUUID();
 
-	private static final UUID TWO = UUID.randomUUID();
+  private static final UUID TWO = UUID.randomUUID();
 
-	@Autowired
-	private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-	@MockBean
-	private VetRepository vets;
+  @MockBean private VetRepository vets;
 
-	@MockBean
-	private SpecialtyRepository specialtyRepository;
+  @MockBean private SpecialtyRepository specialtyRepository;
 
-	private Vet james() {
-		Vet james = new Vet();
-		james.setFirstName("James");
-		james.setLastName("Carter");
-		james.setId(ONE);
-		return james;
-	}
+  private Vet james() {
+    Vet james = new Vet();
+    james.setFirstName("James");
+    james.setLastName("Carter");
+    james.setId(ONE);
+    return james;
+  }
 
-	private Vet helen() {
-		Vet helen = new Vet();
-		helen.setFirstName("Helen");
-		helen.setLastName("Leary");
-		helen.setId(TWO);
-		Specialty radiology = new Specialty();
-		radiology.setId(ONE);
-		radiology.setName("radiology");
-		helen.addSpecialty(radiology);
-		return helen;
-	}
+  private Vet helen() {
+    Vet helen = new Vet();
+    helen.setFirstName("Helen");
+    helen.setLastName("Leary");
+    helen.setId(TWO);
+    Specialty radiology = new Specialty();
+    radiology.setId(ONE);
+    radiology.setName("radiology");
+    helen.addSpecialty(radiology);
+    return helen;
+  }
 
-	@BeforeEach
-	void setup() {
-		given(this.vets.findAll()).willReturn(Lists.newArrayList(james(), helen()));
-		given(this.vets.findAll(any(Pageable.class)))
-			.willReturn(new PageImpl<Vet>(Lists.newArrayList(james(), helen())));
+  @BeforeEach
+  void setup() {
+    given(this.vets.findAll()).willReturn(Lists.newArrayList(james(), helen()));
+    given(this.vets.findAll(any(Pageable.class)))
+        .willReturn(new PageImpl<Vet>(Lists.newArrayList(james(), helen())));
+  }
 
-	}
+  @Test
+  void testShowVetListHtml() throws Exception {
 
-	@Test
-	void testShowVetListHtml() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/vets.html?page=1"))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeExists("listVets"))
+        .andExpect(view().name("vets/vetList"));
+  }
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/vets.html?page=1"))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeExists("listVets"))
-			.andExpect(view().name("vets/vetList"));
-
-	}
-
-	@Test
-	void testShowResourcesVetList() throws Exception {
-		ResultActions actions = mockMvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk());
-		actions.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.vetList[0].id").value(ONE.toString()));
-	}
-
+  @Test
+  void testShowResourcesVetList() throws Exception {
+    ResultActions actions =
+        mockMvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+    actions
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.vetList[0].id").value(ONE.toString()));
+  }
 }

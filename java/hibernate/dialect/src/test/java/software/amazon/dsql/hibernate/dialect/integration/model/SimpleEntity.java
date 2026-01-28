@@ -8,25 +8,25 @@ import jakarta.persistence.Entity;
 @Entity
 public class SimpleEntity extends BaseEntity {
 
-    @Column(name = "name")
-    private String name;
+  @Column(name = "name")
+  private String name;
 
-    @Column(name = "value")
-    private int value;
+  @Column(name = "value")
+  private int value;
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public int getValue() {
-        return value;
-    }
+  public int getValue() {
+    return value;
+  }
 
-    public void setValue(int value) {
-        this.value = value;
-    }
+  public void setValue(int value) {
+    this.value = value;
+  }
 }

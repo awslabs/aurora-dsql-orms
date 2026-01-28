@@ -15,21 +15,19 @@
  */
 package org.springframework.samples.petclinic.vet;
 
+import java.util.Collection;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.CacheEvict;
-
-import java.util.Collection;
 
 /**
- * Repository class for <code>Vet</code> domain objects All method names are compliant
- * with Spring Data naming conventions so this interface can easily be extended for Spring
- * Data. See:
+ * Repository class for <code>Vet</code> domain objects All method names are compliant with Spring
+ * Data naming conventions so this interface can easily be extended for Spring Data. See:
  * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation
  *
  * @author Ken Krebs
@@ -39,26 +37,27 @@ import java.util.Collection;
  */
 public interface VetRepository extends Repository<Vet, Integer> {
 
-	/**
-	 * Retrieve all <code>Vet</code>s from the data store.
-	 * @return a <code>Collection</code> of <code>Vet</code>s
-	 */
-	@Transactional(readOnly = true)
-	@Cacheable(value = "vets")
-	Collection<Vet> findAll();
+  /**
+   * Retrieve all <code>Vet</code>s from the data store.
+   *
+   * @return a <code>Collection</code> of <code>Vet</code>s
+   */
+  @Transactional(readOnly = true)
+  @Cacheable(value = "vets")
+  Collection<Vet> findAll();
 
-	/**
-	 * Retrieve all <code>Vet</code>s from data store in Pages
-	 * @param pageable
-	 * @return
-	 * @throws DataAccessException
-	 */
-	@Transactional(readOnly = true)
-	@Cacheable(value = "vets")
-	Page<Vet> findAll(Pageable pageable);
+  /**
+   * Retrieve all <code>Vet</code>s from data store in Pages
+   *
+   * @param pageable
+   * @return
+   * @throws DataAccessException
+   */
+  @Transactional(readOnly = true)
+  @Cacheable(value = "vets")
+  Page<Vet> findAll(Pageable pageable);
 
-	@CachePut(value = "vet", key = "#result.id.toString()")
-	@CacheEvict(value = "vets", allEntries = true)
-	Vet save(Vet vet);
-
+  @CachePut(value = "vet", key = "#result.id.toString()")
+  @CacheEvict(value = "vets", allEntries = true)
+  Vet save(Vet vet);
 }
