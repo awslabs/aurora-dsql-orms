@@ -1,6 +1,8 @@
 # Aurora DSQL ORM Adapters
 
-This monorepo contains ORM and database tool adapters for [Amazon Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/), AWS's distributed SQL database.
+This monorepo contains ORM adapters for [Amazon Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/), AWS's distributed SQL database.
+
+> **Note:** The Flyway adapter has moved to [aurora-dsql-tools](https://github.com/awslabs/aurora-dsql-tools/tree/main/flyway).
 
 ## Available Adapters
 
@@ -8,24 +10,24 @@ This monorepo contains ORM and database tool adapters for [Amazon Aurora DSQL](h
 
 | Package | Description | PyPI |
 |---------|-------------|------|
+| [aurora-dsql-django](./python/django/) | Django database backend for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-django)](https://pypi.org/project/aurora-dsql-django/) |
 | [aurora-dsql-sqlalchemy](./python/sqlalchemy/) | SQLAlchemy dialect for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-sqlalchemy)](https://pypi.org/project/aurora-dsql-sqlalchemy/) |
 | [aurora-dsql-tortoise-orm](./python/tortoise-orm/) | Tortoise ORM adapter for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-tortoise-orm)](https://pypi.org/project/aurora-dsql-tortoise-orm/) |
-
-### TypeScript
-
-*Coming soon*
 
 ### Java
 
 | Package | Description | Maven Central |
 |---------|-------------|---------------|
-| [aurora-dsql-flyway-support](./java/flyway/) | Flyway database plugin for Aurora DSQL | [![Maven Central](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-flyway-support)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-flyway-support) |
+| [aurora-dsql-hibernate-dialect](./java/hibernate/) | Hibernate dialect for Aurora DSQL | [![Maven Central](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-hibernate-dialect)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-hibernate-dialect) |
 
 ## Installation
 
 Each adapter is published as an independent package. Install the one you need:
 
 ```bash
+# Django
+pip install aurora-dsql-django
+
 # SQLAlchemy
 pip install aurora-dsql-sqlalchemy
 
@@ -39,9 +41,10 @@ For Java adapters, see the individual adapter documentation for Maven/Gradle ins
 
 See the README in each adapter's directory for detailed usage instructions:
 
+- [Django adapter documentation](./python/django/README.md)
+- [Hibernate dialect documentation](./java/hibernate/README.md)
 - [SQLAlchemy adapter documentation](./python/sqlalchemy/README.md)
 - [Tortoise ORM adapter documentation](./python/tortoise-orm/README.md)
-- [Flyway adapter documentation](./java/flyway/README.md)
 
 ## Versioning
 
