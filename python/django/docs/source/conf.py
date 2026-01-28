@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # AuroraDSQL documentation build configuration file, created by
 # sphinx-quickstart on Fri Oct  4 13:54:17 2019.
