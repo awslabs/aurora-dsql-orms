@@ -1,0 +1,117 @@
+name: Hibernate CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'java/hibernate/**'
+      - '.github/workflows/java-hibernate-ci.yml'
+      - '.github/workflows/dsql-cluster-*.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'java/hibernate/**'
+      - '.github/workflows/java-hibernate-ci.yml'
+      - '.github/workflows/dsql-cluster-*.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build dialect and run unit tests
+        working-directory: java/hibernate/dialect
+        run: ./gradlew build
+
+  create-cluster:
+    needs: build
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: hibernate-dialect
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write
+
+  integration-test:
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Build dialect with integration tests
+        working-directory: java/hibernate/dialect
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          REGION: ${{ needs.create-cluster.outputs.region }}
+          RUN_INTEGRATION: "TRUE"
+        run: |
+          ./gradlew build -i
+          mvn install:install-file \
+            -Dfile=build/libs/aurora-dsql-hibernate-dialect-1.0.0.jar \
+            -DgroupId=software.amazon.dsql \
+            -DartifactId=aurora-dsql-hibernate-dialect \
+            -Dversion=1.0.0 \
+            -Dpackaging=jar
+
+      - name: Build sample application
+        working-directory: java/hibernate/examples/pet-clinic-app
+        run: |
+          mvn validate
+          mvn initialize
+          mvn clean compile
+          mvn test
+
+      - name: Run DSQL integration test
+        working-directory: java/hibernate/examples/pet-clinic-app
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          CLUSTER_USER: admin
+          RUN_INTEGRATION: "TRUE"
+        run: mvn test -Dtest=DsqlIntegrationTest
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, integration-test]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write

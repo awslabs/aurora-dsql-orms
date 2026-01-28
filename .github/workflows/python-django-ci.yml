@@ -1,0 +1,118 @@
+name: Django CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'python/django/**'
+      - '.github/workflows/python-django-ci.yml'
+      - '.github/workflows/dsql-cluster-*.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'python/django/**'
+      - '.github/workflows/python-django-ci.yml'
+      - '.github/workflows/dsql-cluster-*.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: python/django
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+      - name: Run ruff lint
+        run: uv run ruff check .
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - name: Build package
+        run: uv build
+
+  create-cluster:
+    needs: [lint, build]
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: django-adapter
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write
+
+  integration-tests:
+    name: Python ${{ matrix.python-version }} - Django ${{ matrix.django-version }}
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    strategy:
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        django-version:
+          - 'default'
+          - '>=4.2,<4.3'
+          - '>=5.0,<5.1'
+          - '>=5.1,<5.2'
+          - '>=5.2,<5.3'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync
+
+      - name: Install Django ${{ matrix.django-version }}
+        if: matrix.django-version != 'default'
+        run: uv pip install "django${{ matrix.django-version }}"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Run unit tests
+        env:
+          DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
+        run: uv run pytest aurora_dsql_django/tests/unit/
+
+      - name: Run integration tests
+        env:
+          DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: uv run pytest -v aurora_dsql_django/tests/integration/
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, integration-tests]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write
