@@ -70,9 +70,9 @@ The code automatically detects the user type and adjusts its behavior accordingl
 
 ```bash
 # Clone the entire repository
-git clone https://github.com/awslabs/aurora-dsql-hibernate.git
+git clone https://github.com/awslabs/aurora-dsql-orms.git
 # Change to the specific directory
-cd aurora-dsql-hibernate/examples/pet-clinic-app
+cd aurora-dsql-orms/java/hibernate/examples/pet-clinic-app
  export CLUSTER_ENDPOINT=<Paste endpoint>
  export REGION=<Cluster region>
  export CLUSTER_USER=admin
@@ -88,9 +88,9 @@ Execute the following commands to set up your environment, then choose either th
 
 ```bash
 # Clone the entire repository
-git clone https://github.com/awslabs/aurora-dsql-hibernate.git
+git clone https://github.com/awslabs/aurora-dsql-orms.git
 # Change to the specific directory
-cd aurora-dsql-hibernate/examples/pet-clinic-app
+cd aurora-dsql-orms/java/hibernate/examples/pet-clinic-app
 
 # create_petclinic.sh step is optional if completed in Cloud Shell
 # Download the Amazon root certificate from the official trust store:
@@ -116,9 +116,9 @@ export PGSSLROOTCERT=root.pem
 
 ```bash
 # Clone the entire repository
-git clone https://github.com/awslabs/aurora-dsql-hibernate.git
+git clone https://github.com/awslabs/aurora-dsql-orms.git
 # Change to the specific directory
-cd aurora-dsql-hibernate\examples\pet-clinic-app
+cd aurora-dsql-orms\java\hibernate\examples\pet-clinic-app
 # create_petclinic.bat step is optional if completed in Cloud Shell
 curl -o root.pem https://www.amazontrust.com/repository/AmazonRootCA1.pem
 set PGSSLROOTCERT=root.pem
