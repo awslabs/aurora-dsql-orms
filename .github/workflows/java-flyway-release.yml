@@ -1,7 +1,6 @@
 name: Deploy Flyway to Maven Central
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:

@@ -1,7 +1,6 @@
 name: Tortoise ORM CI
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -77,14 +76,14 @@ jobs:
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
 
   integration-tests:
     name: Integration Tests (Python ${{ matrix.python-version }})
     needs: create-cluster
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
     strategy:
       max-parallel: 1
       fail-fast: true
@@ -118,4 +117,4 @@ jobs:
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials

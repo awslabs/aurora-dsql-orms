@@ -1,7 +1,6 @@
 name: SQLAlchemy CI
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -42,7 +41,7 @@ jobs:
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
 
   test:
     needs: create-cluster
@@ -53,7 +52,7 @@ jobs:
         version: ["3.10", "3.11", "3.12", "3.13"]
         driver: ["psycopg2", "psycopg"]
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
     env:
       SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
 
@@ -100,4 +99,4 @@ jobs:
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
