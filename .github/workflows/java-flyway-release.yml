@@ -10,6 +10,7 @@ jobs:
   deploy:
     if: startsWith(github.event.release.tag_name, 'java/flyway/')
     runs-on: ubuntu-latest
+    environment: maven
     steps:
       - uses: actions/checkout@v6
 
