@@ -10,10 +10,10 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @EnabledIfSystemProperty(named = "RUN_INTEGRATION", matches = "TRUE")
 public class BasicConnectionTest extends DSQLHibernateBaseTest {
 
-    @Test
-    void testBasicConnection() {
-        try (Session session = getSession()) {
-            Assertions.assertEquals(1, session.createQuery("SELECT 1", Integer.class).uniqueResult());
-        }
+  @Test
+  void testBasicConnection() {
+    try (Session session = getSession()) {
+      Assertions.assertEquals(1, session.createQuery("SELECT 1", Integer.class).uniqueResult());
     }
+  }
 }

@@ -15,10 +15,9 @@
  */
 package org.springframework.samples.petclinic.Specialty;
 
-import org.springframework.samples.petclinic.model.NamedEntity;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.springframework.samples.petclinic.model.NamedEntity;
 import org.springframework.samples.petclinic.vet.Vet;
 
 /**
@@ -28,6 +27,4 @@ import org.springframework.samples.petclinic.vet.Vet;
  */
 @Entity
 @Table(name = "specialties")
-public class Specialty extends NamedEntity {
-
-}
+public class Specialty extends NamedEntity {}

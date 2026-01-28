@@ -15,9 +15,9 @@
  */
 package org.springframework.samples.petclinic.vet;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,13 +25,11 @@ import org.springframework.samples.petclinic.Specialty.Specialty;
 import org.springframework.samples.petclinic.Specialty.SpecialtyRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.PostMapping;
-import jakarta.validation.Valid;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * @author Juergen Hoeller
@@ -42,75 +40,74 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 class VetController {
 
-	private final VetRepository vetRepository;
+  private final VetRepository vetRepository;
 
-	private final SpecialtyRepository specialtyRepository;
+  private final SpecialtyRepository specialtyRepository;
 
-	public VetController(VetRepository clinicService, SpecialtyRepository specialtyRepository) {
-		this.vetRepository = clinicService;
-		this.specialtyRepository = specialtyRepository;
-	}
+  public VetController(VetRepository clinicService, SpecialtyRepository specialtyRepository) {
+    this.vetRepository = clinicService;
+    this.specialtyRepository = specialtyRepository;
+  }
 
-	@GetMapping("/vets.html")
-	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
-		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for Object-Xml mapping
-		Vets vets = new Vets();
-		Page<Vet> paginated = findPaginated(page);
-		vets.getVetList().addAll(paginated.toList());
-		return addPaginationModel(page, paginated, model);
-	}
+  @GetMapping("/vets.html")
+  public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
+    // Here we are returning an object of type 'Vets' rather than a collection of Vet
+    // objects so it is simpler for Object-Xml mapping
+    Vets vets = new Vets();
+    Page<Vet> paginated = findPaginated(page);
+    vets.getVetList().addAll(paginated.toList());
+    return addPaginationModel(page, paginated, model);
+  }
 
-	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
-		List<Vet> listVets = paginated.getContent();
-		model.addAttribute("currentPage", page);
-		model.addAttribute("totalPages", paginated.getTotalPages());
-		model.addAttribute("totalItems", paginated.getTotalElements());
-		model.addAttribute("listVets", listVets);
-		return "vets/vetList";
-	}
+  private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
+    List<Vet> listVets = paginated.getContent();
+    model.addAttribute("currentPage", page);
+    model.addAttribute("totalPages", paginated.getTotalPages());
+    model.addAttribute("totalItems", paginated.getTotalElements());
+    model.addAttribute("listVets", listVets);
+    return "vets/vetList";
+  }
 
-	private Page<Vet> findPaginated(int page) {
-		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page - 1, pageSize);
-		return vetRepository.findAll(pageable);
-	}
+  private Page<Vet> findPaginated(int page) {
+    int pageSize = 5;
+    Pageable pageable = PageRequest.of(page - 1, pageSize);
+    return vetRepository.findAll(pageable);
+  }
 
-	@GetMapping({ "/vets" })
-	public @ResponseBody Vets showResourcesVetList() {
-		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for JSon/Object mapping
-		Vets vets = new Vets();
-		vets.getVetList().addAll(this.vetRepository.findAll());
-		return vets;
-	}
+  @GetMapping({"/vets"})
+  public @ResponseBody Vets showResourcesVetList() {
+    // Here we are returning an object of type 'Vets' rather than a collection of Vet
+    // objects so it is simpler for JSon/Object mapping
+    Vets vets = new Vets();
+    vets.getVetList().addAll(this.vetRepository.findAll());
+    return vets;
+  }
 
-	@GetMapping("vets/new")
-	public String initCreationForm(Model model) {
-		Vet vet = new Vet();
-		model.addAttribute("vet", vet);
-		model.addAttribute("specialties", specialtyRepository.findAll());
-		return "vets/createOrUpdateVetForm";
-	}
+  @GetMapping("vets/new")
+  public String initCreationForm(Model model) {
+    Vet vet = new Vet();
+    model.addAttribute("vet", vet);
+    model.addAttribute("specialties", specialtyRepository.findAll());
+    return "vets/createOrUpdateVetForm";
+  }
 
-	@PostMapping("vets/new")
-	public String processCreationForm(@Valid Vet vet, BindingResult result,
-			@RequestParam("specialtyIds") List<UUID> specialtyIds) {
-		if (result.hasErrors()) {
-			return "vets/createOrUpdateVetForm";
-		}
-		for (UUID specialtyId : specialtyIds) {
-			Specialty specialty = specialtyRepository.findById(specialtyId);
-			vet.addSpecialty(specialty);
-		}
-		vetRepository.save(vet);
-		return "redirect:/vets.html";
-	}
+  @PostMapping("vets/new")
+  public String processCreationForm(
+      @Valid Vet vet, BindingResult result, @RequestParam("specialtyIds") List<UUID> specialtyIds) {
+    if (result.hasErrors()) {
+      return "vets/createOrUpdateVetForm";
+    }
+    for (UUID specialtyId : specialtyIds) {
+      Specialty specialty = specialtyRepository.findById(specialtyId);
+      vet.addSpecialty(specialty);
+    }
+    vetRepository.save(vet);
+    return "redirect:/vets.html";
+  }
 
-	@GetMapping("vets/showlist")
-	public String showVetList(Model model) {
-		model.addAttribute("vets", vetRepository.findAll());
-		return "vets/vetList";
-	}
-
+  @GetMapping("vets/showlist")
+  public String showVetList(Model model) {
+    model.addAttribute("vets", vetRepository.findAll());
+    return "vets/vetList";
+  }
 }
