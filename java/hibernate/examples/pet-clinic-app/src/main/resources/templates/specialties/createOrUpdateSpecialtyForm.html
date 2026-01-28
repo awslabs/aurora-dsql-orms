@@ -1,0 +1,11 @@
+<html xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout (~{::body},'vets')}">
+
+<body>
+<h2>Add Specialty</h2>
+<form th:object="${specialty}" method="post">
+  <input type="text" th:field="*{name}" placeholder="Specialty Name" required/>
+  <button type="submit">Add Specialty</button>
+</form>
+</body>
+</html>

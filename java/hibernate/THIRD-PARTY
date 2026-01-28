@@ -1,0 +1,1441 @@
+Legal Notices
+====================
+
+Component: mockito-core
+Version: 5.11.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.mockito/mockito-core@5.11.0?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: jakarta.transaction-api
+Version: 2.0.1
+Publisher: EE4J Community
+Package URL (PURL): pkg:maven/jakarta.transaction/jakarta.transaction-api@2.0.1?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+  - GPL-2.0-with-classpath-exception (https://spdx.org/licenses/GPL-2.0-with-classpath-exception.html)
+
+Component: spring-boot-starter-data-jpa
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-data-jpa@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: mysql
+Version: 1.19.8
+Publisher: Oracle
+Package URL (PURL): pkg:maven/org.testcontainers/mysql@1.19.8?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: netty-codec
+Version: 4.1.113.Final
+Publisher: netty
+Package URL (PURL): pkg:maven/io.netty/netty-codec@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jakarta.annotation-api
+Version: 2.1.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/jakarta.annotation/jakarta.annotation-api@2.1.1?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+  - GPL-2.0-with-classpath-exception (https://spdx.org/licenses/GPL-2.0-with-classpath-exception.html)
+
+Component: docker-java-transport
+Version: 3.3.6
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.github.docker-java/docker-java-transport@3.3.6?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: error_prone_annotations
+Version: 2.21.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.errorprone/error_prone_annotations@2.21.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: mockito-junit-jupiter
+Version: 5.11.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.mockito/mockito-junit-jupiter@5.11.0?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: spring-boot-starter-tomcat
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-tomcat@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: logback-classic
+Version: 1.5.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/ch.qos.logback/logback-classic@1.5.8?type=jar
+Licenses:
+  - EPL-1.0 (https://www.eclipse.org/org/documents/epl-v10.html)
+  - LGPL-2.1 (http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
+
+Component: istack-commons-runtime
+Version: 4.1.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.sun.istack/istack-commons-runtime@4.1.2?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: jdbc
+Version: 1.19.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.testcontainers/jdbc@1.19.8?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: hibernate-validator
+Version: 8.0.1.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.hibernate.validator/hibernate-validator@8.0.1.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: spring-web
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-web@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: retries-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/retries-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-resolver
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-resolver@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-handler
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-handler@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: testcontainers
+Version: 1.19.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.testcontainers/testcontainers@1.19.8?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: spring-orm
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-orm@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-platform-native
+Version: 0.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.graalvm.buildtools/junit-platform-native@0.10.3?type=jar
+Licenses:
+  - UPL-1.0 (http://oss.oracle.com/licenses/upl)
+
+Component: spring-jdbc
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-jdbc@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: slf4j-api
+Version: 2.0.16
+Publisher: QOS
+Package URL (PURL): pkg:maven/org.slf4j/slf4j-api@2.0.16?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: tomcat-embed-core
+Version: 10.1.30
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@10.1.30?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: Saxon-HE
+Version: 9.9.1-7
+Publisher: Saxonica
+Package URL (PURL): pkg:maven/net.sf.saxon/Saxon-HE@9.9.1-7?type=jar
+Licenses:
+  - MPL-2.0 (https://www.mozilla.org/MPL/2.0/)
+
+Component: spring-webmvc
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-webmvc@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: reactive-streams
+Version: 1.0.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.reactivestreams/reactive-streams@1.0.4?type=jar
+Licenses:
+  - MIT-0 (https://github.com/aws/mit-0)
+
+Component: thymeleaf-spring6
+Version: 3.1.2.RELEASE
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.thymeleaf/thymeleaf-spring6@3.1.2.RELEASE?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-jupiter
+Version: 1.19.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.testcontainers/junit-jupiter@1.19.8?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: angus-activation
+Version: 2.0.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.eclipse.angus/angus-activation@2.0.2?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: spring-boot
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: utils
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/utils@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: commons-codec
+Version: 1.16.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/commons-codec/commons-codec@1.16.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: hamcrest-core
+Version: 2.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.hamcrest/hamcrest-core@2.2?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+
+Component: identity-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/identity-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-test
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-test@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jandex
+Version: 3.1.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.smallrye/jandex@3.1.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: awaitility
+Version: 4.2.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.awaitility/awaitility@4.2.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: protocol-core
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/protocol-core@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter-aop
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-aop@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: json-path
+Version: 2.9.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.jayway.jsonpath/json-path@2.9.0?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: commons-collections
+Version: 3.2.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/commons-collections/commons-collections@3.2.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-actuator
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-actuator@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: profiles
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/profiles@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: endpoints-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/endpoints-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jakarta.xml.bind-api
+Version: 4.0.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/jakarta.xml.bind/jakarta.xml.bind-api@4.0.2?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: HdrHistogram
+Version: 2.2.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.hdrhistogram/HdrHistogram@2.2.2?type=jar
+Licenses:
+  - CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+  - BSD-2-Clause (https://opensource.org/licenses/BSD-2-Clause)
+
+Component: eventstream
+Version: 1.0.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.eventstream/eventstream@1.0.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: commons-logging
+Version: 1.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/commons-logging/commons-logging@1.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-expression
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-expression@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-jcl
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-jcl@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-docker-compose
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-docker-compose@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: httpcore
+Version: 4.4.16
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.httpcomponents/httpcore@4.4.16?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: guava
+Version: 31.0.1-jre
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.guava/guava@31.0.1-jre?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-context-support
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-context-support@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: sdk-core
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/sdk-core@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: micrometer-core
+Version: 1.13.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.micrometer/micrometer-core@1.13.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-context
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-context@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: log4j-to-slf4j
+Version: 2.23.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.logging.log4j/log4j-to-slf4j@2.23.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: objenesis
+Version: 3.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.objenesis/objenesis@3.3?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: opentest4j
+Version: 1.3.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.opentest4j/opentest4j@1.3.0?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-jupiter
+Version: 5.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.jupiter/junit-jupiter@5.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: spring-petclinic
+Version: 3.3.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.springframework.samples/spring-petclinic@3.3.0?classifier=plain&type=jar
+Licenses:
+
+Component: httpclient
+Version: 4.5.13
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.httpcomponents/httpclient@4.5.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: h2
+Version: 2.2.224
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.h2database/h2@2.2.224?type=jar
+Licenses:
+  - MPL-2.0 (https://www.mozilla.org/en-US/MPL/2.0/)
+  - Unknown (https://opensource.org/licenses/eclipse-1.0.php)
+
+Component: reflections
+Version: 0.10.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.reflections/reflections@0.10.2?type=jar
+Licenses:
+  - WTFPL (http://www.wtfpl.net/about/)
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: dsql
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/dsql@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: checkstyle
+Version: 9.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.puppycrawl.tools/checkstyle@9.3?type=jar
+Licenses:
+  - LGPL-2.1+ (https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html)
+
+Component: checker-qual
+Version: 3.12.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.checkerframework/checker-qual@3.12.0?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit)
+
+Component: metrics-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/metrics-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-tx
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-tx@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-buffer
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-buffer@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-common
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-common@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: annotations
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/annotations@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: checker-qual
+Version: 2.11.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.checkerframework/checker-qual@2.11.1?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit)
+
+Component: spring-beans
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-beans@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: caffeine
+Version: 3.1.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.github.ben-manes.caffeine/caffeine@3.1.8?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: byte-buddy
+Version: 1.14.19
+Publisher: Unknown
+Package URL (PURL): pkg:maven/net.bytebuddy/byte-buddy@1.14.19?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-core
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-core@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-platform-engine
+Version: 1.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.platform/junit-platform-engine@1.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: spring-boot-starter-cache
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-cache@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: micrometer-observation
+Version: 1.13.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.micrometer/micrometer-observation@1.13.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter-web
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-web@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jakarta.validation-api
+Version: 3.0.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/jakarta.validation/jakarta.validation-api@3.0.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: byte-buddy-agent
+Version: 1.14.19
+Publisher: Unknown
+Package URL (PURL): pkg:maven/net.bytebuddy/byte-buddy-agent@1.14.19?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: aspectjweaver
+Version: 1.9.22.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.aspectj/aspectjweaver@1.9.22.1?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: checker-qual
+Version: 3.42.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.checkerframework/checker-qual@3.42.0?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit)
+
+Component: nohttp-cli
+Version: 0.0.11
+Publisher: spring.io
+Package URL (PURL): pkg:maven/io.spring.nohttp/nohttp-cli@0.0.11?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: LatencyUtils
+Version: 2.0.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.latencyutils/LatencyUtils@2.0.3?type=jar
+Licenses:
+  - CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+
+Component: jakarta.activation-api
+Version: 2.1.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/jakarta.activation/jakarta.activation-api@2.1.3?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: spring-boot-starter-thymeleaf
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-thymeleaf@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: http-auth
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/http-auth@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jboss-logging
+Version: 3.5.3.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.jboss.logging/jboss-logging@3.5.3.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: spring-boot-test-autoconfigure
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-test-autoconfigure@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: aws-json-protocol
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/aws-json-protocol@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: json-utils
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/json-utils@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: xmlunit-core
+Version: 2.9.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.xmlunit/xmlunit-core@2.9.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: http-auth-aws
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/http-auth-aws@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: apiguardian-api
+Version: 1.1.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apiguardian/apiguardian-api@1.1.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: duct-tape
+Version: 1.0.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.rnorth.duct-tape/duct-tape@1.0.8?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: nohttp-checkstyle
+Version: 0.0.11
+Publisher: spring.io
+Package URL (PURL): pkg:maven/io.spring.nohttp/nohttp-checkstyle@0.0.11?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jakarta.persistence-api
+Version: 3.1.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/jakarta.persistence/jakarta.persistence-api@3.1.0?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: logback-core
+Version: 1.5.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/ch.qos.logback/logback-core@1.5.8?type=jar
+Licenses:
+  - EPL-1.0 (https://www.eclipse.org/org/documents/epl-v10.html)
+  - LGPL-2.1 (http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
+
+Component: hamcrest
+Version: 2.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.hamcrest/hamcrest@2.2?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+
+Component: antlr4-runtime
+Version: 4.13.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.antlr/antlr4-runtime@4.13.0?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+
+Component: spring-boot-starter-logging
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-logging@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: error_prone_annotations
+Version: 2.3.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.errorprone/error_prone_annotations@2.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-devtools
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-devtools@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: error_prone_annotations
+Version: 2.7.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: antlr4-runtime
+Version: 4.8-1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.antlr/antlr4-runtime@4.8-1?type=jar
+Licenses:
+  - BSD-4-Clause (https://spdx.org/licenses/BSD-4-Clause.html)
+
+Component: spring-aop
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-aop@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-data-commons
+Version: 3.3.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.springframework.data/spring-data-commons@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jsonassert
+Version: 1.5.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.skyscreamer/jsonassert@1.5.3?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: checksums
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/checksums@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter-test
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-test@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter-actuator
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-actuator@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: txw2
+Version: 4.0.5
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.glassfish.jaxb/txw2@4.0.5?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: regions
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/regions@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: picocli
+Version: 4.6.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/info.picocli/picocli@4.6.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-testcontainers
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-testcontainers@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: micrometer-jakarta9
+Version: 1.13.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.micrometer/micrometer-jakarta9@1.13.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-transport
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-transport@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: commons-compress
+Version: 1.24.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.commons/commons-compress@1.24.0?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: json-smart
+Version: 2.5.1
+Publisher: Chemouni Uriel
+Package URL (PURL): pkg:maven/net.minidev/json-smart@2.5.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: assertj-core
+Version: 3.25.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.assertj/assertj-core@3.25.3?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: listenablefuture
+Version: 9999.0-empty-to-avoid-conflict-with-guava
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-transport-native-unix-common
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-transport-native-unix-common@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-codec-http
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-codec-http@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-autoconfigure
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-autoconfigure@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jackson-core
+Version: 2.17.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: accessors-smart
+Version: 2.5.1
+Publisher: Chemouni Uriel
+Package URL (PURL): pkg:maven/net.minidev/accessors-smart@2.5.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jul-to-slf4j
+Version: 2.0.16
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.slf4j/jul-to-slf4j@2.0.16?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: http-auth-aws-eventstream
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/http-auth-aws-eventstream@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit
+Version: 4.13.2
+Publisher: JUnit
+Package URL (PURL): pkg:maven/junit/junit@4.13.2?type=jar
+Licenses:
+  - EPL-1.0 (http://www.eclipse.org/legal/epl-v10.html)
+
+Component: jaxb-core
+Version: 4.0.5
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.glassfish.jaxb/jaxb-core@4.0.5?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: junit-jupiter-engine
+Version: 5.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.jupiter/junit-jupiter-engine@5.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: netty-transport-classes-epoll
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-transport-classes-epoll@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: javassist
+Version: 3.28.0-GA
+Publisher: Shigeru Chiba, www.javassist.org
+Package URL (PURL): pkg:maven/org.javassist/javassist@3.28.0-GA?type=jar
+Licenses:
+  - MPL-1.1 (https://www.mozilla.org/en-US/MPL/1.1/)
+  - LGPL-2.1-only (https://spdx.org/licenses/LGPL-2.1-only.html)
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: postgresql
+Version: 42.7.4
+Publisher: PostgreSQL Global Development Group
+Package URL (PURL): pkg:maven/org.postgresql/postgresql@42.7.4?type=jar
+Licenses:
+  - BSD-2-Clause (https://opensource.org/licenses/BSD-2-Clause)
+
+Component: log4j-api
+Version: 2.23.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.logging.log4j/log4j-api@2.23.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: http-client-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/http-client-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: font-awesome
+Version: 4.7.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.webjars.npm/font-awesome@4.7.0?type=jar
+Licenses:
+  - Unknown (https://spdx.org/licenses/Openfont-1.1#licenseText)
+
+Component: cache-api
+Version: 1.1.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/javax.cache/cache-api@1.1.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-jupiter-api
+Version: 5.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.jupiter/junit-jupiter-api@5.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: nohttp
+Version: 0.0.11
+Publisher: spring.io
+Package URL (PURL): pkg:maven/io.spring.nohttp/nohttp@0.0.11?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-actuator-autoconfigure
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-actuator-autoconfigure@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: failureaccess
+Version: 1.0.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.guava/failureaccess@1.0.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: docker-java-transport-zerodep
+Version: 3.3.6
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.github.docker-java/docker-java-transport-zerodep@3.3.6?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: HikariCP
+Version: 5.1.0
+Publisher: Zaxxer.com
+Package URL (PURL): pkg:maven/com.zaxxer/HikariCP@5.1.0?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-codec-http2
+Version: 4.1.113.Final
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.netty/netty-codec-http2@4.1.113.Final?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: snakeyaml
+Version: 2.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.yaml/snakeyaml@2.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jna
+Version: 5.13.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/net.java.dev.jna/jna@5.13.0?type=jar
+Licenses:
+  - LGPL-2.1-or-later (https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html)
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: picocli
+Version: 3.9.5
+Publisher: Unknown
+Package URL (PURL): pkg:maven/info.picocli/picocli@3.9.5?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: netty-nio-client
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/netty-nio-client@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: picocli
+Version: 4.3.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/info.picocli/picocli@4.3.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: http-auth-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/http-auth-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: unbescape
+Version: 1.1.6.RELEASE
+Publisher: The UNBESCAPE team
+Package URL (PURL): pkg:maven/org.unbescape/unbescape@1.1.6.RELEASE?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: checksums-spi
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/checksums-spi@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: checkstyle
+Version: 8.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.puppycrawl.tools/checkstyle@8.33?type=jar
+Licenses:
+  - LGPL-2.1+ (https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html)
+
+Component: jaxb-runtime
+Version: 4.0.5
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.glassfish.jaxb/jaxb-runtime@4.0.5?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: antlr
+Version: 2.7.7
+Publisher: Unknown
+Package URL (PURL): pkg:maven/antlr/antlr@2.7.7?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/license/bsd-3-clause)
+
+Component: tomcat-embed-websocket
+Version: 10.1.30
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.tomcat.embed/tomcat-embed-websocket@10.1.30?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: thymeleaf
+Version: 3.1.2.RELEASE
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.thymeleaf/thymeleaf@3.1.2.RELEASE?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: aws-core
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/aws-core@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: hibernate-commons-annotations
+Version: 6.0.6.Final
+Publisher: Hibernate.org
+Package URL (PURL): pkg:maven/org.hibernate.common/hibernate-commons-annotations@6.0.6.Final?type=jar
+Licenses:
+  - LGPL-2.1-only (https://opensource.org/licenses/LGPL-2.1)
+
+Component: junit-platform-commons
+Version: 1.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.platform/junit-platform-commons@1.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: apache-client
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/apache-client@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter-jdbc
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-jdbc@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: j2objc-annotations
+Version: 1.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.j2objc/j2objc-annotations@1.3?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: commons-beanutils
+Version: 1.9.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/commons-beanutils/commons-beanutils@1.9.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-platform-reporting
+Version: 1.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.platform/junit-platform-reporting@1.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: hibernate-core
+Version: 6.5.3.Final
+Publisher: Hibernate.org
+Package URL (PURL): pkg:maven/org.hibernate.orm/hibernate-core@6.5.3.Final?type=jar
+Licenses:
+  - LGPL-2.1-only (https://opensource.org/licenses/LGPL-2.1)
+
+Component: spring-boot-starter-json
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-json@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: antlr4-runtime
+Version: 4.9.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.antlr/antlr4-runtime@4.9.3?type=jar
+Licenses:
+  - BSD-4-Clause (https://spdx.org/licenses/BSD-4-Clause.html)
+
+Component: asm
+Version: 9.6
+Publisher: OW2
+Package URL (PURL): pkg:maven/org.ow2.asm/asm@9.6?type=jar
+Licenses:
+  - BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+
+Component: spring-test
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-test@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: attoparser
+Version: 2.0.7.RELEASE
+Publisher: The ATTOPARSER team
+Package URL (PURL): pkg:maven/org.attoparser/attoparser@2.0.7.RELEASE?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-platform-console
+Version: 1.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.platform/junit-platform-console@1.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: annotations
+Version: 17.0.0
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.jetbrains/annotations@17.0.0?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: third-party-jackson-core
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/third-party-jackson-core@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: micrometer-commons
+Version: 1.13.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/io.micrometer/micrometer-commons@1.13.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-aspects
+Version: 6.1.13
+Publisher: Spring IO
+Package URL (PURL): pkg:maven/org.springframework/spring-aspects@6.1.13?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: spring-boot-starter-validation
+Version: 3.3.4
+Publisher: VMware, Inc.
+Package URL (PURL): pkg:maven/org.springframework.boot/spring-boot-starter-validation@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: retries
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/retries@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: tomcat-embed-el
+Version: 10.1.30
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@10.1.30?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jsr305
+Version: 3.0.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: bootstrap
+Version: 5.3.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.webjars.npm/bootstrap@5.3.3?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: auth
+Version: 2.31.33
+Publisher: Unknown
+Package URL (PURL): pkg:maven/software.amazon.awssdk/auth@2.31.33?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-jupiter-params
+Version: 5.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.jupiter/junit-jupiter-params@5.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: database-commons
+Version: 1.19.8
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.testcontainers/database-commons@1.19.8?type=jar
+Licenses:
+  - MIT (https://opensource.org/license/mit/)
+
+Component: jackson-datatype-jsr310
+Version: 2.17.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jsr310@2.17.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jackson-databind
+Version: 2.17.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.17.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: guava
+Version: 29.0-jre
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.google.guava/guava@29.0-jre?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jackson-datatype-jdk8
+Version: 2.17.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8@2.17.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jakarta.inject-api
+Version: 2.0.1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: junit-platform-launcher
+Version: 1.10.3
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.junit.platform/junit-platform-launcher@1.10.3?type=jar
+Licenses:
+  - EPL-2.0 (https://www.eclipse.org/legal/epl-2.0/)
+
+Component: Saxon-HE
+Version: 10.6
+Publisher: Saxonica
+Package URL (PURL): pkg:maven/net.sf.saxon/Saxon-HE@10.6?type=jar
+Licenses:
+  - MPL-2.0 (https://www.mozilla.org/MPL/2.0/)
+
+Component: spring-data-jpa
+Version: 3.3.4
+Publisher: Unknown
+Package URL (PURL): pkg:maven/org.springframework.data/spring-data-jpa@3.3.4?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: classmate
+Version: 1.7.0
+Publisher: fasterxml.com
+Package URL (PURL): pkg:maven/com.fasterxml/classmate@1.7.0?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: jackson-module-parameter-names
+Version: 2.17.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.fasterxml.jackson.module/jackson-module-parameter-names@2.17.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: docker-java-api
+Version: 3.3.6
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.github.docker-java/docker-java-api@3.3.6?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+Component: android-json
+Version: 0.0.20131108.vaadin1
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.vaadin.external.google/android-json@0.0.20131108.vaadin1?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+Component: jackson-annotations
+Version: 2.17.2
+Publisher: Unknown
+Package URL (PURL): pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.17.2?type=jar
+Licenses:
+  - Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0.txt)
+
