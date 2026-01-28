@@ -1,14 +1,19 @@
 name: Deploy Hibernate to Maven Central
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'java/hibernate/v*'
+
+defaults:
+  run:
+    working-directory: java/hibernate/dialect
 
 jobs:
   deploy:
-    if: startsWith(github.event.release.tag_name, 'java/hibernate/')
     runs-on: ubuntu-latest
     environment: maven
     steps:
@@ -21,7 +26,6 @@ jobs:
           distribution: 'corretto'
 
       - name: Deploy to Central Portal
-        working-directory: java/hibernate/dialect
         run: |
           ./gradlew build
           ./gradlew publish
