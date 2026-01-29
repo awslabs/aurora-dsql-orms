@@ -42,4 +42,10 @@ jacoco.exec
 # Environment
 .env
 .env.local
+
+# Node/TypeScript
 node_modules/
+*.tsbuildinfo
+
+# Prisma
+generated/
