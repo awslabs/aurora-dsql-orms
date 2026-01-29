@@ -12,7 +12,19 @@ defaults:
     working-directory: java/hibernate/dialect
 
 jobs:
+  wait-for-ci:
+    name: Wait for CI to pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lewagon/wait-on-check-action@v1.4.1
+        with:
+          ref: ${{ github.sha }}
+          running-workflow-name: "Wait for CI to pass"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
   deploy:
+    needs: wait-for-ci
     runs-on: ubuntu-latest
     environment: maven
     steps:
