@@ -1,7 +1,6 @@
 name: Hibernate CI
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -46,13 +45,13 @@ jobs:
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
 
   integration-test:
     needs: create-cluster
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
 
     steps:
       - uses: actions/checkout@v6
@@ -114,4 +113,4 @@ jobs:
     secrets:
       IAM_ROLE: ${{ secrets.IAM_ROLE }}
     permissions:
-      id-token: write
+      id-token: write # required by aws-actions/configure-aws-credentials
