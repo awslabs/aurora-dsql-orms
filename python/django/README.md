@@ -1,7 +1,7 @@
 # Aurora DSQL adapter for Django
 
-[![GitHub](https://img.shields.io/badge/github-awslabs/aurora--dsql--django-blue?logo=github)](https://github.com/awslabs/aurora-dsql-django)
-[![License](https://img.shields.io/badge/license-Apache--2.0-brightgreen)]([LICENSE](https://github.com/awslabs/aurora-dsql-django/blob/main/LICENSE))
+[![GitHub](https://img.shields.io/badge/github-awslabs/aurora--dsql--orms-blue?logo=github)](https://github.com/awslabs/aurora-dsql-orms)
+[![License](https://img.shields.io/badge/license-Apache--2.0-brightgreen)](https://github.com/awslabs/aurora-dsql-orms/blob/main/LICENSE)
 [![PyPI - Version](https://img.shields.io/pypi/v/aurora-dsql-django)](https://pypi.org/project/aurora-dsql-django)
 [![Discord chat](https://img.shields.io/discord/1435027294837276802.svg?logo=discord)](https://discord.com/invite/nEF6ksFWru)
 
@@ -82,8 +82,8 @@ For more info follow the [Aurora DSQL with Django example](examples/pet-clinic-a
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then:
 
 ```
-$ git clone https://github.com/awslabs/aurora-dsql-django
-$ cd aurora-dsql-django
+$ git clone https://github.com/awslabs/aurora-dsql-orms
+$ cd aurora-dsql-orms/python/django
 $ uv sync
 ```
 
@@ -117,13 +117,13 @@ $ uv run sphinx-build docs/source build
 
 Please use these community resources for getting help.
 * Open a support ticket with [AWS Support](http://docs.aws.amazon.com/awssupport/latest/user/getting-started.html).
-* If you think you may have found a bug, please open an [issue](https://github.com/awslabs/aurora-dsql-django/issues/new).
+* If you think you may have found a bug, please open an [issue](https://github.com/awslabs/aurora-dsql-orms/issues/new).
 
 ## Opening Issues
 
-If you encounter a bug with the Aurora DSQL Django adapter, we would like to hear about it. Please search the [existing issues](https://github.com/awslabs/aurora-dsql-django/issues) and see if others are also experiencing the issue before opening a new issue. When opening a new issue please follow the template.
+If you encounter a bug with the Aurora DSQL Django adapter, we would like to hear about it. Please search the [existing issues](https://github.com/awslabs/aurora-dsql-orms/issues) and see if others are also experiencing the issue before opening a new issue. When opening a new issue please follow the template.
 
-The GitHub issues are intended for bug reports and feature requests. For help and questions with using Aurora DSQL Django adapter, please make use of the resources listed in the [Getting Help](https://github.com/awslabs/aurora-dsql-django#getting-help) section. Keeping the list of open issues lean will help us respond in a timely manner.
+The GitHub issues are intended for bug reports and feature requests. For help and questions with using Aurora DSQL Django adapter, please make use of the resources listed in the [Getting Help](#getting-help) section. Keeping the list of open issues lean will help us respond in a timely manner.
 
 ## License
 
