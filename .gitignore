@@ -25,6 +25,9 @@ target/
 dependency-reduced-pom.xml
 .gradle/
 
+# Generated version files
+**/_version.py
+
 # Coverage
 .coverage
 .coverage.*
