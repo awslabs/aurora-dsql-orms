@@ -60,4 +60,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md#security-issue-notifications) for inform
 
 ## License
 
-This project is licensed under the Apache-2.0 License. See [LICENSE](./LICENSE) for details.
+This repository is licensed under Apache-2.0 ([LICENSE](./LICENSE)). The Hibernate dialect has additional licensing terms; see [java/hibernate/](./java/hibernate/) for details.
