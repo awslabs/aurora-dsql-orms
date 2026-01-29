@@ -32,7 +32,7 @@ ext.webjarsBootstrapVersion = "5.3.3"
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-cache'
-  implementation 'org.hibernate:hibernate-core:6.6.13.Final'
+  implementation 'org.hibernate:hibernate-core:7.2.2.Final'
   implementation('org.springframework.boot:spring-boot-starter-data-jpa') {
         exclude group: 'org.hibernate', module: 'hibernate-core'
   }
