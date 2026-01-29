@@ -98,9 +98,10 @@ jobs:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
         run: npm run test -- --testPathPatterns=workflow
 
-      # Note: cli-integration tests require prisma.config.ts which is only
-      # in the example app. Those tests run Prisma migrate commands that need
-      # full application setup. Integration testing is covered by test-example.
+      - name: Run CLI integration tests
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: npm run test -- --testPathPatterns=cli-integration
 
   test-example:
     needs: create-cluster
