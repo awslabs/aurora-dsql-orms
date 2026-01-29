@@ -81,10 +81,10 @@ npx prisma migrate diff \
 
 #### What the Transformer Does
 
-| Transformation                                  | Reason                                          |
-| ----------------------------------------------- | ----------------------------------------------- |
-| Wraps each statement in `BEGIN/COMMIT`          | DSQL requires one DDL statement per transaction |
-| Converts `CREATE INDEX` to `CREATE INDEX ASYNC` | DSQL requires asynchronous index creation       |
+| Transformation                                  | Reason                                                |
+| ----------------------------------------------- | ----------------------------------------------------- |
+| Wraps each statement in `BEGIN/COMMIT`          | DSQL requires one DDL statement per transaction       |
+| Converts `CREATE INDEX` to `CREATE INDEX ASYNC` | DSQL requires asynchronous index creation             |
 | Removes foreign key constraints                 | DSQL requires application-layer referential integrity |
 
 ### All-in-One Migrate
@@ -131,24 +131,26 @@ npx aurora-dsql-prisma migrate prisma/schema.prisma \
 When using Prisma with Aurora DSQL:
 
 1. **Set relation mode** - DSQL doesn't support foreign keys:
-   ```prisma
-   datasource db {
-     provider     = "postgresql"
-     relationMode = "prisma"
-   }
-   ```
+
+    ```prisma
+    datasource db {
+      provider     = "postgresql"
+      relationMode = "prisma"
+    }
+    ```
 
 2. **Use UUID for IDs** - DSQL doesn't support sequences:
-   ```prisma
-   model User {
-     id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-   }
-   ```
+
+    ```prisma
+    model User {
+      id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    }
+    ```
 
 3. **Disable advisory locks** - When running migrations:
-   ```bash
-   PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
-   ```
+    ```bash
+    PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
+    ```
 
 ## Example
 

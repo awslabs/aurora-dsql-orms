@@ -20,25 +20,28 @@ This example shows:
 ## Setup
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 2. Set environment variables:
-   ```bash
-   export CLUSTER_USER="admin"
-   export CLUSTER_ENDPOINT="your-cluster.dsql.us-east-1.on.aws"
-   ```
+
+    ```bash
+    export CLUSTER_USER="admin"
+    export CLUSTER_ENDPOINT="your-cluster.dsql.us-east-1.on.aws"
+    ```
 
 3. Build the project:
-   ```bash
-   npm run build
-   ```
+
+    ```bash
+    npm run build
+    ```
 
 4. Apply migrations:
-   ```bash
-   npm run prisma:migrate-up
-   ```
+    ```bash
+    npm run prisma:migrate-up
+    ```
 
 ## Run
 

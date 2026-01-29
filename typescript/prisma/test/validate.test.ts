@@ -1,10 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import {
-    validateSchema,
-    formatValidationResult,
-} from "../src/cli/validate";
+import { validateSchema, formatValidationResult } from "../src/cli/validate";
 
 describe("Schema Validator", () => {
     let tempDir: string;
