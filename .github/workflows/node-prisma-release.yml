@@ -1,0 +1,98 @@
+name: Release Node Prisma
+
+permissions: {}
+
+on:
+  push:
+    tags:
+      - "node/prisma/v*"
+
+defaults:
+  run:
+    working-directory: node/prisma
+
+jobs:
+  wait-for-ci:
+    name: Wait for CI to pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lewagon/wait-on-check-action@v1.5.0
+        with:
+          ref: ${{ github.sha }}
+          running-workflow-name: "Wait for CI to pass"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  build:
+    name: Build distribution
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: node-prisma-dist
+          path: |
+            node/prisma/dist/
+            node/prisma/package.json
+            node/prisma/README.md
+            node/prisma/CHANGELOG.md
+
+  publish-to-npm:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+    permissions:
+      # Required for npm trusted publishing (OIDC)
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: node-prisma-dist
+          path: package/
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to npm
+        working-directory: package/node/prisma
+        run: npm publish --provenance
+
+  update-changelog:
+    name: Update changelog
+    needs: publish-to-npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # required by rhysd/changelog-from-release/action
+      pull-requests: write # required by rhysd/changelog-from-release/action
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: node/prisma/CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pull_request: true
+          version: ${{ github.ref_name }}
+          args: -e ^node/prisma/

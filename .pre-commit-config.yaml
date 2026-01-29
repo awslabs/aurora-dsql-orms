@@ -53,14 +53,6 @@ repos:
         files: ^python/django/.*\.py$
         pass_filenames: false
 
-      # TypeScript formatting (per-project, requires npm)
-      - id: prettier-prisma
-        name: prettier (prisma)
-        entry: bash -c 'cd typescript/prisma && npx prettier --write --ignore-unknown .'
-        language: system
-        files: ^typescript/prisma/.*\.(ts|js|json)$
-        pass_filenames: false
-
   # Python license headers
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.5
@@ -82,6 +74,10 @@ repos:
     hooks:
       - id: prettier
         types: [yaml]
+      - id: prettier
+        name: prettier (prisma)
+        files: ^node/prisma/
+        types_or: [ts, javascript, json]
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
