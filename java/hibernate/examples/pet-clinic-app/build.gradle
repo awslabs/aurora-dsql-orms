@@ -28,7 +28,7 @@ repositories {
 ext.checkstyleVersion = "10.18.1"
 ext.springJavaformatCheckstyleVersion = "0.0.43"
 ext.webjarsFontawesomeVersion = "4.7.0"
-ext.webjarsBootstrapVersion = "5.3.3"
+ext.webjarsBootstrapVersion = "5.3.8"
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-cache'
