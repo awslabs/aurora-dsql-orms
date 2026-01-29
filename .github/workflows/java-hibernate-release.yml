@@ -36,3 +36,21 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+
+  update-changelog:
+    name: Update changelog
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # required by rhysd/changelog-from-release/action
+      pull-requests: write # required by rhysd/changelog-from-release/action
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: java/hibernate/CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pull_request: true
+          args: -e ^java/hibernate/
