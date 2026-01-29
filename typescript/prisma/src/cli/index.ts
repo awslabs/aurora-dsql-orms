@@ -123,9 +123,9 @@ Examples:
         process.exit(0);
     }
 
-    let schemaPath: string | null = null;
-    let outputFile: string | null = null;
-    let fromUrl: string | null = null;
+    let schemaPath: string | undefined;
+    let outputFile: string | undefined;
+    let fromUrl: string | undefined;
     let fromConfigDatasource = false;
     let fromEmpty = false;
     let includeHeader = true;
@@ -133,24 +133,25 @@ Examples:
 
     // Parse arguments
     for (let i = 0; i < args.length; i++) {
-        if (args[i] === "-o" || args[i] === "--output") {
+        const arg = args[i];
+        if (arg === "-o" || arg === "--output") {
             outputFile = args[++i];
-        } else if (args[i] === "--from-url") {
+        } else if (arg === "--from-url") {
             fromUrl = args[++i];
             if (!fromUrl || fromUrl.startsWith("-")) {
                 console.error("Error: --from-url requires a URL argument");
                 process.exit(1);
             }
-        } else if (args[i] === "--from-config-datasource") {
+        } else if (arg === "--from-config-datasource") {
             fromConfigDatasource = true;
-        } else if (args[i] === "--from-empty") {
+        } else if (arg === "--from-empty") {
             fromEmpty = true;
-        } else if (args[i] === "--no-header") {
+        } else if (arg === "--no-header") {
             includeHeader = false;
-        } else if (args[i] === "--force") {
+        } else if (arg === "--force") {
             force = true;
-        } else if (!args[i].startsWith("-")) {
-            schemaPath = args[i];
+        } else if (arg && !arg.startsWith("-")) {
+            schemaPath = arg;
         }
     }
 
@@ -300,21 +301,22 @@ Examples:
         process.exit(0);
     }
 
-    let inputFile: string | null = null;
-    let outputFile: string | null = null;
+    let inputFile: string | undefined;
+    let outputFile: string | undefined;
     let includeHeader = true;
     let force = false;
 
     // Parse arguments
     for (let i = 0; i < args.length; i++) {
-        if (args[i] === "-o" || args[i] === "--output") {
+        const arg = args[i];
+        if (arg === "-o" || arg === "--output") {
             outputFile = args[++i];
-        } else if (args[i] === "--no-header") {
+        } else if (arg === "--no-header") {
             includeHeader = false;
-        } else if (args[i] === "--force") {
+        } else if (arg === "--force") {
             force = true;
-        } else if (!args[i].startsWith("-")) {
-            inputFile = args[i];
+        } else if (arg && !arg.startsWith("-")) {
+            inputFile = arg;
         }
     }
 

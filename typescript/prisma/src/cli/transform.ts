@@ -244,7 +244,7 @@ function transformStatement(
 function transformAlterTable(
     sql: string,
     unsupportedStatements: string[],
-    force: boolean,
+    _force: boolean,
 ): string | null {
     const normalized = sql.toUpperCase();
 
@@ -260,7 +260,7 @@ function transformAlterTable(
     // Format: ALTER TABLE "table" clause1, clause2, ...;
     // Note: Prisma always generates double-quoted identifiers for PostgreSQL
     const match = sql.match(/^(ALTER\s+TABLE\s+"[^"]+"\s+)(.+);?\s*$/is);
-    if (!match) {
+    if (!match?.[1] || !match[2]) {
         return sql;
     }
 
@@ -285,7 +285,7 @@ function transformAlterTable(
             const constraintMatch = clause.match(
                 /DROP\s+CONSTRAINT\s+"([^"]+)"/i,
             );
-            if (constraintMatch) {
+            if (constraintMatch?.[1]) {
                 droppedConstraints.push(constraintMatch[1].toUpperCase());
             }
             continue; // Always skip DROP CONSTRAINT
@@ -299,9 +299,7 @@ function transformAlterTable(
             const constraintMatch = clause.match(
                 /ADD\s+CONSTRAINT\s+"([^"]+)"/i,
             );
-            const constraintName = constraintMatch
-                ? constraintMatch[1].toUpperCase()
-                : "";
+            const constraintName = constraintMatch?.[1]?.toUpperCase() ?? "";
 
             // If we're dropping and re-adding the same constraint, skip the ADD too
             // (avoids partial SQL that would fail anyway)
