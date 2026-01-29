@@ -86,22 +86,22 @@ jobs:
       - name: Run validator unit tests
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: npm run test -- --testPathPattern=validate
+        run: npm run test -- --testPathPatterns=validate
 
       - name: Run transformer unit tests
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: npm run test -- --testPathPattern=transform
+        run: npm run test -- --testPathPatterns=transform
 
       - name: Run workflow unit tests
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: npm run test -- --testPathPattern=workflow
+        run: npm run test -- --testPathPatterns=workflow
 
       - name: Run CLI integration tests
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: npm run test -- --testPathPattern=cli-integration
+        run: npm run test -- --testPathPatterns=cli-integration
 
   test-example:
     needs: create-cluster
@@ -154,7 +154,7 @@ jobs:
         env:
           CLUSTER_USER: "admin"
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: npm run test -- --testPathPattern=dsql-client
+        run: npm run test -- --testPathPatterns=dsql-client
 
       - name: Run sample
         working-directory: typescript/prisma/examples/veterinary-app
