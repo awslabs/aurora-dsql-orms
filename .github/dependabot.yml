@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/python/sqlalchemy"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/python/sqlalchemy/examples/pet-clinic-app"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/python/tortoise-orm"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/python/django"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/python/django/examples/pet-clinic-app"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gradle"
+    directory: "/java/flyway"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gradle"
+    directory: "/java/hibernate/dialect"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gradle"
+    directory: "/java/hibernate/examples/pet-clinic-app"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "maven"
+    directory: "/java/hibernate/examples/pet-clinic-app"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
