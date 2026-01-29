@@ -31,7 +31,7 @@ jobs:
           distribution: "corretto"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Build dialect and run unit tests
         working-directory: java/hibernate/dialect
@@ -64,7 +64,7 @@ jobs:
           cache: maven
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
