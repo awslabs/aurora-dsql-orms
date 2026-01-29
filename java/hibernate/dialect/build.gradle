@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.hibernate:hibernate-core:6.2.38.Final")
+    implementation("org.hibernate:hibernate-core:7.2.2.Final")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
@@ -24,7 +24,7 @@ dependencies {
     testImplementation("software.amazon.awssdk:aws-core:2.41.17")
     testImplementation("org.postgresql:postgresql:42.7.9")
     testImplementation("org.apache.logging.log4j:log4j-core:2.25.3")
-    testImplementation("org.hibernate.orm:hibernate-ant:6.2.38.Final")
+    testImplementation("org.hibernate.orm:hibernate-ant:7.2.2.Final")
 
 }
 
