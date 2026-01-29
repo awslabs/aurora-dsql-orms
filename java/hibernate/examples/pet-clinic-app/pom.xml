@@ -31,7 +31,7 @@
     <jacoco.version>0.8.12</jacoco.version>
     <libsass.version>0.2.29</libsass.version>
     <lifecycle-mapping>1.0.0</lifecycle-mapping>
-    <maven-checkstyle.version>3.5.0</maven-checkstyle.version>
+    <maven-checkstyle.version>3.6.0</maven-checkstyle.version>
     <nohttp-checkstyle.version>0.0.11</nohttp-checkstyle.version>
     <hibernate.version>6.6.13.Final</hibernate.version>
   </properties>
