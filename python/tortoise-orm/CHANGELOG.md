@@ -1,3 +1,39 @@
+<a id="python/tortoise-orm/v0.1.4"></a>
+# [Aurora DSQL Adapter for Tortoise ORM v0.1.4 (python/tortoise-orm/v0.1.4)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.1.4) - 2026-01-30
+
+This release updates the package metadata and documentation to align with the migrated [Aurora DSQL ORM Adapters monorepo](https://github.com/awslabs/aurora-dsql-orms) location.
+
+## What's Changed
+* Update repo links pointing to old repo by [@danielfrankcom](https://github.com/danielfrankcom) in [#4](https://github.com/awslabs/aurora-dsql-orms/pull/4)
+* Merge dev tooling from subprojects at root level by [@danielfrankcom](https://github.com/danielfrankcom) in [#13](https://github.com/awslabs/aurora-dsql-orms/pull/13)
+* Consolidate .gitignore files by [@danielfrankcom](https://github.com/danielfrankcom) in [#17](https://github.com/awslabs/aurora-dsql-orms/pull/17)
+* Consolidate docs/licensing by [@danielfrankcom](https://github.com/danielfrankcom) in [#18](https://github.com/awslabs/aurora-dsql-orms/pull/18)
+* Update docs to point to new repo by [@danielfrankcom](https://github.com/danielfrankcom) in [#19](https://github.com/awslabs/aurora-dsql-orms/pull/19)
+* Update changelog files as part of release by [@danielfrankcom](https://github.com/danielfrankcom) in [#20](https://github.com/awslabs/aurora-dsql-orms/pull/20)
+* Bump pip-licenses from 5.5.0 to 5.5.1 in /python/tortoise-orm by [@dependabot](https://github.com/dependabot)[bot] in [#52](https://github.com/awslabs/aurora-dsql-orms/pull/52)
+* Bump ruff from 0.14.13 to 0.14.14 in /python/tortoise-orm by [@dependabot](https://github.com/dependabot)[bot] in [#59](https://github.com/awslabs/aurora-dsql-orms/pull/59)
+* Configure explicit release name for changelog update task by [@danielfrankcom](https://github.com/danielfrankcom) in [#64](https://github.com/awslabs/aurora-dsql-orms/pull/64)
+* Fix Python publishing metadata by [@danielfrankcom](https://github.com/danielfrankcom) in [#72](https://github.com/awslabs/aurora-dsql-orms/pull/72)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.3...python/tortoise-orm/v0.1.4
+
+[Changes][python/tortoise-orm/v0.1.4]
+
+
+<a id="python/tortoise-orm/v0.1.3"></a>
+# [Aurora DSQL Adapter for Tortoise ORM v0.1.3 (python/tortoise-orm/v0.1.3)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.1.3) - 2026-01-30
+
+This release migrates the Tortoise ORM adapter to the new [Aurora DSQL ORM Adapters monorepo](https://github.com/awslabs/aurora-dsql-orms).
+
+## What's Changed
+No functional changes
+
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.2...python/tortoise-orm/v0.1.3
+
+[Changes][python/tortoise-orm/v0.1.3]
+
+
 <a id="python/tortoise-orm/v0.1.2"></a>
 # [Aurora DSQL Adapter for Tortoise ORM v0.1.2 (python/tortoise-orm/v0.1.2)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.1.2) - 2026-01-29
 
@@ -69,6 +105,8 @@ Initial release of Aurora DSQL Adapter for Tortoise ORM.
 [Changes][python/tortoise-orm/v0.1.0]
 
 
+[python/tortoise-orm/v0.1.4]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.3...python/tortoise-orm/v0.1.4
+[python/tortoise-orm/v0.1.3]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.2...python/tortoise-orm/v0.1.3
 [python/tortoise-orm/v0.1.2]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.1...python/tortoise-orm/v0.1.2
 [python/tortoise-orm/v0.1.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.0...python/tortoise-orm/v0.1.1
 [python/tortoise-orm/v0.1.0]: https://github.com/awslabs/aurora-dsql-orms/tree/python/tortoise-orm/v0.1.0
