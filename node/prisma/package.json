@@ -46,7 +46,7 @@
     "@aws-sdk/dsql-signer": "^3.971.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.0.9",
-    "prettier": "4.0.0-alpha.8",
+    "prettier": "4.0.0-alpha.13",
     "prisma": "^7.3.0",
     "ts-jest": "^29.4.1",
     "tsx": "^4.20.3",
