@@ -76,7 +76,7 @@ jobs:
 
       - name: Publish to npm
         working-directory: package/node/prisma
-        run: npm publish --provenance
+        run: npm publish
 
   update-changelog:
     name: Update changelog
