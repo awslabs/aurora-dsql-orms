@@ -39,12 +39,14 @@
   },
   "overrides": {
     "lodash": "^4.17.23",
-    "hono": "^4.11.7"
+    "hono": "^4.11.7",
+    "fast-xml-parser": "^5.3.4"
   },
   "comments": {
     "overrides": {
       "lodash": "CVE-2025-13465 - Remove when prisma updates to lodash >=4.17.23",
-      "hono": "CVE-2026-24472 - Remove when prisma updates to hono >=4.11.7"
+      "hono": "CVE-2026-24472 - Remove when prisma updates to hono >=4.11.7",
+      "fast-xml-parser": "CVE-2026-25128 - Remove when @aws-sdk/xml-builder updates to fast-xml-parser >=5.3.4"
     }
   }
 }
