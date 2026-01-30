@@ -51,5 +51,15 @@
     "ts-jest": "^29.4.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "lodash": "^4.17.23",
+    "hono": "^4.11.7"
+  },
+  "comments": {
+    "overrides": {
+      "lodash": "CVE-2025-13465 - Remove when prisma updates to lodash >=4.17.23",
+      "hono": "CVE-2026-24472 - Remove when prisma updates to hono >=4.11.7"
+    }
   }
 }
