@@ -21,7 +21,7 @@ Aurora DSQL has [specific PostgreSQL compatibility limitations](https://docs.aws
 npm install --save-dev @aws/aurora-dsql-prisma-tools
 ```
 
-**Supported Node.js versions:** 20, 22, 24 (Active and LTS releases)
+**Supported Node.js versions:** 20+ (Active and LTS releases)
 
 ## Quick Start
 
