@@ -24,5 +24,11 @@ jobs:
           java-version: "17"
           distribution: "corretto"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci --prefix node/prisma
+
       - name: Run pre-commit
         run: uvx pre-commit run --all-files
