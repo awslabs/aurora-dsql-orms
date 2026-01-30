@@ -13,7 +13,7 @@ To assemble the Jar without running any tests use:
 
 `./gradlew assemble`
 
-A Jar containing the dialect will be produced at `build/libs/aurora-dsql-hibernate-dialect-1.0.0.jar`. This Jar can
+A Jar containing the dialect will be produced at `build/libs/aurora-dsql-hibernate-dialect-1.0.1.jar`. This Jar can
 then be used in the Pet-Clinic sample or in your Hibernate application.
 
 ## Running integration tests
