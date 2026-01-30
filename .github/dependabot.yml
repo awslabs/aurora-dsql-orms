@@ -36,6 +36,14 @@ updates:
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/node/prisma"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/node/prisma/examples/veterinary-app"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
