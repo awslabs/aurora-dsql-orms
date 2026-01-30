@@ -1,3 +1,50 @@
+<a id="python/django/v0.4.0"></a>
+# [Aurora DSQL adapter for Django v0.4.0 (python/django/v0.4.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.4.0) - 2026-01-30
+
+This release migrates the Django adapter to the new [Aurora DSQL ORM Adapters monorepo](https://github.com/awslabs/aurora-dsql-orms) and switches to using the [Aurora DSQL Connector for Python](https://pypi.org/project/aurora-dsql-python-connector/) for IAM authentication.
+
+**Breaking change:** Python 3.10+ is now required (previously 3.9+). Python 3.9 reached end-of-life in October 2025, and the integrated `aurora-dsql-python-connector` dependency requires Python 3.10+.
+
+The adapter now uses `aurora-dsql-python-connector` instead of direct `boto3` token generation for IAM authentication. This simplifies configuration, by allowing the region to be inferred from the cluster endpoint where possible, making it optional. All connector options are available via Django's `OPTIONS` dict, including the previously unavailable `custom_credentials_provider` for custom authentication scenarios.
+
+**Breaking change:** As a result of the above, `aws_profile`/`expires_in` have been renamed to `profile`/`token_duration_secs` to match the Python connector.
+
+## What's Changed
+* Update changelog for v0.3.0 by [@github-actions](https://github.com/github-actions)[bot] in [awslabs/aurora-dsql-django#76](https://github.com/awslabs/aurora-dsql-django/pull/76)
+* Minimize workflow permissions by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django#77](https://github.com/awslabs/aurora-dsql-django/pull/77)
+* Bump astral-sh/setup-uv from 6 to 7 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#78](https://github.com/awslabs/aurora-dsql-django/pull/78)
+* Add missing badges (GitHub, Discord and License) by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django#81](https://github.com/awslabs/aurora-dsql-django/pull/81)
+* Update Discord badge by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django#82](https://github.com/awslabs/aurora-dsql-django/pull/82)
+* Bump actions/checkout from 5 to 6 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#83](https://github.com/awslabs/aurora-dsql-django/pull/83)
+* Bump actions/download-artifact from 5 to 7 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#85](https://github.com/awslabs/aurora-dsql-django/pull/85)
+* Bump actions/upload-artifact from 4 to 6 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#84](https://github.com/awslabs/aurora-dsql-django/pull/84)
+* Use Python connector for IAM authentication by [@amaksimo](https://github.com/amaksimo) in [awslabs/aurora-dsql-django#86](https://github.com/awslabs/aurora-dsql-django/pull/86)
+* Bump wheel from 0.45.1 to 0.46.2 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#88](https://github.com/awslabs/aurora-dsql-django/pull/88)
+* Use dependency-groups for dev dependencies by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django#87](https://github.com/awslabs/aurora-dsql-django/pull/87)
+* Bump pip from 24.3.1 to 25.3 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#89](https://github.com/awslabs/aurora-dsql-django/pull/89)
+* Bump lewagon/wait-on-check-action from 1.4.1 to 1.5.0 by [@dependabot](https://github.com/dependabot)[bot] in [awslabs/aurora-dsql-django#91](https://github.com/awslabs/aurora-dsql-django/pull/91)
+* Allow CI/CD workflows to run in parallel without conflicts by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django#90](https://github.com/awslabs/aurora-dsql-django/pull/90)
+* Add license classifier for PyPI by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django#92](https://github.com/awslabs/aurora-dsql-django/pull/92)
+* Add Hibernate and Django adapters to monorepo by [@amaksimo](https://github.com/amaksimo) in [#7](https://github.com/awslabs/aurora-dsql-orms/pull/7)
+* Add CI/CD workflows for Hibernate and Django adapters by [@amaksimo](https://github.com/amaksimo) in [#8](https://github.com/awslabs/aurora-dsql-orms/pull/8)
+* Add Django copyright headers by [@danielfrankcom](https://github.com/danielfrankcom) in [#12](https://github.com/awslabs/aurora-dsql-orms/pull/12)
+* Merge dev tooling from subprojects at root level by [@danielfrankcom](https://github.com/danielfrankcom) in [#13](https://github.com/awslabs/aurora-dsql-orms/pull/13)
+* Consolidate .gitignore files by [@danielfrankcom](https://github.com/danielfrankcom) in [#17](https://github.com/awslabs/aurora-dsql-orms/pull/17)
+* Consolidate docs/licensing by [@danielfrankcom](https://github.com/danielfrankcom) in [#18](https://github.com/awslabs/aurora-dsql-orms/pull/18)
+* Update changelog files as part of release by [@danielfrankcom](https://github.com/danielfrankcom) in [#20](https://github.com/awslabs/aurora-dsql-orms/pull/20)
+* Update docs to point to new repo by [@danielfrankcom](https://github.com/danielfrankcom) in [#19](https://github.com/awslabs/aurora-dsql-orms/pull/19)
+* Bump ruff from 0.14.11 to 0.14.14 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#56](https://github.com/awslabs/aurora-dsql-orms/pull/56)
+* Bump wheel from 0.46.2 to 0.46.3 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#51](https://github.com/awslabs/aurora-dsql-orms/pull/51)
+
+## New Contributors
+
+* [@amaksimo](https://github.com/amaksimo) made their first contribution in [#7](https://github.com/awslabs/aurora-dsql-orms/issues/7) 
+
+Full Changelog: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.3.0...python/django/v0.4.0
+
+[Changes][python/django/v0.4.0]
+
+
 <a id="python/django/v0.3.0"></a>
 # [Aurora DSQL adapter for Django v0.3.0 (python/django/v0.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.3.0) - 2026-01-29
 
@@ -107,6 +154,7 @@ Initial version of the [Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/) Dj
 [Changes][python/django/v0.1.0]
 
 
+[python/django/v0.4.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.3.0...python/django/v0.4.0
 [python/django/v0.3.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.2.1...python/django/v0.3.0
 [python/django/v0.2.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.2.0...python/django/v0.2.1
 [python/django/v0.2.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.1.0...python/django/v0.2.0
