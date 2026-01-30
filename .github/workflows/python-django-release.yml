@@ -96,4 +96,5 @@ jobs:
           file: python/django/CHANGELOG.md
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pull_request: true
+          version: ${{ github.ref_name }}
           args: -e ^python/django/
