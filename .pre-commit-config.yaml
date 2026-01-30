@@ -80,7 +80,7 @@ repos:
     hooks:
       - id: prettier-prisma
         name: prettier (prisma)
-        entry: npx --prefix node/prisma prettier --write
+        entry: npx --prefix node/prisma --no prettier --write
         language: system
         files: ^node/prisma/
         types_or: [ts, javascript, json]
