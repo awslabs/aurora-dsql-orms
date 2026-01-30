@@ -1,3 +1,20 @@
+<a id="python/sqlalchemy/v1.1.3"></a>
+# [Aurora DSQL dialect for SQLAlchemy v1.1.3 (python/sqlalchemy/v1.1.3)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.1.3) - 2026-01-30
+
+This release fixes the metadata published to PyPI to ensure the full documentation is visible for readers.
+
+## What's Changed
+* Configure explicit release name for changelog update task by [@danielfrankcom](https://github.com/danielfrankcom) in [#64](https://github.com/awslabs/aurora-dsql-orms/pull/64)
+* Fix Python publishing metadata by [@danielfrankcom](https://github.com/danielfrankcom) in [#72](https://github.com/awslabs/aurora-dsql-orms/pull/72)
+
+## New Contributors
+* [@github-actions](https://github.com/github-actions)[bot] made their first contribution in [#63](https://github.com/awslabs/aurora-dsql-orms/pull/63)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.2...python/sqlalchemy/v1.1.3
+
+[Changes][python/sqlalchemy/v1.1.3]
+
+
 <a id="python/sqlalchemy/v1.1.2"></a>
 # [Aurora DSQL dialect for SQLAlchemy v1.1.2 (python/sqlalchemy/v1.1.2)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.1.2) - 2026-01-29
 
@@ -111,6 +128,7 @@ Initial release of Aurora DSQL Dialect for SQLAlchemy
 [Changes][python/sqlalchemy/v1.0.0]
 
 
+[python/sqlalchemy/v1.1.3]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.2...python/sqlalchemy/v1.1.3
 [python/sqlalchemy/v1.1.2]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.1...python/sqlalchemy/v1.1.2
 [python/sqlalchemy/v1.1.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.0...python/sqlalchemy/v1.1.1
 [python/sqlalchemy/v1.1.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.0.2...python/sqlalchemy/v1.1.0
