@@ -1,3 +1,18 @@
+<a id="python/django/v0.4.1"></a>
+# [Aurora DSQL adapter for Django v0.4.1 (python/django/v0.4.1)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.4.1) - 2026-01-30
+
+This release fixes the metadata published to PyPI to ensure the full documentation is visible for readers.
+
+## What's Changed
+* Update changelog for python/django/v0.4.0 by [@github-actions](https://github.com/github-actions)[bot] in [#71](https://github.com/awslabs/aurora-dsql-orms/pull/71)
+* Fix Python publishing metadata by [@danielfrankcom](https://github.com/danielfrankcom) in [#72](https://github.com/awslabs/aurora-dsql-orms/pull/72)
+
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.4.0...python/django/v0.4.1
+
+[Changes][python/django/v0.4.1]
+
+
 <a id="python/django/v0.4.0"></a>
 # [Aurora DSQL adapter for Django v0.4.0 (python/django/v0.4.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.4.0) - 2026-01-30
 
@@ -154,6 +169,7 @@ Initial version of the [Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/) Dj
 [Changes][python/django/v0.1.0]
 
 
+[python/django/v0.4.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.4.0...python/django/v0.4.1
 [python/django/v0.4.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.3.0...python/django/v0.4.0
 [python/django/v0.3.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.2.1...python/django/v0.3.0
 [python/django/v0.2.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.2.0...python/django/v0.2.1
