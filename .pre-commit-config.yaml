@@ -74,6 +74,10 @@ repos:
     hooks:
       - id: prettier
         types: [yaml]
+      - id: prettier
+        name: prettier (prisma)
+        files: ^node/prisma/
+        types_or: [ts, javascript, json]
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint

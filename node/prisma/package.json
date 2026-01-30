@@ -1,0 +1,55 @@
+{
+  "name": "@aws/aurora-dsql-prisma-tools",
+  "version": "0.1.0",
+  "description": "CLI tools for using Prisma with Amazon Aurora DSQL",
+  "main": "dist/cli/index.js",
+  "bin": {
+    "aurora-dsql-prisma": "dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true,
+    "access": "public"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "tsc",
+    "pretest": "npm run build",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "validate": "tsx src/cli/index.ts validate",
+    "dsql-transform": "tsx src/cli/index.ts transform",
+    "dsql-migrate": "tsx src/cli/index.ts migrate"
+  },
+  "keywords": [
+    "prisma",
+    "aurora",
+    "dsql",
+    "aws",
+    "database",
+    "postgresql"
+  ],
+  "author": "Amazon Web Services",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aurora-dsql-orms.git",
+    "directory": "node/prisma"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@aws-sdk/dsql-signer": "^3.971.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.9",
+    "prettier": "4.0.0-alpha.8",
+    "prisma": "^7.3.0",
+    "ts-jest": "^29.4.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

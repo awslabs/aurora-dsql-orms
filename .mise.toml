@@ -2,3 +2,4 @@
 uv = "latest"
 shellcheck = "latest"
 java = "corretto-17"
+node = "22"
