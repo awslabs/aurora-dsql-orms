@@ -1,9 +1,8 @@
 [project]
 name = "aurora-dsql-tortoise-orm"
-dynamic = ["version"]
-readme = "README.md"
+dynamic = ["version", "readme"]
 description = "Aurora DSQL adapter for Tortoise ORM"
-license-files = ["LICENSE"]
+license = "Apache-2.0"
 authors = [{name = "Amazon Web Services"}]
 
 requires-python = ">=3.10"
@@ -47,7 +46,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling", "hatch-vcs", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
@@ -57,6 +56,16 @@ raw-options = { root = "../..", git_describe_command = ["git", "describe", "--ta
 
 [tool.hatch.build.hooks.vcs]
 version-file = "aurora_dsql_tortoise/_version.py"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\[([^\]]+)\]\((?!https?://)([^)]+)\)'
+replacement = '[\1](https://github.com/awslabs/aurora-dsql-orms/blob/python/tortoise-orm/v$HFPR_VERSION/python/tortoise-orm/\2)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["aurora_dsql_tortoise"]

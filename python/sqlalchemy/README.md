@@ -13,8 +13,8 @@ Aurora DSQL's distributed architecture and high availability.
 
 ## Sample Application
 
-There is an included sample application in [examples/pet-clinic-app](https://github.com/awslabs/aurora-dsql-orms/tree/main/python/sqlalchemy/examples/pet-clinic-app) that shows how to use Aurora DSQL
-with SQLAlchemy. To run the included example please refer to the [sample README](https://github.com/awslabs/aurora-dsql-orms/tree/main/python/sqlalchemy/examples/pet-clinic-app#readme).
+There is an included sample application in [examples/pet-clinic-app](examples/pet-clinic-app) that shows how to use Aurora DSQL
+with SQLAlchemy. To run the included example please refer to the [sample README](examples/pet-clinic-app#readme).
 
 ## Prerequisites
 
@@ -146,11 +146,11 @@ Column(
 
 ## Developer instructions
 
-Instructions on how to build and test the dialect are available in the [Developer Instructions](https://github.com/awslabs/aurora-dsql-orms/tree/main/python/sqlalchemy/aurora_dsql_sqlalchemy#readme).
+Instructions on how to build and test the dialect are available in the [Developer Instructions](aurora_dsql_sqlalchemy/README.md).
 
 ## Security
 
-See [CONTRIBUTING](https://github.com/awslabs/aurora-dsql-orms/blob/main/CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](../../CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 

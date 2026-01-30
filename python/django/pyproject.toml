@@ -1,12 +1,12 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling", "hatch-vcs", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
 name = "aurora_dsql_django"
 dynamic = ["version", "readme"]
 description = "Aurora DSQL adapter for Django"
-license-files = ["LICENSE"]
+license = "Apache-2.0"
 authors = [{name = "Amazon Web Services"}]
 requires-python = ">=3.10"
 dependencies = [
@@ -61,6 +61,16 @@ raw-options = { root = "../..", git_describe_command = ["git", "describe", "--ta
 
 [tool.hatch.build.hooks.vcs]
 version-file = "aurora_dsql_django/_version.py"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\[([^\]]+)\]\((?!https?://)([^)]+)\)'
+replacement = '[\1](https://github.com/awslabs/aurora-dsql-orms/blob/python/django/v$HFPR_VERSION/python/django/\2)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["aurora_dsql_django"]

@@ -1,14 +1,13 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling", "hatch-vcs", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
 name = "aurora-dsql-sqlalchemy"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Amazon Aurora DSQL dialect for SQLAlchemy"
 authors = [{name = "Amazon Web Services"}]
-license = {text = "Apache License 2.0"}
-readme = "README.md"
+license = "Apache-2.0"
 requires-python = ">=3.10"
 dependencies = [
     "sqlalchemy>=2.0.0",
@@ -62,6 +61,16 @@ raw-options = { root = "../..", git_describe_command = ["git", "describe", "--ta
 
 [tool.hatch.build.hooks.vcs]
 version-file = "aurora_dsql_sqlalchemy/_version.py"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\[([^\]]+)\]\((?!https?://)([^)]+)\)'
+replacement = '[\1](https://github.com/awslabs/aurora-dsql-orms/blob/python/sqlalchemy/v$HFPR_VERSION/python/sqlalchemy/\2)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["aurora_dsql_sqlalchemy"]
