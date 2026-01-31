@@ -6,19 +6,25 @@ This monorepo contains ORM adapters for [Amazon Aurora DSQL](https://aws.amazon.
 
 ## Available Adapters
 
+### Node.js
+
+| Package | Description | npm | License(s) |
+|---------|-------------|-----|------------|
+| [@aws/aurora-dsql-prisma-tools](./node/prisma/) | CLI tools for using Prisma with Aurora DSQL | [![npm](https://img.shields.io/npm/v/@aws/aurora-dsql-prisma-tools)](https://www.npmjs.com/package/@aws/aurora-dsql-prisma-tools) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
+
 ### Python
 
-| Package | Description | PyPI |
-|---------|-------------|------|
-| [aurora-dsql-django](./python/django/) | Django database backend for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-django)](https://pypi.org/project/aurora-dsql-django/) |
-| [aurora-dsql-sqlalchemy](./python/sqlalchemy/) | SQLAlchemy dialect for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-sqlalchemy)](https://pypi.org/project/aurora-dsql-sqlalchemy/) |
-| [aurora-dsql-tortoise-orm](./python/tortoise-orm/) | Tortoise ORM adapter for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-tortoise-orm)](https://pypi.org/project/aurora-dsql-tortoise-orm/) |
+| Package | Description | PyPI | License(s) |
+|---------|-------------|------|------------|
+| [aurora-dsql-django](./python/django/) | Django database backend for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-django)](https://pypi.org/project/aurora-dsql-django/) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
+| [aurora-dsql-sqlalchemy](./python/sqlalchemy/) | SQLAlchemy dialect for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-sqlalchemy)](https://pypi.org/project/aurora-dsql-sqlalchemy/) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
+| [aurora-dsql-tortoise-orm](./python/tortoise-orm/) | Tortoise ORM adapter for Aurora DSQL | [![PyPI](https://img.shields.io/pypi/v/aurora-dsql-tortoise-orm)](https://pypi.org/project/aurora-dsql-tortoise-orm/) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
 
 ### Java
 
-| Package | Description | Maven Central |
-|---------|-------------|---------------|
-| [aurora-dsql-hibernate-dialect](./java/hibernate/) | Hibernate dialect for Aurora DSQL | [![Maven Central](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-hibernate-dialect)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-hibernate-dialect) |
+| Package | Description | Maven Central | License(s) |
+|---------|-------------|---------------|------------|
+| [aurora-dsql-hibernate-dialect](./java/hibernate/) | Hibernate dialect for Aurora DSQL | [![Maven Central](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-hibernate-dialect)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-hibernate-dialect) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![License](https://img.shields.io/badge/License-LGPL_2.1-blue.svg) |
 
 ## Installation
 
