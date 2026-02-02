@@ -28,14 +28,31 @@ updates:
     directory: "/java/hibernate/dialect"
     schedule:
       interval: "weekly"
+    ignore:
+      # Hibernate 7 has breaking API changes incompatible with this dialect
+      - dependency-name: "org.hibernate:hibernate-core"
+        versions: [">=7"]
+      - dependency-name: "org.hibernate.orm:hibernate-ant"
+        versions: [">=7"]
   - package-ecosystem: "gradle"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
       interval: "weekly"
+    ignore:
+      # Hibernate 7 has breaking API changes incompatible with this dialect
+      - dependency-name: "org.hibernate:hibernate-core"
+        versions: [">=7"]
   - package-ecosystem: "maven"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
       interval: "weekly"
+    ignore:
+      # Hibernate 7 has breaking API changes incompatible with this dialect
+      - dependency-name: "org.hibernate:hibernate-core"
+        versions: [">=7"]
+      # Checkstyle 13+ requires Java 21, but this project targets Java 17
+      - dependency-name: "com.puppycrawl.tools:checkstyle"
+        versions: [">=13"]
   - package-ecosystem: "npm"
     directory: "/node/prisma"
     schedule:
