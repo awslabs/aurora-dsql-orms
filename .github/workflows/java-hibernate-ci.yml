@@ -3,19 +3,10 @@ name: Hibernate CI
 permissions: {}
 
 on:
+  workflow_call: {}
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - "java/hibernate/**"
-      - ".github/workflows/java-hibernate-ci.yml"
-      - ".github/workflows/dsql-cluster-*.yml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "java/hibernate/**"
-      - ".github/workflows/java-hibernate-ci.yml"
-      - ".github/workflows/dsql-cluster-*.yml"
-  workflow_dispatch:
 
 jobs:
   build:
