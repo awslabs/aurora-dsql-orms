@@ -43,7 +43,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@aws-sdk/dsql-signer": "^3.971.0",
+    "@aws-sdk/dsql-signer": "^3.980.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.0.9",
     "prettier": "4.0.0-alpha.8",
