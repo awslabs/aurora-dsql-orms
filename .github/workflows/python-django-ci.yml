@@ -3,19 +3,10 @@ name: Django CI
 permissions: {}
 
 on:
+  workflow_call: {}
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - "python/django/**"
-      - ".github/workflows/python-django-ci.yml"
-      - ".github/workflows/dsql-cluster-*.yml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "python/django/**"
-      - ".github/workflows/python-django-ci.yml"
-      - ".github/workflows/dsql-cluster-*.yml"
-  workflow_dispatch:
 
 defaults:
   run:
