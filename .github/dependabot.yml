@@ -3,31 +3,31 @@ updates:
   - package-ecosystem: "uv"
     directory: "/python/sqlalchemy"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "pip"
     directory: "/python/sqlalchemy/examples/pet-clinic-app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "uv"
     directory: "/python/tortoise-orm"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "uv"
     directory: "/python/django"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "pip"
     directory: "/python/django/examples/pet-clinic-app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "gradle"
     directory: "/java/flyway"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "gradle"
     directory: "/java/hibernate/dialect"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     ignore:
       # Hibernate 7 has breaking API changes incompatible with this dialect
       - dependency-name: "org.hibernate:hibernate-core"
@@ -37,7 +37,7 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     ignore:
       # Hibernate 7 has breaking API changes incompatible with this dialect
       - dependency-name: "org.hibernate:hibernate-core"
@@ -45,7 +45,7 @@ updates:
   - package-ecosystem: "maven"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     ignore:
       # Hibernate 7 has breaking API changes incompatible with this dialect
       - dependency-name: "org.hibernate:hibernate-core"
@@ -56,12 +56,12 @@ updates:
   - package-ecosystem: "npm"
     directory: "/node/prisma"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "npm"
     directory: "/node/prisma/examples/veterinary-app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
