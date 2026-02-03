@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.hibernate:hibernate-core:6.2.38.Final")
+    implementation("org.hibernate:hibernate-core:6.6.42.Final")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.2")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.0.2")
