@@ -19,7 +19,7 @@ jobs:
       python-sqlalchemy: ${{ steps.detect.outputs.python-sqlalchemy }}
       python-tortoise: ${{ steps.detect.outputs.python-tortoise }}
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         id: detect
         with:
           script: |
@@ -126,7 +126,7 @@ jobs:
       - node-prisma
     if: always()
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           script: |
             const needs = ${{ toJSON(needs) }};
