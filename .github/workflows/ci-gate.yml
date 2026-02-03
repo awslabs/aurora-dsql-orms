@@ -35,7 +35,6 @@ jobs:
               '.github/workflows/dsql-cluster-create.yml',
               '.github/workflows/dsql-cluster-delete.yml',
               '.pre-commit-config.yaml',
-              'pyproject.toml'
             ];
 
             const pr = context.payload.pull_request;
