@@ -53,20 +53,8 @@ jobs:
         run: npm publish
 
   update-changelog:
-    name: Update changelog
     needs: publish-to-npm
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # required by rhysd/changelog-from-release/action
-      pull-requests: write # required by rhysd/changelog-from-release/action
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: main
-      - uses: rhysd/changelog-from-release/action@v3
-        with:
-          file: node/prisma/CHANGELOG.md
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          pull_request: true
-          version: ${{ github.ref_name }}
-          args: -e ^node/prisma/
+    uses: ./.github/workflows/update-changelog.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
