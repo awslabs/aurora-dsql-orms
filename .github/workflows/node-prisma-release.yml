@@ -23,10 +23,15 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
-  build:
-    name: Build distribution
+  publish-to-npm:
+    name: Publish to npm
     needs: wait-for-ci
     runs-on: ubuntu-latest
+    environment:
+      name: npm
+    permissions:
+      id-token: write # required for npm trusted publishing (OIDC)
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -36,6 +41,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: npm ci
@@ -43,40 +49,10 @@ jobs:
       - name: Build package
         run: npm run build
 
-      - uses: actions/upload-artifact@v6
-        with:
-          name: node-prisma-dist
-          path: |
-            node/prisma/dist/
-            node/prisma/package.json
-            node/prisma/README.md
-            node/prisma/CHANGELOG.md
-
-  publish-to-npm:
-    name: Publish to npm
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: npm
-    permissions:
-      # Required for npm trusted publishing (OIDC)
-      id-token: write
-
-    steps:
-      - uses: actions/download-artifact@v7
-        with:
-          name: node-prisma-dist
-          path: package/
-
-      - name: Set up Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
-
       - name: Publish to npm
-        working-directory: package/node/prisma
-        run: npm publish
+        run: npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   update-changelog:
     name: Update changelog
