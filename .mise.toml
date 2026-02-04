@@ -2,4 +2,5 @@
 uv = "latest"
 shellcheck = "latest"
 java = "corretto-17"
+maven = "latest"
 node = "22"
