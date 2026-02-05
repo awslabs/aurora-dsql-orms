@@ -22,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Repository class for <code>Owner</code> domain objects All method names are compliant with Spring
@@ -42,7 +41,6 @@ public interface OwnerRepository extends Repository<Owner, Integer> {
    * @return a Collection of {@link PetType}s.
    */
   @Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
-  @Transactional(readOnly = true)
   List<PetType> findPetTypes();
 
   /**
@@ -55,7 +53,6 @@ public interface OwnerRepository extends Repository<Owner, Integer> {
   @Query(
       "SELECT DISTINCT owner FROM Owner owner left join  owner.pets WHERE owner.lastName LIKE"
           + " :lastName% ")
-  @Transactional(readOnly = true)
   Page<Owner> findByLastName(@Param("lastName") String lastName, Pageable pageable);
 
   /**
@@ -65,7 +62,6 @@ public interface OwnerRepository extends Repository<Owner, Integer> {
    * @return the {@link Owner} if found
    */
   @Query("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id")
-  @Transactional(readOnly = true)
   Owner findById(@Param("id") UUID id);
 
   /**
@@ -84,6 +80,5 @@ public interface OwnerRepository extends Repository<Owner, Integer> {
 
   /** Returns all the owners from data store */
   @Query("SELECT owner FROM Owner owner")
-  @Transactional(readOnly = true)
   Page<Owner> findAll(Pageable pageable);
 }

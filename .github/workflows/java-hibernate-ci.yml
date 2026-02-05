@@ -84,15 +84,17 @@ jobs:
           mvn validate
           mvn initialize
           mvn clean compile
-          mvn test
 
-      - name: Run DSQL integration test
+      - name: Test with H2
+        working-directory: java/hibernate/examples/pet-clinic-app
+        run: mvn test -Dspring.profiles.active=h2
+
+      - name: Test with DSQL
         working-directory: java/hibernate/examples/pet-clinic-app
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
           CLUSTER_USER: admin
-          RUN_INTEGRATION: "TRUE"
-        run: mvn test -Dtest=DsqlIntegrationTest
+        run: mvn test -Dspring.profiles.active=dsql
 
   delete-cluster:
     if: always() && needs.create-cluster.result == 'success'

@@ -175,31 +175,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.4</version>
-        <configuration>
-          <!-- Configure tests to use test profile -->
-          <systemPropertyVariables>
-            <spring.profiles.active>test</spring.profiles.active>
-          </systemPropertyVariables>
-          <!-- Include specific test classes -->
-          <includes>
-            <include>**/ValidatorTests.java</include>
-            <include>**/VetControllerTests.java</include>
-            <include>**/VetTests.java</include>
-            <include>**/PetTypeFormatterTests.java</include>
-            <include>**/VetControllerTests.java</include>
-            <include>**/VisitControllerTests.java</include>
-            <include>**/PetControllerTests.java</include>
-            <include>**/PetTypeFormatterTests.java</include>
-            <include>**/CrashControllerIntegrationTests.java</include>
-            <include>**/CrashControllerTests.java</include>
-            <include>**/VetTests.java</include>
-          </includes>
-          <excludes>
-             <!-- Disabled this tests as it relies on sql statement not supported by H2. -->
-            <exclude>**/ClinicServiceTests.java</exclude>
-            <include>**/PostgresIntegrationTests.java</include>
-          </excludes>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
