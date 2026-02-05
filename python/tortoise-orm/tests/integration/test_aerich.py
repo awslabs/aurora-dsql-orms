@@ -19,6 +19,7 @@ from tests.conftest import BACKENDS
 from .conftest import CLUSTER_ENDPOINT, CLUSTER_USER
 
 AERICH_MODELS = "tests.integration.aerich_models.basic"
+BIGINT_PK_MODELS = "tests.integration.aerich_models.bigint_pk"
 ADD_COLUMN_V1 = "tests.integration.aerich_models.add_column_v1"
 ADD_COLUMN_V2 = "tests.integration.aerich_models.add_column_v2"
 ADD_MODEL_V1 = "tests.integration.aerich_models.add_model_v1"
@@ -429,3 +430,23 @@ async def test_aerich_init_with_multi_statement_pre_sql(migration_dir, backend):
     conn = Tortoise.get_connection("default")
     assert await table_exists(conn, "pre_sql_table_a"), "pre_sql_table_a should be created"
     assert await table_exists(conn, "pre_sql_table_b"), "pre_sql_table_b should be created"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("backend", BACKENDS)
+async def test_aerich_bigint_pk_migration(migration_dir, backend):
+    """Verifies that our custom field's sequence_cache_size parameter is correctly applied
+    when Aerich generates the schema."""
+    command = await make_command([BIGINT_PK_MODELS], migration_dir, backend)
+    await command.init_db(safe=True)
+
+    conn = Tortoise.get_connection("default")
+    assert await table_exists(conn, "custom_cache_aerich_model"), "Table should be created"
+
+    # Verify the identity column was created with the correct cache size.
+    result = await conn.execute_query(
+        "SELECT cache_size FROM pg_sequences "
+        "WHERE sequencename = 'custom_cache_aerich_model_id_seq'"
+    )
+    assert len(result[1]) == 1, "Sequence should exist"
+    assert result[1][0]["cache_size"] == 1, "Cache size should be 1"
