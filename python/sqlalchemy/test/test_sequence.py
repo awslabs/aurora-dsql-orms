@@ -30,7 +30,10 @@ class SequenceTest(fixtures.TestBase):
             connection.rollback()
 
     def test_int_seq(self, connection, metadata):
-        """Test Integer sequence - dialect converts Integer to BIGINT for DSQL compatibility"""
+        """
+        Test Integer sequence - dialect converts Integer to BIGINT
+        for DSQL compatibility
+        """
         seq = Sequence("int_seq", data_type=Integer(), metadata=metadata)
 
         t = Table(
@@ -51,7 +54,7 @@ class SequenceTest(fixtures.TestBase):
 
     def test_int_seq_order(self, connection, metadata):
         """Test that sequence generates sequential IDs for multiple inserts"""
-        seq = Sequence('test_order_seq', metadata=metadata)
+        seq = Sequence("test_order_seq", metadata=metadata)
 
         # Create table (sequence will be created automatically)
         t = Table(
@@ -101,9 +104,13 @@ class SequenceTest(fixtures.TestBase):
         sequence_name = "bigint_seq"
 
         if optional:
-            request.addfinalizer(lambda: self._cleanup_sequence(connection, sequence_name))
+            request.addfinalizer(
+                lambda: self._cleanup_sequence(connection, sequence_name)
+            )
 
-        seq = Sequence(sequence_name, start=3000000000, optional=optional, metadata=metadata)
+        seq = Sequence(
+            sequence_name, start=3000000000, optional=optional, metadata=metadata
+        )
 
         if optional:
             connection.execute(CreateSequence(seq))
@@ -125,12 +132,13 @@ class SequenceTest(fixtures.TestBase):
         result = connection.scalar(select(t.c.id))
         eq_(result, 3000000000)
 
-
     def test_bigint_seq_direct(self, connection, metadata):
         t = Table(
             "bigint_seq_direct_t",
             metadata,
-            Column("id", BIGINT, default=Sequence("bigint_direct_seq", start=3000000000)),
+            Column(
+                "id", BIGINT, default=Sequence("bigint_direct_seq", start=3000000000)
+            ),
             Column("txt", String(50)),
         )
         t.create(connection, checkfirst=False)
@@ -147,7 +155,11 @@ class SequenceTest(fixtures.TestBase):
         t = Table(
             "bigint_seq_direct_t",
             metadata,
-            Column("id", BIGINT, default=Sequence("bigint_direct_seq", start=1, cache=100000)),
+            Column(
+                "id",
+                BIGINT,
+                default=Sequence("bigint_direct_seq", start=1, cache=100000),
+            ),
             Column("txt", String(50)),
         )
         t.create(connection, checkfirst=False)
@@ -159,7 +171,6 @@ class SequenceTest(fixtures.TestBase):
 
         result = connection.scalar(select(t.c.id))
         eq_(result, 1)
-
 
     def test_unsupported_decimal_seq(self, connection, metadata):
         """Test that DECIMAL sequence type raises DataError"""

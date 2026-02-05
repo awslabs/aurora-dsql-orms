@@ -18,7 +18,12 @@ class SerialPrimaryKeyTest(fixtures.TestBase):
         t = Table(
             "serial_test",
             metadata,
-            Column("id", BigInteger, Identity(always=True, cache=cache_size), primary_key=True),
+            Column(
+                "id",
+                BigInteger,
+                Identity(always=True, cache=cache_size),
+                primary_key=True,
+            ),
             Column("name", String(50)),
         )
 
@@ -91,9 +96,17 @@ class SerialPrimaryKeyTest(fixtures.TestBase):
         t = Table(
             "invalid_cache_test",
             metadata,
-            Column("id", BigInteger, Identity(always=True, cache=invalid_cache), primary_key=True),
+            Column(
+                "id",
+                BigInteger,
+                Identity(always=True, cache=invalid_cache),
+                primary_key=True,
+            ),
             Column("name", String(50)),
         )
 
-        with pytest.raises(DataError, match="CACHE.*must be greater than or equal to.*65536.*or equal to 1"):
+        with pytest.raises(
+            DataError,
+            match="CACHE.*must be greater than or equal to.*65536.*or equal to 1",
+        ):
             t.create(connection)
