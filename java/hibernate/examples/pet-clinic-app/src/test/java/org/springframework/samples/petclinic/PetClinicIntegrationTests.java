@@ -25,9 +25,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.samples.petclinic.owner.OwnerRepository;
 import org.springframework.samples.petclinic.vet.VetRepository;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,6 +39,8 @@ public class PetClinicIntegrationTests {
   @LocalServerPort int port;
 
   @Autowired private VetRepository vets;
+
+  @Autowired private OwnerRepository owners;
 
   @Autowired private RestTemplateBuilder builder;
 
@@ -48,9 +52,10 @@ public class PetClinicIntegrationTests {
 
   @Test
   void testOwnerDetails() {
+    var owner = owners.findByLastName("Franklin", Pageable.unpaged()).iterator().next();
     RestTemplate template = builder.rootUri("http://localhost:" + port).build();
     ResponseEntity<String> result =
-        template.exchange(RequestEntity.get("/owners/1").build(), String.class);
+        template.exchange(RequestEntity.get("/owners/" + owner.getId()).build(), String.class);
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
   }
 

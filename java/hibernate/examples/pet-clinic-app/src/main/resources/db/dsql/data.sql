@@ -12,7 +12,7 @@ INSERT INTO vets (first_name, last_name) SELECT 'Henry', 'Stevens' WHERE NOT EXI
 INSERT INTO vets (first_name, last_name) SELECT 'Sharon', 'Jenkins' WHERE NOT EXISTS (SELECT * FROM vets WHERE first_name='Sharon' AND last_name='Jenkins');
 
 -- Link vets with specialties (using subqueries to get the UUIDs)
-INSERT INTO vet_specialties 
+INSERT INTO vet_specialties (vet_id, specialty_id)
 SELECT v.id, s.id FROM vets v, specialties s 
 WHERE v.first_name='Helen' AND v.last_name='Leary' AND s.name='radiology'
 AND NOT EXISTS (
@@ -22,7 +22,7 @@ AND NOT EXISTS (
     WHERE v2.first_name='Helen' AND v2.last_name='Leary' AND s2.name='radiology'
 );
 
-INSERT INTO vet_specialties 
+INSERT INTO vet_specialties (vet_id, specialty_id)
 SELECT v.id, s.id FROM vets v, specialties s 
 WHERE v.first_name='Linda' AND v.last_name='Douglas' AND s.name='surgery'
 AND NOT EXISTS (
@@ -32,7 +32,7 @@ AND NOT EXISTS (
     WHERE v2.first_name='Linda' AND v2.last_name='Douglas' AND s2.name='surgery'
 );
 
-INSERT INTO vet_specialties 
+INSERT INTO vet_specialties (vet_id, specialty_id)
 SELECT v.id, s.id FROM vets v, specialties s 
 WHERE v.first_name='Linda' AND v.last_name='Douglas' AND s.name='dentistry'
 AND NOT EXISTS (
@@ -42,7 +42,7 @@ AND NOT EXISTS (
     WHERE v2.first_name='Linda' AND v2.last_name='Douglas' AND s2.name='dentistry'
 );
 
-INSERT INTO vet_specialties 
+INSERT INTO vet_specialties (vet_id, specialty_id)
 SELECT v.id, s.id FROM vets v, specialties s 
 WHERE v.first_name='Rafael' AND v.last_name='Ortega' AND s.name='surgery'
 AND NOT EXISTS (
@@ -52,7 +52,7 @@ AND NOT EXISTS (
     WHERE v2.first_name='Rafael' AND v2.last_name='Ortega' AND s2.name='surgery'
 );
 
-INSERT INTO vet_specialties 
+INSERT INTO vet_specialties (vet_id, specialty_id)
 SELECT v.id, s.id FROM vets v, specialties s 
 WHERE v.first_name='Henry' AND v.last_name='Stevens' AND s.name='radiology'
 AND NOT EXISTS (
@@ -112,130 +112,143 @@ SELECT 'Carlos', 'Estaban', '2335 Independence La.', 'Waunakee', '6085555487'
 WHERE NOT EXISTS (SELECT * FROM owners WHERE first_name='Carlos' AND last_name='Estaban');
 
 -- Insert pets (using subqueries to get the UUIDs)
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Leo', '2000-09-07', 
        (SELECT id FROM types WHERE name = 'cat'),
-       (SELECT id FROM owners WHERE first_name = 'George' AND last_name = 'Franklin')
+       (SELECT id FROM owners WHERE first_name = 'George' AND last_name = 'Franklin'),
+       4.5
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Leo' AND o.first_name = 'George' AND o.last_name = 'Franklin'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Basil', '2002-08-06', 
        (SELECT id FROM types WHERE name = 'hamster'),
-       (SELECT id FROM owners WHERE first_name = 'Betty' AND last_name = 'Davis')
+       (SELECT id FROM owners WHERE first_name = 'Betty' AND last_name = 'Davis'),
+       0.5
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Basil' AND o.first_name = 'Betty' AND o.last_name = 'Davis'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Rosy', '2001-04-17', 
        (SELECT id FROM types WHERE name = 'dog'),
-       (SELECT id FROM owners WHERE first_name = 'Eduardo' AND last_name = 'Rodriquez')
+       (SELECT id FROM owners WHERE first_name = 'Eduardo' AND last_name = 'Rodriquez'),
+       8.2
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Rosy' AND o.first_name = 'Eduardo' AND o.last_name = 'Rodriquez'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Jewel', '2000-03-07', 
        (SELECT id FROM types WHERE name = 'dog'),
-       (SELECT id FROM owners WHERE first_name = 'Eduardo' AND last_name = 'Rodriquez')
+       (SELECT id FROM owners WHERE first_name = 'Eduardo' AND last_name = 'Rodriquez'),
+       6.1
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Jewel' AND o.first_name = 'Eduardo' AND o.last_name = 'Rodriquez'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Iggy', '2000-11-30', 
        (SELECT id FROM types WHERE name = 'lizard'),
-       (SELECT id FROM owners WHERE first_name = 'Harold' AND last_name = 'Davis')
+       (SELECT id FROM owners WHERE first_name = 'Harold' AND last_name = 'Davis'),
+       1.2
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Iggy' AND o.first_name = 'Harold' AND o.last_name = 'Davis'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'George', '2000-01-20', 
        (SELECT id FROM types WHERE name = 'snake'),
-       (SELECT id FROM owners WHERE first_name = 'Peter' AND last_name = 'McTavish')
+       (SELECT id FROM owners WHERE first_name = 'Peter' AND last_name = 'McTavish'),
+       0.8
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'George' AND o.first_name = 'Peter' AND o.last_name = 'McTavish'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Samantha', '1995-09-04', 
        (SELECT id FROM types WHERE name = 'cat'),
-       (SELECT id FROM owners WHERE first_name = 'Jean' AND last_name = 'Coleman')
+       (SELECT id FROM owners WHERE first_name = 'Jean' AND last_name = 'Coleman'),
+       3.8
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Samantha' AND o.first_name = 'Jean' AND o.last_name = 'Coleman'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Max', '1995-09-04', 
        (SELECT id FROM types WHERE name = 'cat'),
-       (SELECT id FROM owners WHERE first_name = 'Jean' AND last_name = 'Coleman')
+       (SELECT id FROM owners WHERE first_name = 'Jean' AND last_name = 'Coleman'),
+       5.2
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Max' AND o.first_name = 'Jean' AND o.last_name = 'Coleman'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Lucky', '1999-08-06', 
        (SELECT id FROM types WHERE name = 'bird'),
-       (SELECT id FROM owners WHERE first_name = 'Jeff' AND last_name = 'Black')
+       (SELECT id FROM owners WHERE first_name = 'Jeff' AND last_name = 'Black'),
+       2.3
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Lucky' AND o.first_name = 'Jeff' AND o.last_name = 'Black'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Mulligan', '1997-02-24', 
        (SELECT id FROM types WHERE name = 'dog'),
-       (SELECT id FROM owners WHERE first_name = 'Maria' AND last_name = 'Escobito')
+       (SELECT id FROM owners WHERE first_name = 'Maria' AND last_name = 'Escobito'),
+       12.5
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Mulligan' AND o.first_name = 'Maria' AND o.last_name = 'Escobito'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Freddy', '2000-03-09', 
        (SELECT id FROM types WHERE name = 'bird'),
-       (SELECT id FROM owners WHERE first_name = 'David' AND last_name = 'Schroeder')
+       (SELECT id FROM owners WHERE first_name = 'David' AND last_name = 'Schroeder'),
+       3.1
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Freddy' AND o.first_name = 'David' AND o.last_name = 'Schroeder'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Lucky', '2000-06-24', 
        (SELECT id FROM types WHERE name = 'dog'),
-       (SELECT id FROM owners WHERE first_name = 'Carlos' AND last_name = 'Estaban')
+       (SELECT id FROM owners WHERE first_name = 'Carlos' AND last_name = 'Estaban'),
+       9.7
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 
     WHERE p.name = 'Lucky' AND o.first_name = 'Carlos' AND o.last_name = 'Estaban'
 );
 
-INSERT INTO pets (name, birth_date, type_id, owner_id)
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight)
 SELECT 'Sly', '2002-06-08', 
        (SELECT id FROM types WHERE name = 'cat'),
-       (SELECT id FROM owners WHERE first_name = 'Carlos' AND last_name = 'Estaban')
+       (SELECT id FROM owners WHERE first_name = 'Carlos' AND last_name = 'Estaban'),
+       4.0
 WHERE NOT EXISTS (
     SELECT * FROM pets p 
     JOIN owners o ON p.owner_id = o.id 

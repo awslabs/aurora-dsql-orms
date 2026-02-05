@@ -1,5 +1,4 @@
--- Create UUID extension function for H2 to mimic PostgreSQL's gen_random_uuid()
--- CREATE ALIAS IF NOT EXISTS gen_random_uuid FOR "java.util.UUID.randomUUID";
+-- In H2 with MODE=PostgreSQL, gen_random_uuid() is a built-in function
 
 DROP TABLE vet_specialties IF EXISTS;
 DROP TABLE vets IF EXISTS;
@@ -51,7 +50,8 @@ CREATE TABLE pets (
   name       VARCHAR(30),
   birth_date DATE,
   type_id    UUID NOT NULL,
-  owner_id   UUID
+  owner_id   UUID,
+  weight     DOUBLE
 );
 ALTER TABLE pets ADD CONSTRAINT fk_pets_owners FOREIGN KEY (owner_id) REFERENCES owners (id);
 ALTER TABLE pets ADD CONSTRAINT fk_pets_types FOREIGN KEY (type_id) REFERENCES types (id);

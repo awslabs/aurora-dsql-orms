@@ -1,6 +1,5 @@
 package org.springframework.samples.petclinic.owner;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.UUID;
@@ -11,14 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @Transactional
 public class OwnerControllerIntegrationTest {
 
@@ -28,9 +25,6 @@ public class OwnerControllerIntegrationTest {
 
   @Test
   public void testOptimisticLockingFailureException() throws Exception {
-    assertTrue(true);
-    assertTrue(false);
-
     // Create and save an owner
     Owner owner = new Owner();
     owner.setFirstName("John");

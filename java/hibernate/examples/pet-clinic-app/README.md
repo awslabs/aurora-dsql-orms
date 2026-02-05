@@ -141,6 +141,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -148,16 +149,17 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.util.logging.Logger;
 
 @Configuration(proxyBeanMethods = false)
+@Profile("dsql")
 public class DsqlDataSourceConfig {
 
   final Logger logger = Logger.getLogger(this.toString());
 
-  @Value("${app.datasource.username:admin}")
+  @Value("${spring.datasource.username:admin}")
   private String username;
 
   @Bean
   @Primary
-  @ConfigurationProperties("app.datasource")
+  @ConfigurationProperties("spring.datasource")
   public DataSourceProperties dataSourceProperties() {
     return new DataSourceProperties();
   }

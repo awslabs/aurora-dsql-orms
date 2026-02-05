@@ -8,23 +8,26 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 @Configuration(proxyBeanMethods = false)
+@Profile("dsql")
 public class DsqlDataSourceConfig {
 
   final Logger logger = Logger.getLogger(this.toString());
 
-  @Value("${app.datasource.username:admin}")
+  @Value("${spring.datasource.username:admin}")
   private String username;
 
   @Bean
   @Primary
-  @ConfigurationProperties("app.datasource")
+  @ConfigurationProperties("spring.datasource")
   public DataSourceProperties dataSourceProperties() {
     return new DataSourceProperties();
   }
 
   @Bean
+  @Primary
   public HikariDataSource dataSource(DataSourceProperties properties) {
     final HikariDataSource hds =
         properties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
