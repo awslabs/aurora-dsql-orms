@@ -227,14 +227,14 @@ class AuroraDSQLDialect(PGDialect):
         if context and context.isddl:
             cursor.connection.commit()
 
-    def do_execute_no_params(self, cursor, statement, context):
+    def do_execute_no_params(self, cursor, statement, context=None):
         """
         Execute statement and commit immediately if DDL
         since DSQL doesn't support multiple DDL in one transaction
         """
         cursor.execute(statement)
         # Commit after each DDL statement
-        if context.isddl:
+        if context and context.isddl:
             cursor.connection.commit()
 
     @lru_cache

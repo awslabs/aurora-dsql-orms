@@ -15,7 +15,8 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.schema import CreateSequence
-from sqlalchemy.testing import eq_, fixtures
+from sqlalchemy.testing import fixtures
+from sqlalchemy.testing.assertions import eq_
 
 
 class SequenceTest(fixtures.TestBase):
