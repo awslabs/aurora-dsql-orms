@@ -3,7 +3,17 @@
 
 
 import pytest
-from sqlalchemy import BIGINT, DECIMAL, Column, Integer, Sequence, String, Table, select, text
+from sqlalchemy import (
+    BIGINT,
+    DECIMAL,
+    Column,
+    Integer,
+    Sequence,
+    String,
+    Table,
+    select,
+    text,
+)
 from sqlalchemy.schema import CreateSequence
 from sqlalchemy.testing import eq_, fixtures
 
@@ -42,7 +52,7 @@ class SequenceTest(fixtures.TestBase):
     def test_int_seq_order(self, connection, metadata):
         """Test that sequence generates sequential IDs for multiple inserts"""
         seq = Sequence('test_order_seq', metadata=metadata)
-        
+
         # Create table (sequence will be created automatically)
         t = Table(
             "sequence_test",
@@ -94,7 +104,7 @@ class SequenceTest(fixtures.TestBase):
             request.addfinalizer(lambda: self._cleanup_sequence(connection, sequence_name))
 
         seq = Sequence(sequence_name, start=3000000000, optional=optional, metadata=metadata)
-        
+
         if optional:
             connection.execute(CreateSequence(seq))
             connection.commit()
@@ -150,11 +160,11 @@ class SequenceTest(fixtures.TestBase):
         result = connection.scalar(select(t.c.id))
         eq_(result, 1)
 
-   
+
     def test_unsupported_decimal_seq(self, connection, metadata):
         """Test that DECIMAL sequence type raises DataError"""
         from sqlalchemy.exc import DataError
-        
+
         seq = Sequence("decimal_seq", data_type=DECIMAL(10, 0), metadata=metadata)
 
         t = Table(
@@ -163,6 +173,6 @@ class SequenceTest(fixtures.TestBase):
             Column("id", DECIMAL(10, 0), seq),
             Column("txt", String(50)),
         )
-        
+
         with pytest.raises(DataError, match="sequence type must be bigint"):
             t.create(connection, checkfirst=False)

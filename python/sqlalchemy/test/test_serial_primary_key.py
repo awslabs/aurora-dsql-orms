@@ -1,11 +1,11 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import pytest
 from sqlalchemy import BigInteger, Column, Identity, Integer, String, Table, select
 from sqlalchemy.exc import DataError
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing.assertions import eq_
-import pytest
 
 
 class SerialPrimaryKeyTest(fixtures.TestBase):
