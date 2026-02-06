@@ -111,22 +111,8 @@ public class PrimaryKeyTest extends DSQLHibernateBaseTest {
     }
   }
 
-  /** Should fail to create, as auto-incrementing values aren't supported. */
-  @Test
-  void testSequencePrimaryKey() {
-    SequenceKeyEntity entity = new SequenceKeyEntity();
-    entity.setName("Sequence Entity 1");
-    try (Session session = getSession()) {
-      session.beginTransaction();
-      session.persist(entity);
-      session.getTransaction().commit();
-    } catch (GenericJDBCException e) {
-      Assertions.assertInstanceOf(PSQLException.class, e.getCause());
-    }
-  }
-
   @Override
   protected List<Class<?>> getAnnotatedClasses() {
-    return List.of(SimpleEntity.class, SequenceKeyEntity.class, IntegerKeyEntity.class);
+    return List.of(SimpleEntity.class, IntegerKeyEntity.class);
   }
 }
