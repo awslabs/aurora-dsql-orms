@@ -10,11 +10,26 @@ from django.db.backends.postgresql import operations
 
 
 class DatabaseOperations(operations.DatabaseOperations):
-    cast_data_types = {
-        "AutoField": "uuid",
-        "BigAutoField": "uuid",
-        "SmallAutoField": "smallint",
-    }
+    def __init__(self, connection):
+        super().__init__(connection)
+        # Check if using IDENTITY columns
+        use_identity = connection.settings_dict.get("USE_SEQUENCE_AUTOFIELDS", False)
+
+        if use_identity:
+            # Use bigint for IDENTITY columns
+            self.cast_data_types = {
+                "AutoField": "bigint",
+                "BigAutoField": "bigint",
+                "SmallAutoField": "smallint",
+            }
+        else:
+            # Use uuid (default)
+            self.cast_data_types = {
+                "AutoField": "uuid",
+                "BigAutoField": "uuid",
+                "SmallAutoField": "smallint",
+            }
+        self.cast_data_types["SequenceAutoField"] = "bigint"
 
     def deferrable_sql(self):
         # Deferrable constraints aren't supported:
