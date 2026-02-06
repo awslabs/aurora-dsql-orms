@@ -151,14 +151,14 @@ wheels = [
 
 [[package]]
 name = "aurora-dsql-python-connector"
-version = "0.2.2"
+version = "0.2.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/a5/25a04f01ef6024955e9a88c9675933016b35e60da1ff1bf188a800945fa2/aurora_dsql_python_connector-0.2.2.tar.gz", hash = "sha256:0e03d088841bc9cbb5463d1a38e68fd09143c5da3ac7f7975994be043ff8918c", size = 19432, upload-time = "2025-12-31T17:09:59.946Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fd/3a/4c6b8ae9c751be83f95ed7a8263d2fe968e3e597c0082c8d885a90a003b9/aurora_dsql_python_connector-0.2.6.tar.gz", hash = "sha256:cf6fdcc8f1af8b8a9265a447f66af01f58fee73d83723148d52c73df00a7f393", size = 90971, upload-time = "2026-02-05T20:33:13.946Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/b0/306b10e710ff3558af539414ccb1d6a7e5b2659f9d88b67f24b6abeed46b/aurora_dsql_python_connector-0.2.2-py3-none-any.whl", hash = "sha256:cc1003e2daa3031418f5a4ff13ce53c639769dddf719519388aa807ea022d9ba", size = 19832, upload-time = "2025-12-31T17:09:58.685Z" },
+    { url = "https://files.pythonhosted.org/packages/96/ee/faf42c6db9624f5d04ba16dc7775c82168aab35200f81162e9db9e29ab3c/aurora_dsql_python_connector-0.2.6-py3-none-any.whl", hash = "sha256:45844a7a572e0db8d2f60e1439b86aea9c3a058be18a77aeef1aaf744c005876", size = 17406, upload-time = "2026-02-05T20:33:12.435Z" },
 ]
 
 [[package]]
