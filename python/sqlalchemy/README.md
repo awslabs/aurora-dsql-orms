@@ -87,7 +87,9 @@ See [SSL Configuration](docs/SSL_CONFIGURATION.md) for detailed setup instructio
 
 ### Primary Key Generation
 
-SQLAlchemy applications connecting to Aurora DSQL should use UUID for the primary key column since auto-incrementing integer keys (sequences or serial) are not supported in DSQL. The following column definition can be used to define an UUID primary key column.
+#### UUID
+
+Server-generated UUIDs are the recommended choice for primary key columns. The following column definition can be used to define a UUID primary key column.
 
 ```python
 Column(
@@ -99,6 +101,46 @@ Column(
 ```
 
 `gen_random_uuid()` returns an UUID version 4 as the default value.
+
+#### Sequence and identity-based keys
+
+Sequence and identity-based keys are also supported in DSQL and can be used for integer primary keys.
+The following column definitions can be used to define sequence and identity-based keys column.
+
+```python
+Column(
+    "id",
+    BIGINT, 
+    primary_key=True,
+    default=Sequence("bigint_seq")
+)
+
+Column(
+    "id", 
+    BigInteger, 
+    primary_key=True,
+    Identity(always=True)
+)
+
+Column(
+    "id", 
+    BigInteger, 
+    primary_key=True, 
+    autoincrement=True
+)
+```
+
+The dialect uses a default CACHE parameter of 65536 in sequence and identity definitions.
+A different value can be passed directly in column definitions.
+
+```python
+
+Sequence("bigint_seq", cache=<cache_size>)
+
+Identity(always=True, cache=<cache_size>)
+
+```
+
 
 ## Dialect Features and Limitations
 
