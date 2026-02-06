@@ -35,7 +35,12 @@ class TestPrepareConnectionParams(unittest.TestCase):
         self.assertEqual(result["sslrootcert"], "system")
 
     def test_preserves_custom_sslrootcert(self):
-        params = {"host": "test-host", "user": "admin", "sslmode": "verify-full", "sslrootcert": "/path/to/cert.pem"}
+        params = {
+            "host": "test-host",
+            "user": "admin",
+            "sslmode": "verify-full",
+            "sslrootcert": "/path/to/cert.pem",
+        }
         result = _prepare_connection_params(params)
         self.assertEqual(result["sslrootcert"], "/path/to/cert.pem")
 
@@ -55,7 +60,11 @@ class TestPrepareConnectionParams(unittest.TestCase):
         self.assertEqual(result["profile"], "my-profile")
 
     def test_preserves_token_duration_secs(self):
-        params = {"host": "test-host", "user": "admin", "token_duration_secs": 900}  # nosec B105
+        params = {
+            "host": "test-host",
+            "user": "admin",
+            "token_duration_secs": 900,
+        }  # nosec B105
         result = _prepare_connection_params(params)
         self.assertEqual(result["token_duration_secs"], 900)
 
@@ -63,7 +72,9 @@ class TestPrepareConnectionParams(unittest.TestCase):
 class TestAuroraDSQLBackend(unittest.TestCase):
     def setUp(self):
         self.wrapper = DatabaseWrapper({})
-        self.ops = DatabaseOperations(connection=MagicMock())
+        mock_connection = MagicMock()
+        mock_connection.settings_dict = {}
+        self.ops = DatabaseOperations(connection=mock_connection)
 
     def test_database_wrapper_data_types(self):
         self.assertEqual(self.wrapper.data_types["BigAutoField"], "uuid")
@@ -77,7 +88,11 @@ class TestAuroraDSQLBackend(unittest.TestCase):
 
     @patch("aurora_dsql_django.base._prepare_connection_params")
     def test_database_wrapper_get_connection_params(self, mock_prepare_params):
-        mock_prepare_params.return_value = {"host": "test-host", "port": 5432, "application_name": "django"}
+        mock_prepare_params.return_value = {
+            "host": "test-host",
+            "port": 5432,
+            "application_name": "django",
+        }
 
         with patch("django.db.backends.postgresql.base.DatabaseWrapper.get_connection_params") as mock_super:
             mock_super.return_value = {"host": "test-host", "user": "admin"}
@@ -96,7 +111,11 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         mock_connector.DSQLConnection.connect.return_value = mock_connection
 
         wrapper = DatabaseWrapper({"OPTIONS": {}})
-        conn_params = {"host": "test-host", "user": "admin", "application_name": "django"}
+        conn_params = {
+            "host": "test-host",
+            "user": "admin",
+            "application_name": "django",
+        }
 
         result = wrapper.get_new_connection(conn_params)
 
@@ -111,7 +130,11 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         mock_connector.connect.return_value = mock_connection
 
         wrapper = DatabaseWrapper({"OPTIONS": {}})
-        conn_params = {"host": "test-host", "user": "admin", "application_name": "django"}
+        conn_params = {
+            "host": "test-host",
+            "user": "admin",
+            "application_name": "django",
+        }
 
         result = wrapper.get_new_connection(conn_params)
 
@@ -292,6 +315,149 @@ class TestAuroraDSQLBackend(unittest.TestCase):
         # Should add DISABLE_SERVER_SIDE_CURSORS while preserving other options
         self.assertTrue(wrapper.settings_dict["DISABLE_SERVER_SIDE_CURSORS"])
         self.assertEqual(wrapper.settings_dict["OPTIONS"]["sslmode"], "require")
+
+
+class TestSequenceAutoFieldsConfiguration(unittest.TestCase):
+    """Tests for USE_SEQUENCE_AUTOFIELDS and SEQUENCE_CACHE_SIZE settings."""
+
+    def test_default_uses_uuid_autofields(self):
+        """Test that by default (USE_SEQUENCE_AUTOFIELDS=False), UUID autofields are used."""
+        wrapper = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+            }
+        )
+
+        # Should use UUID types
+        self.assertEqual(wrapper.data_types["BigAutoField"], "uuid")
+        self.assertEqual(wrapper.data_types["AutoField"], "uuid")
+        self.assertEqual(wrapper.data_types_suffix["BigAutoField"], "DEFAULT gen_random_uuid()")
+        self.assertEqual(wrapper.data_types_suffix["AutoField"], "DEFAULT gen_random_uuid()")
+
+    def test_use_sequence_autofields_enabled(self):
+        """Test that USE_SEQUENCE_AUTOFIELDS=True enables IDENTITY columns."""
+        wrapper = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+                "USE_SEQUENCE_AUTOFIELDS": True,
+            }
+        )
+
+        # Should use bigint with IDENTITY
+        self.assertEqual(wrapper.data_types["BigAutoField"], "bigint")
+        self.assertEqual(wrapper.data_types["AutoField"], "bigint")
+        self.assertIn(
+            "GENERATED BY DEFAULT AS IDENTITY",
+            wrapper.data_types_suffix["BigAutoField"],
+        )
+        self.assertIn("GENERATED BY DEFAULT AS IDENTITY", wrapper.data_types_suffix["AutoField"])
+
+    def test_sequence_cache_size_default(self):
+        """Test that default SEQUENCE_CACHE_SIZE is 65536."""
+        wrapper = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+                "USE_SEQUENCE_AUTOFIELDS": True,
+            }
+        )
+
+        # Should use default cache size of 65536
+        self.assertIn("CACHE 65536", wrapper.data_types_suffix["BigAutoField"])
+        self.assertIn("CACHE 65536", wrapper.data_types_suffix["AutoField"])
+
+    def test_sequence_cache_size_custom(self):
+        """Test that custom SEQUENCE_CACHE_SIZE is applied."""
+        custom_cache_size = 1024
+        wrapper = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+                "USE_SEQUENCE_AUTOFIELDS": True,
+                "SEQUENCE_CACHE_SIZE": custom_cache_size,
+            }
+        )
+
+        # Should use custom cache size
+        self.assertIn(f"CACHE {custom_cache_size}", wrapper.data_types_suffix["BigAutoField"])
+        self.assertIn(f"CACHE {custom_cache_size}", wrapper.data_types_suffix["AutoField"])
+
+    def test_sequence_cache_size_various_values(self):
+        """Test SEQUENCE_CACHE_SIZE with various values."""
+        test_values = [1, 65536, 65537, 100000]
+
+        for cache_size in test_values:
+            with self.subTest(cache_size=cache_size):
+                wrapper = DatabaseWrapper(
+                    {
+                        "ENGINE": "aurora_dsql_django",
+                        "NAME": "test_db",
+                        "USE_SEQUENCE_AUTOFIELDS": True,
+                        "SEQUENCE_CACHE_SIZE": cache_size,
+                    }
+                )
+
+                self.assertIn(f"CACHE {cache_size}", wrapper.data_types_suffix["BigAutoField"])
+                self.assertIn(f"CACHE {cache_size}", wrapper.data_types_suffix["AutoField"])
+
+    def test_sequence_cache_size_ignored_without_use_sequence_autofields(self):
+        """Test that SEQUENCE_CACHE_SIZE is ignored when USE_SEQUENCE_AUTOFIELDS is False."""
+        wrapper = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+                "USE_SEQUENCE_AUTOFIELDS": False,
+                "SEQUENCE_CACHE_SIZE": 1024,
+            }
+        )
+
+        # Should still use UUID, not IDENTITY with CACHE
+        self.assertEqual(wrapper.data_types["BigAutoField"], "uuid")
+        self.assertEqual(wrapper.data_types["AutoField"], "uuid")
+        self.assertNotIn("CACHE", wrapper.data_types_suffix["BigAutoField"])
+        self.assertNotIn("CACHE", wrapper.data_types_suffix["AutoField"])
+
+    def test_smallautofield_suffix_empty_with_sequence_autofields(self):
+        """Test that SmallAutoField suffix is empty when using IDENTITY columns."""
+        wrapper = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+                "USE_SEQUENCE_AUTOFIELDS": True,
+            }
+        )
+
+        # SmallAutoField should have empty suffix
+        self.assertEqual(wrapper.data_types_suffix["SmallAutoField"], "")
+
+    def test_autofield_patching_only_when_uuid_mode(self):
+        """Test that AutoField patching only happens when not using IDENTITY columns."""
+        # With USE_SEQUENCE_AUTOFIELDS=False (default), patching should occur
+        wrapper_uuid = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+            }
+        )
+
+        # AutoField should have UUID-related methods
+        autofield = models.AutoField()
+        self.assertEqual(autofield.rel_db_type(wrapper_uuid), "uuid")
+
+        # With USE_SEQUENCE_AUTOFIELDS=True, no patching should occur
+        # (AutoField behavior should be standard Django behavior)
+        wrapper_identity = DatabaseWrapper(
+            {
+                "ENGINE": "aurora_dsql_django",
+                "NAME": "test_db",
+                "USE_SEQUENCE_AUTOFIELDS": True,
+            }
+        )
+
+        # Data types should be bigint
+        self.assertEqual(wrapper_identity.data_types["AutoField"], "bigint")
 
 
 if __name__ == "__main__":

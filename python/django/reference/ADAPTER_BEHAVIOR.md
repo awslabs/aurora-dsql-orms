@@ -2,18 +2,48 @@
 
 This document describes how the Aurora DSQL adapter for Django modifies standard Django behavior to work with the features provided by Aurora DSQL.
 
-## AutoField uses UUID instead of integers
 
-**Behavior:** The Aurora DSQL adapter for Django automatically converts Django's `AutoField` and `BigAutoField` to use UUID primary keys instead of auto-incrementing integers.
+## AutoField and Primary Key Behavior
 
-**Impact:** 
-- All primary keys will be UUIDs (e.g. `8fcc0dd2-1d96-4428-a619-f0e43996dc19`) instead of integers (e.g. `1`, `2`, `3`)
+**Behavior:** The Aurora DSQL adapter for Django automatically converts Django's `AutoField` and `BigAutoField` to use UUID primary keys instead of auto-incrementing integers. Applications requiring sequential integer keys can override this by setting `USE_SEQUENCE_AUTOFIELDS=True`.
+
+**Impact:**
+- All primary keys will be UUIDs by default (e.g. `8fcc0dd2-1d96-4428-a619-f0e43996dc19`) instead of integers (e.g. `1`, `2`, `3`)
 - Sort order may not match insertion order
 - URLs, session data, etc. may contain UUID strings
+- The `SequenceAutoField` can be used in custom models for explicit sequence-based IDs with per-model cache size configuration
 
-**Why this is necessary:** Aurora DSQL does not support auto-incrementing sequences. UUID primary keys are recommended.
+**Why this is necessary:** UUID primary keys are recommended for use with Aurora DSQL. However, many applications and legacy systems require sequential integer primary keys for business logic, compatibility with existing code, and integration with third-party Django packages that expect integer IDs.
 
-**Limitations:** This is a best-effort compatibility approach. Not all Django `contrib` apps are compatible with UUID primary keys. For new applications, customers are encouraged to use `UUIDField` directly instead of `AutoField` where possible.
+**Limitations:** Not all Django `contrib` apps are compatible with UUID primary keys. For new applications, customers are encouraged to use `UUIDField` directly instead of `AutoField` where possible.
+
+**Sequence Configuration:**
+
+```python
+DATABASES = {
+    "default": {
+        # Other database settings
+        "ENGINE": "aurora_dsql_django",
+        "USE_SEQUENCE_AUTOFIELDS": True, # Optional, False by default
+        "SEQUENCE_CACHE_SIZE": 65536, # Optional, 65536 by default
+        "OPTIONS": {
+            "sslmode": "require"
+        },
+    },
+}
+```
+
+**Usage for individual models:**
+
+```python
+from aurora_dsql_django import SequenceAutoField
+
+class Owner(models.Model):
+    id = SequenceAutoField(primary_key=True)
+    name = models.CharField(max_length=30, blank=False)
+```
+
+See the [Aurora DSQL Sequence documentation TODO_UPDATE_LINK](TODO_UPDATE_LINK) for more details.
 
 ## Server-side cursors automatically disabled
 

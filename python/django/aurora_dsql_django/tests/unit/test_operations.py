@@ -18,6 +18,8 @@ from aurora_dsql_django.operations import DatabaseOperations
 class TestDatabaseOperations(unittest.TestCase):
     def setUp(self):
         mock_connection = MagicMock()
+        # Configure settings_dict to default to UUID mode (USE_SEQUENCE_AUTOFIELDS=False)
+        mock_connection.settings_dict = {}
         self.ops = DatabaseOperations(mock_connection)
 
     def test_cast_data_types(self):
@@ -25,6 +27,7 @@ class TestDatabaseOperations(unittest.TestCase):
             "AutoField": "uuid",
             "BigAutoField": "uuid",
             "SmallAutoField": "smallint",
+            "SequenceAutoField": "bigint",
         }
         self.assertEqual(self.ops.cast_data_types, expected_cast_data_types)
 
