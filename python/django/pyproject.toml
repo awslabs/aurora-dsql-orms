@@ -90,8 +90,15 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
-ignore = []
+extend-select = [
+    "E",      # https://docs.astral.sh/ruff/rules/#error-e
+    "F",      # https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "FA",     # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+    "I",      # https://docs.astral.sh/ruff/rules/#isort-i
+    "RUF100", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "UP",     # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "W",      # https://docs.astral.sh/ruff/rules/#warning-w
+]
 
 [tool.ruff.format]
 quote-style = "double"
