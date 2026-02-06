@@ -6,7 +6,8 @@ import re
 from setuptools import setup
 from setuptools_scm import get_version
 
-GITHUB_URL = "https://github.com/awslabs/aurora-dsql-django"
+GITHUB_URL = "https://github.com/awslabs/aurora-dsql-orms"
+SUBDIR = "python/django"
 version = get_version()
 
 # Use default branch for dev versions, tag for releases.
@@ -23,7 +24,7 @@ def convert_relative_link(match):
     old_url = match.group(2)
     if old_url.startswith("./") or old_url.startswith("../"):
         raise ValueError(f"Relative links starting with './' or '../' are not allowed: {old_url}")
-    new_url = f"{GITHUB_URL}/blob/{ref}/{old_url}"
+    new_url = f"{GITHUB_URL}/blob/{ref}/{SUBDIR}/{old_url}"
     print(f"Converting: {old_url} -> {new_url}")
     return f"[{link_text}]({new_url})"
 

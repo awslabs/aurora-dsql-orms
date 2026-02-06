@@ -264,7 +264,7 @@ class Vet(Base):
 ## Additional resources
 
 - [Amazon Aurora DSQL Documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/what-is-aurora-dsql.html)
-- [Aurora DSQL Python Connector](https://github.com/awslabs/aurora-dsql-python-connector)
+- [Aurora DSQL Python Connector](https://github.com/awslabs/aurora-dsql-connectors/tree/main/python/connector/)
 - [SQLAlchemy Documentation](https://docs.sqlalchemy.org/en/20/)
 - [Psycopg Documentation](https://www.psycopg.org/docs/)
 

@@ -50,7 +50,7 @@ TORTOISE_ORM = {
 }
 ```
 
-The adapter accepts all parameters supported by the underlying [asyncpg](https://magicstack.github.io/asyncpg/current/api/index.html) or [psycopg](https://www.psycopg.org/psycopg3/docs/) driver, as well as the [Aurora DSQL Connector for Python](https://github.com/awslabs/aurora-dsql-python-connector).
+The adapter accepts all parameters supported by the underlying [asyncpg](https://magicstack.github.io/asyncpg/current/api/index.html) or [psycopg](https://www.psycopg.org/psycopg3/docs/) driver, as well as the [Aurora DSQL Connector for Python](https://github.com/awslabs/aurora-dsql-connectors/tree/main/python/connector/).
 
 Or use a connection URL (requires registering the backend first):
 
