@@ -28,14 +28,14 @@ public class AuroraDSQLDialectTest {
   public void testIdentityColumnSupport() {
     IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
     assertNotNull(identityColumnSupport);
-    assertFalse(identityColumnSupport.supportsIdentityColumns());
+    assertTrue(identityColumnSupport.supportsIdentityColumns());
   }
 
   @Test
   public void testSequenceSupport() {
     SequenceSupport sequenceSupport = dialect.getSequenceSupport();
     assertNotNull(sequenceSupport);
-    assertEquals(NoSequenceSupport.INSTANCE, sequenceSupport);
+    assertTrue(sequenceSupport.supportsSequences());
   }
 
   @Test
