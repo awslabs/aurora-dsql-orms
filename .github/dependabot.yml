@@ -39,7 +39,9 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      # Hibernate 7 has breaking API changes incompatible with this dialect
+      # Spring Boot 4.x requires Hibernate 7, which has breaking API changes incompatible with this dialect
+      - dependency-name: "org.springframework.boot"
+        versions: [">=4"]
       - dependency-name: "org.hibernate:hibernate-core"
         versions: [">=7"]
   - package-ecosystem: "maven"
@@ -47,7 +49,9 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      # Hibernate 7 has breaking API changes incompatible with this dialect
+      # Spring Boot 4.x requires Hibernate 7, which has breaking API changes incompatible with this dialect
+      - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
+        versions: [">=4"]
       - dependency-name: "org.hibernate:hibernate-core"
         versions: [">=7"]
       # Checkstyle 13+ requires Java 21, but this project targets Java 17
