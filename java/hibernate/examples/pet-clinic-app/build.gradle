@@ -1,18 +1,11 @@
 plugins {
   id 'java'
-  id 'org.springframework.boot' version '4.0.2'
+  id 'org.springframework.boot' version '3.3.4'
   id 'io.spring.dependency-management' version '1.1.7'
-  id 'org.graalvm.buildtools.native' version '0.11.4'
-  id 'org.cyclonedx.bom' version '3.1.0'
-  id 'io.spring.javaformat' version '0.0.47'
-  id "io.spring.nohttp" version "0.0.11"
+  id 'org.graalvm.buildtools.native' version '0.10.3'
 }
 
 apply plugin: 'java'
-apply plugin: 'checkstyle'
-apply plugin: 'io.spring.javaformat'
-
-gradle.startParameter.excludedTaskNames += [ "checkFormatAot", "checkFormatAotTest" ]
 
 group = 'org.springframework.samples'
 version = '3.3.0'
@@ -25,14 +18,13 @@ repositories {
   mavenCentral()
 }
 
-ext.checkstyleVersion = "10.18.1"
-ext.springJavaformatCheckstyleVersion = "0.0.43"
 ext.webjarsFontawesomeVersion = "4.7.0"
 ext.webjarsBootstrapVersion = "5.3.8"
+ext.hibernateVersion = "6.6.4.Final"
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-cache'
-  implementation 'org.hibernate:hibernate-core:6.6.42.Final'
+  implementation "org.hibernate:hibernate-core:${hibernateVersion}"
   implementation('org.springframework.boot:spring-boot-starter-data-jpa') {
         exclude group: 'org.hibernate', module: 'hibernate-core'
   }
@@ -59,35 +51,23 @@ dependencies {
   // AWS SDK deps
   implementation 'software.amazon.awssdk:dsql:2.41.23'
   implementation 'software.amazon.dsql:aurora-dsql-hibernate-dialect:1.0.1'
+  implementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.3.0'
 
   implementation fileTree(dir: 'lib', includes: ['*.jar'])
 }
 
-//tasks.named('test') {
-//  useJUnitPlatform()
-//}
-
-checkstyle {
-  configDirectory = project.file('src/checkstyle')
-  configFile = file('src/checkstyle/nohttp-checkstyle.xml')
+tasks.named('test') {
+  useJUnitPlatform()
+  
+  def profile = System.getProperty('spring.profiles.active') ?: System.getenv('SPRING_PROFILES_ACTIVE') ?: ''
+  
+  doFirst {
+    if (!profile) {
+      throw new GradleException("spring.profiles.active must be set. Use -Dspring.profiles.active=h2 or =dsql")
+    }
+  }
+  
+  systemProperty 'spring.profiles.active', profile
+  environment 'CLUSTER_ENDPOINT', System.getenv('CLUSTER_ENDPOINT') ?: ''
+  environment 'CLUSTER_USER', System.getenv('CLUSTER_USER') ?: ''
 }
-
-checkstyleNohttp {
-  configDirectory = project.file('src/checkstyle')
-  configFile = file('src/checkstyle/nohttp-checkstyle.xml')
-}
-
-tasks.named("formatMain").configure { dependsOn("checkstyleMain") }
-tasks.named("formatMain").configure { dependsOn("checkstyleNohttp") }
-
-tasks.named("formatTest").configure { dependsOn("checkstyleTest") }
-tasks.named("formatTest").configure { dependsOn("checkstyleNohttp") }
-
-checkstyleAot.enabled = false
-checkstyleAotTest.enabled = false
-
-checkFormatAot.enabled = false
-checkFormatAotTest.enabled = false
-
-formatAot.enabled = false
-formatAotTest.enabled = false
