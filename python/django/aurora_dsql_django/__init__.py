@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from importlib.metadata import PackageNotFoundError, version
+
 from .fields import SequenceAutoField
 
 try:
