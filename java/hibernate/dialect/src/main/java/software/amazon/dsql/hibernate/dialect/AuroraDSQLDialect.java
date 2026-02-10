@@ -131,7 +131,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 public class AuroraDSQLDialect extends Dialect {
 
-  public static final String SEQUENCE_CACHE_SIZE = "hibernate.dialect.aurora_dsql.sequence_cache_size";
+  public static final String SEQUENCE_CACHE_SIZE =
+      "hibernate.dialect.aurora_dsql.sequence_cache_size";
   private static final int DEFAULT_CACHE_SIZE = 65536;
 
   private int sequenceCacheSize = DEFAULT_CACHE_SIZE;
@@ -148,7 +149,9 @@ public class AuroraDSQLDialect extends Dialect {
   public AuroraDSQLDialect(DialectResolutionInfo dialectResolutionInfo) {
     super(dialectResolutionInfo);
     if (dialectResolutionInfo.getConfigurationValues().containsKey(SEQUENCE_CACHE_SIZE)) {
-      sequenceCacheSize = Integer.parseInt(dialectResolutionInfo.getConfigurationValues().get(SEQUENCE_CACHE_SIZE).toString());
+      sequenceCacheSize =
+          Integer.parseInt(
+              dialectResolutionInfo.getConfigurationValues().get(SEQUENCE_CACHE_SIZE).toString());
     }
     sequenceSupport = new AuroraDSQLSequenceSupport(sequenceCacheSize);
     identityColumnSupport = new AuroraDSQLIdentitySupport(sequenceCacheSize);

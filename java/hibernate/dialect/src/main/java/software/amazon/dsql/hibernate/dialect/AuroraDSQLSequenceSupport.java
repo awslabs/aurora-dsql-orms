@@ -6,29 +6,29 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 
 public class AuroraDSQLSequenceSupport implements SequenceSupport {
 
-    private final int sequenceCacheSize;
+  private final int sequenceCacheSize;
 
-    public AuroraDSQLSequenceSupport(int sequenceCacheSize) {
-        this.sequenceCacheSize = sequenceCacheSize;
-    }
+  public AuroraDSQLSequenceSupport(int sequenceCacheSize) {
+    this.sequenceCacheSize = sequenceCacheSize;
+  }
 
-    @Override
-    public String getCreateSequenceString(String sequenceName) {
-        return "create sequence " + sequenceName + " cache " + sequenceCacheSize;
-    }
+  @Override
+  public String getCreateSequenceString(String sequenceName) {
+    return "create sequence " + sequenceName + " cache " + sequenceCacheSize;
+  }
 
-    @Override
-    public String getSelectSequenceNextValString(String sequenceName) {
-        return "nextval('" + sequenceName + "')";
-    }
+  @Override
+  public String getSelectSequenceNextValString(String sequenceName) {
+    return "nextval('" + sequenceName + "')";
+  }
 
-    @Override
-    public boolean sometimesNeedsStartingValue() {
-        return true;
-    }
+  @Override
+  public boolean sometimesNeedsStartingValue() {
+    return true;
+  }
 
-    @Override
-    public String getDropSequenceString(String sequenceName) {
-        return "drop sequence if exists " + sequenceName;
-    }
+  @Override
+  public String getDropSequenceString(String sequenceName) {
+    return "drop sequence if exists " + sequenceName;
+  }
 }

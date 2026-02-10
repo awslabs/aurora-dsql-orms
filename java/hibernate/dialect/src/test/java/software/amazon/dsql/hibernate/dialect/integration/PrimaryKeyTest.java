@@ -5,14 +5,11 @@ package software.amazon.dsql.hibernate.dialect.integration;
 import java.util.List;
 import java.util.UUID;
 import org.hibernate.Session;
-import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.id.IdentifierGenerationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.postgresql.util.PSQLException;
 import software.amazon.dsql.hibernate.dialect.integration.model.IntegerKeyEntity;
-import software.amazon.dsql.hibernate.dialect.integration.model.SequenceKeyEntity;
 import software.amazon.dsql.hibernate.dialect.integration.model.SimpleEntity;
 
 @EnabledIfSystemProperty(named = "RUN_INTEGRATION", matches = "TRUE")

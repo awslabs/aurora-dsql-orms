@@ -12,24 +12,27 @@ import jakarta.persistence.SequenceGenerator;
 @Entity
 public class SequenceKeyWithOptionsEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence_generator")
-    @SequenceGenerator(name = "sequence_generator", sequenceName = "custom_test_sequence", initialValue = 1000, allocationSize = 100)
-    private Integer id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence_generator")
+  @SequenceGenerator(
+      name = "sequence_generator",
+      sequenceName = "custom_test_sequence",
+      initialValue = 1000,
+      allocationSize = 100)
+  private Integer id;
 
-    @Column(name = "name")
-    private String name;
+  @Column(name = "name")
+  private String name;
 
-    public Integer getId() {
-        return id;
-    }
+  public Integer getId() {
+    return id;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
+  public void setName(String name) {
+    this.name = name;
+  }
 }
