@@ -8,9 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.List;
 import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import software.amazon.dsql.hibernate.dialect.integration.model.SequenceKeyEntity;
 import software.amazon.dsql.hibernate.dialect.integration.model.SequenceKeyWithOptionsEntity;
 
+@EnabledIfSystemProperty(named = "RUN_INTEGRATION", matches = "TRUE")
 public class SequenceTest extends DSQLHibernateBaseTest {
 
   @Test

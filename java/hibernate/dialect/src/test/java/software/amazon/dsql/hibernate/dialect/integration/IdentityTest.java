@@ -1,3 +1,5 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1
 package software.amazon.dsql.hibernate.dialect.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -5,9 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import software.amazon.dsql.hibernate.dialect.integration.model.IdentityKeyIntEntity;
 import software.amazon.dsql.hibernate.dialect.integration.model.IdentityKeyLongEntity;
 
+@EnabledIfSystemProperty(named = "RUN_INTEGRATION", matches = "TRUE")
 public class IdentityTest extends DSQLHibernateBaseTest {
 
   @Test
