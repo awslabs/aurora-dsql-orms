@@ -51,7 +51,7 @@ class Invoice(Model):
     id = BigIntField(primary_key=True, sequence_cache_size=65536)
 ```
 
-For best practices on choosing the appropriate cache size for your workload, see the [Aurora DSQL sequence documentation](<SEQUENCE_DOCUMENTATION_URL>).
+For best practices on choosing the appropriate cache size for your workload, see the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page.
 
 **Why this is necessary:** Aurora DSQL does not support `SERIAL`/`BIGSERIAL` syntax and requires an explicit `CACHE` clause for identity columns.
 
