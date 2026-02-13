@@ -74,11 +74,13 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -129,12 +131,30 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 public class AuroraDSQLDialect extends Dialect {
 
+  public static final String SEQUENCE_CACHE_SIZE =
+      "hibernate.dialect.aurora_dsql.sequence_cache_size";
+  private static final int DEFAULT_CACHE_SIZE = 65536;
+
+  private int sequenceCacheSize = DEFAULT_CACHE_SIZE;
+
+  private final SequenceSupport sequenceSupport;
+  private final IdentityColumnSupport identityColumnSupport;
+
   public AuroraDSQLDialect() {
     super();
+    sequenceSupport = new AuroraDSQLSequenceSupport(sequenceCacheSize);
+    identityColumnSupport = new AuroraDSQLIdentitySupport(sequenceCacheSize);
   }
 
   public AuroraDSQLDialect(DialectResolutionInfo dialectResolutionInfo) {
     super(dialectResolutionInfo);
+    if (dialectResolutionInfo.getConfigurationValues().containsKey(SEQUENCE_CACHE_SIZE)) {
+      sequenceCacheSize =
+          Integer.parseInt(
+              dialectResolutionInfo.getConfigurationValues().get(SEQUENCE_CACHE_SIZE).toString());
+    }
+    sequenceSupport = new AuroraDSQLSequenceSupport(sequenceCacheSize);
+    identityColumnSupport = new AuroraDSQLIdentitySupport(sequenceCacheSize);
   }
 
   private final Exporter<ForeignKey> NO_FK_SUPPORT_EXPORTER =
@@ -189,6 +209,16 @@ public class AuroraDSQLDialect extends Dialect {
           };
         }
       };
+
+  @Override
+  public SequenceSupport getSequenceSupport() {
+    return sequenceSupport;
+  }
+
+  @Override
+  public IdentityColumnSupport getIdentityColumnSupport() {
+    return identityColumnSupport;
+  }
 
   @Override
   public boolean supportsTemporaryTables() {

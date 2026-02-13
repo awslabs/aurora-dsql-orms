@@ -5,12 +5,21 @@ package software.amazon.dsql.hibernate.dialect.integration.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 @Entity
-public class SequenceKeyEntity {
+public class SequenceKeyWithOptionsEntity {
 
-  @Id @GeneratedValue private Integer id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence_generator")
+  @SequenceGenerator(
+      name = "sequence_generator",
+      sequenceName = "custom_test_sequence",
+      initialValue = 1000,
+      allocationSize = 100)
+  private Integer id;
 
   @Column(name = "name")
   private String name;

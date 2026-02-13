@@ -48,7 +48,7 @@ public abstract class DSQLHibernateBaseTest {
     return sessionFactory.openSession();
   }
 
-  private static Configuration createConfiguration() {
+  protected static Configuration createConfiguration() {
     Configuration configuration =
         new Configuration()
             .setProperty(URL, url)

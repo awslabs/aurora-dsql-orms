@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -28,14 +27,14 @@ public class AuroraDSQLDialectTest {
   public void testIdentityColumnSupport() {
     IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
     assertNotNull(identityColumnSupport);
-    assertFalse(identityColumnSupport.supportsIdentityColumns());
+    assertTrue(identityColumnSupport.supportsIdentityColumns());
   }
 
   @Test
   public void testSequenceSupport() {
     SequenceSupport sequenceSupport = dialect.getSequenceSupport();
     assertNotNull(sequenceSupport);
-    assertEquals(NoSequenceSupport.INSTANCE, sequenceSupport);
+    assertTrue(sequenceSupport.supportsSequences());
   }
 
   @Test
