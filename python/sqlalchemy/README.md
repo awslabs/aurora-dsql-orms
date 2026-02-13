@@ -141,6 +141,7 @@ Identity(always=True, cache=<cache_size>)
 
 ```
 
+See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page for more information.
 
 ## Dialect Features and Limitations
 
