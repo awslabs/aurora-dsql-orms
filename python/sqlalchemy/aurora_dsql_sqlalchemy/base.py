@@ -57,8 +57,15 @@ class AuroraDSQLDDLCompiler(PGDDLCompiler):
 
             return colspec
 
-        # Check if this is an identity column (autoincrement without explicit sequence)
-        is_identity = column.autoincrement and column.primary_key
+        # Check if this is an identity column (autoincrement without explicit sequence).
+        # Skip if column has an explicit default or is not an integer type.
+        is_identity = (
+            column.autoincrement
+            and column.primary_key
+            and column.default is None
+            and column.server_default is None
+            and isinstance(column.type, Integer)
+        )
 
         if is_identity:
             # Build column spec manually to avoid SERIAL
