@@ -82,7 +82,7 @@ private UUID id;
 Sequence and identity based keys are also supported in DSQL, and can be used for integer primary keys. The Hibernate
 dialect uses a default `CACHE` parameter of 65536 in sequence and identity definitions, but this can be overridden
 using the configuration property `hibernate.dialect.aurora_dsql.sequence_cache_size`, configurable in the same ways
-as the dialect choice above. See [Aurora DSQL Sequence documentation TODO_UPDATE_LINK](TODO_UPDATE_LINK)
+as the dialect choice above. See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page
 for guidance on choosing the appropriate cache size for your workload.
 
 ### Auto-DDL
@@ -117,7 +117,7 @@ and Aurora DSQL. The list below contains some of the key differences from the Po
 - **Foreign Keys**: Aurora DSQL does not support foreign key constraints. The dialect disables these constraints, but be aware that referential integrity must be maintained at the application level.
 - **Index creation**: Aurora DSQL does not support `CREATE INDEX` or `CREATE UNIQUE INDEX` commands. The dialect instead uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
 - **Locking**: Aurora DSQL uses optimistic concurrency control (OCC) with support for `SELECT ... FOR UPDATE`. The dialect supports these two locking methods. See the [Concurrency control in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html) page for more information.
-- **Sequences**: The dialect implements correct syntax for Aurora DSQL sequence and identity support, including the mandatory `CACHE` parameter.
+- **Sequences**: The dialect implements correct syntax for Aurora DSQL sequence and identity support, including the mandatory `CACHE` parameter. See the [Sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns.html) page for more information.
 - **Temporary tables**: Aurora DSQL does not support temporary tables. The dialect will use standard tables instead. These tables will appear with `HT_` or `HTE_` prefixes, and will be managed automatically by Hibernate.
 - **Truncate command**: Aurora DSQL does not support `TRUNCATE` command. The dialect uses a `DELETE` command instead.
 
