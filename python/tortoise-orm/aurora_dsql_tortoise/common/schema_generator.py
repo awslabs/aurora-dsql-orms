@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from tortoise.backends.base_postgres.schema_generator import BasePostgresSchemaGenerator
+from tortoise.fields import Field
 
 if TYPE_CHECKING:
     from tortoise.backends.base.schema_generator import BaseSchemaGenerator
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
     _Base = BaseSchemaGenerator
 else:
     _Base = object
+
+from aurora_dsql_tortoise.common.fields import DEFAULT_SEQUENCE_CACHE_SIZE, _get_identity_sql
 
 
 class AuroraDSQLSchemaGeneratorMixin(_Base):
@@ -40,6 +43,29 @@ class AuroraDSQLSchemaGeneratorMixin(_Base):
         but the constraints are not forwarded to the database.
         """
         return ""
+
+    def _get_pk_create_sql(self, field_object: Field, column_name: str, comment: str) -> str:
+        """Override to use IDENTITY instead of SERIAL for generated integer PKs.
+
+        DSQL only supports BIGINT for identity columns.
+        """
+        if field_object.pk and field_object.generated:
+            if field_object.SQL_TYPE == "BIGINT":
+                generated_sql = field_object.get_for_dialect(self.DIALECT, "GENERATED_SQL")
+                if "BIGSERIAL" in generated_sql:
+                    generated_sql = _get_identity_sql(DEFAULT_SEQUENCE_CACHE_SIZE)
+                return self.GENERATED_PK_TEMPLATE.format(
+                    field_name=column_name,
+                    generated_sql=generated_sql,
+                    comment=comment,
+                )
+            if field_object.SQL_TYPE in ("INT", "SMALLINT"):
+                raise ValueError(
+                    f"Aurora DSQL does not support {field_object.__class__.__name__} as an "
+                    f"auto-generated primary key. Use UUIDField(primary_key=True) (recommended) "
+                    f"or BigIntField(primary_key=True) instead."
+                )
+        return super()._get_pk_create_sql(field_object, column_name, comment)
 
 
 class AuroraDSQLBaseSchemaGenerator(AuroraDSQLSchemaGeneratorMixin, BasePostgresSchemaGenerator):
