@@ -175,7 +175,7 @@ class Pet(models.Model):
 ```
 
 AutoField and BigAutoField default to UUID as their underlying data type. 
-Sequence and identity-based keys are also supported in DSQL and can be used for integer primary keys. To change this behavior from UUID to bigint, set the USE_SEQUENCE_AUTOFIELDS flag to true and specify the SEQUENCE_CACHE_SIZE (default value: 65536). See the [Aurora DSQL Sequence documentation TODO_UPDATE_LINK](TODO_UPDATE_LINK)
+Sequence and identity-based keys are also supported in DSQL and can be used for integer primary keys. To change this behavior from UUID to bigint, set the USE_SEQUENCE_AUTOFIELDS flag to true and specify the SEQUENCE_CACHE_SIZE (default value: 65536). See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page for more details.
 
 ```
 DATABASES = {

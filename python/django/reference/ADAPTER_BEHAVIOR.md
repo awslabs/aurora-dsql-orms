@@ -43,7 +43,7 @@ class Owner(models.Model):
     name = models.CharField(max_length=30, blank=False)
 ```
 
-See the [Aurora DSQL Sequence documentation TODO_UPDATE_LINK](TODO_UPDATE_LINK) for more details.
+See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page for more details.
 
 ## Server-side cursors automatically disabled
 
