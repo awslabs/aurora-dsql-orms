@@ -8,8 +8,8 @@
 ### Bootstrap Django app
 1. Create a new directory named `django_aurora_dsql_example` and change to the new directory
    ```sh
-   mkdir django_dsql_example
-   cd django_dsql_example
+   mkdir django_aurora_dsql_example
+   cd django_aurora_dsql_example
    ```
 2. Install django and other requirements.
    
@@ -141,10 +141,7 @@ A owner can visit the resident veterinarian in the clinic with their pet.
 - A veterinarian can have any number of specialties and a specialty can be associated
   with any number of veterinarians (many-to-many)
 
-> [!Important]
-> Aurora DSQL does not support the auto incrementing SERIAL type primary key.
-> We must use a different different primary key. In this example, we are going to use
-> a UUIDField with a default uuid value for the primary key.
+Server-generated UUIDs are the recommended choice for primary key columns.
 
 ```python
 from django.db import models
@@ -153,7 +150,6 @@ import uuid
 # Create your models here.
 
 class Owner(models.Model):
-    # SERIAL Auto incrementing primary keys are not supported. Using UUID instead.
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -177,6 +173,36 @@ class Pet(models.Model):
     birth_date = models.DateField()
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, db_constraint=False, null=True)
 ```
+
+AutoField and BigAutoField default to UUID as their underlying data type. 
+Sequence and identity-based keys are also supported in DSQL and can be used for integer primary keys. To change this behavior from UUID to bigint, set the USE_SEQUENCE_AUTOFIELDS flag to true and specify the SEQUENCE_CACHE_SIZE (default value: 65536). See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page for more details.
+
+```
+DATABASES = {
+    "default": {
+        # Other database settings
+        "ENGINE": "aurora_dsql_django",
+        "USE_SEQUENCE_AUTOFIELDS": True,
+        "SEQUENCE_CACHE_SIZE": 65536,
+        "OPTIONS": {
+            "sslmode": "require"
+        },
+    },
+}
+```
+
+The `SequenceAutoField` allows you to use sequences in self-defined models.
+```
+from aurora_dsql_django import SequenceAutoField
+
+class Owner(models.Model):
+    id = SequenceAutoField(primary_key=True)
+    name = models.CharField(max_length=30, blank=False)
+    city = models.CharField(max_length=80, blank=False)
+    telephone = models.CharField(max_length=20, blank=True, null=True, default=None)
+```
+
+
 
 To create associated tables in the Aurora DSQL cluster run following commands in
 `django_aurora_dsql_example/project` directory
