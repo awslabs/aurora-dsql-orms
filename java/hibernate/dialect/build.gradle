@@ -14,8 +14,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.hibernate:hibernate-core:6.6.0.Final")
-    testImplementation("org.hibernate:hibernate-core:6.6.0.Final")
+    compileOnly("org.hibernate:hibernate-core:6.6.42.Final")
+    testImplementation("org.hibernate:hibernate-core:6.6.42.Final")
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.0.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
