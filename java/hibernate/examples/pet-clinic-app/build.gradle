@@ -49,7 +49,7 @@ dependencies {
   testImplementation 'org.testcontainers:mysql'
   
   // AWS SDK deps
-  implementation 'software.amazon.awssdk:dsql:2.41.30'
+  implementation 'software.amazon.awssdk:dsql:2.41.31'
   implementation 'software.amazon.dsql:aurora-dsql-hibernate-dialect:1.0.1'
   implementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.4.0'
 
