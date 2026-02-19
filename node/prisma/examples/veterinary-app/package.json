@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.2.3",
+    "@types/node": "^25.3.0",
     "prettier": "^3.8.1",
     "prisma": "^7.4.0",
     "ts-jest": "^29.4.1",
