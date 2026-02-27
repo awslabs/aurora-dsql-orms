@@ -53,7 +53,7 @@ jobs:
       id-token: write # required by pypa/gh-action-pypi-publish
 
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: python-django-dist
           path: dist/
@@ -73,7 +73,7 @@ jobs:
       id-token: write # required by pypa/gh-action-pypi-publish
 
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: python-django-dist
           path: dist/
