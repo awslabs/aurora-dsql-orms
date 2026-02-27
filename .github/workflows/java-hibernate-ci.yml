@@ -152,7 +152,7 @@ jobs:
           aws-region: ${{ needs.create-cluster.outputs.region }}
 
       - name: Download dialect JAR
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dialect-jar
           path: java/hibernate/examples/pet-clinic-app/lib
