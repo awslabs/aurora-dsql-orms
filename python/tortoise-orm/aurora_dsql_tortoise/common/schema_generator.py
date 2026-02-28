@@ -21,10 +21,19 @@ from aurora_dsql_tortoise.common.fields import DEFAULT_SEQUENCE_CACHE_SIZE, _get
 
 class AuroraDSQLSchemaGeneratorMixin(_Base):
     """Adapts schema generation for DSQL."""
+    __table_name_clause = (
+        '{table_name}'  # tortoise>=1.0.0
+        if '"{table_name}"' not in BasePostgresSchemaGenerator.INDEX_CREATE_TEMPLATE
+        else '"{table_name}"'  # tortoise<1.0.0
+    )
 
     client: BasePostgresClient
+
     INDEX_CREATE_TEMPLATE = (
-        'CREATE INDEX ASYNC {exists}"{index_name}" ON "{table_name}" {index_type}({fields}){extra};'
+        'CREATE INDEX ASYNC {exists}"{index_name}" ON {table_name} {index_type}({fields}){extra};'.replace(
+            '{table_name}',
+            __table_name_clause,
+        )
     )
     UNIQUE_INDEX_CREATE_TEMPLATE = INDEX_CREATE_TEMPLATE.replace("INDEX", "UNIQUE INDEX")
 
