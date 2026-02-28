@@ -57,12 +57,12 @@ updates:
       # Checkstyle 13+ requires Java 21, but this project targets Java 17
       - dependency-name: "com.puppycrawl.tools:checkstyle"
         versions: [">=13"]
+  # Use 'directories' (plural) so the connector and its example are
+  # updated in the same PR, keeping lockfiles consistent.
   - package-ecosystem: "npm"
-    directory: "/node/prisma"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/node/prisma/examples/veterinary-app"
+    directories:
+      - "/node/prisma"
+      - "/node/prisma/examples/veterinary-app"
     schedule:
       interval: "daily"
   - package-ecosystem: "github-actions"
