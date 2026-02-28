@@ -83,6 +83,9 @@ async def test_schema_uses_async_index_creation(initialized_models, generator_cl
     assert "CREATE INDEX ASYNC" in schema_sql, (
         f"Schema should use ASYNC index creation:\n{schema_sql}"
     )
+    assert 'ON "test_parent" (' in schema_sql, (
+        f"Schema should use the correct table name in index creation:\n{schema_sql}"
+    )
 
 
 @pytest.mark.asyncio
