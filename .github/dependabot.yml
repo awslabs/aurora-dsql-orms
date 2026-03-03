@@ -3,31 +3,52 @@ updates:
   - package-ecosystem: "uv"
     directory: "/python/sqlalchemy"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      python-sqlalchemy:
+        patterns: ["*"]
   - package-ecosystem: "pip"
     directory: "/python/sqlalchemy/examples/pet-clinic-app"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      python-sqlalchemy-example:
+        patterns: ["*"]
   - package-ecosystem: "uv"
     directory: "/python/tortoise-orm"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      python-tortoise:
+        patterns: ["*"]
   - package-ecosystem: "uv"
     directory: "/python/django"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      python-django:
+        patterns: ["*"]
   - package-ecosystem: "pip"
     directory: "/python/django/examples/pet-clinic-app"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      python-django-example:
+        patterns: ["*"]
   - package-ecosystem: "gradle"
     directory: "/java/flyway"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      java-flyway:
+        patterns: ["*"]
   - package-ecosystem: "gradle"
     directory: "/java/hibernate/dialect"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      java-hibernate-dialect:
+        patterns: ["*"]
     ignore:
       # Hibernate 7 has breaking API changes incompatible with this dialect
       - dependency-name: "org.hibernate:hibernate-core"
@@ -37,7 +58,10 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      java-hibernate-example-gradle:
+        patterns: ["*"]
     ignore:
       # Spring Boot 4.x requires Hibernate 7, which has breaking API changes incompatible with this dialect
       - dependency-name: "org.springframework.boot"
@@ -47,7 +71,10 @@ updates:
   - package-ecosystem: "maven"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      java-hibernate-example-maven:
+        patterns: ["*"]
     ignore:
       # Spring Boot 4.x requires Hibernate 7, which has breaking API changes incompatible with this dialect
       - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
@@ -64,8 +91,14 @@ updates:
       - "/node/prisma"
       - "/node/prisma/examples/veterinary-app"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      node-prisma:
+        patterns: ["*"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
