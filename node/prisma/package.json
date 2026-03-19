@@ -43,9 +43,12 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@aws-sdk/dsql-signer": "^3.980.0",
+    "@aws-sdk/dsql-signer": "^3.1014.0",
+    "@aws/aurora-dsql-node-postgres-connector": "^0.1.8",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.2.0",
+    "@types/pg": "^8.18.0",
+    "pg": "^8.20.0",
     "prettier": "4.0.0-alpha.13",
     "prisma": "^7.3.0",
     "ts-jest": "^29.4.1",

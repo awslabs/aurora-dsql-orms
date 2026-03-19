@@ -45,15 +45,14 @@ describe("CLI Integration", () => {
     });
 
     test("validator catches invalid schema", () => {
-      // Create an invalid schema with autoincrement
+      // Create an invalid schema missing relationMode
       const invalidSchema = `
 datasource db {
   provider     = "postgresql"
-  relationMode = "prisma"
 }
 
 model User {
-  id   Int    @id @default(autoincrement())
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name String
 }
 `;
@@ -70,7 +69,7 @@ model User {
         fail("Expected validator to fail");
       } catch (error: unknown) {
         const execError = error as { stdout?: string; status?: number };
-        expect(execError.stdout).toContain("autoincrement");
+        expect(execError.stdout).toContain("relationMode");
         expect(execError.status).toBe(1);
       }
     });
@@ -153,7 +152,7 @@ datasource db {
 }
 
 model User {
-  id   Int    @id @default(autoincrement())
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name String
 }
 `;
@@ -176,7 +175,7 @@ model User {
           status?: number;
         };
         const output = (execError.stdout || "") + (execError.stderr || "");
-        expect(output).toContain("autoincrement");
+        expect(output).toContain("relationMode");
         expect(output).toContain("Fix the schema errors");
         expect(execError.status).toBe(1);
       }
