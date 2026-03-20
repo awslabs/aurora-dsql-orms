@@ -26,13 +26,14 @@ Commands:
 
   validate <schema>
     Validates a Prisma schema file for DSQL compatibility.
-    Reports errors for unsupported features like autoincrement, foreign keys, etc.
+    Reports errors for unsupported features like missing relationMode, fulltext indexes, etc.
 
   transform [input] [-o output]
     Transforms Prisma-generated SQL migrations to be DSQL-compatible.
     - Wraps each statement in BEGIN/COMMIT
     - Converts CREATE INDEX to CREATE INDEX ASYNC
     - Removes foreign key constraints
+    - Converts SERIAL types to IDENTITY columns
 
     If no input file is specified, reads from stdin.
     If no output file is specified, writes to stdout.
@@ -104,6 +105,7 @@ Options:
   --from-url <url>      Compare against existing database (for incremental migrations)
   --force               Force transformation even with unsupported statements
   --no-header           Omit the generated header comment
+  --identity-cache <n>  CACHE value for IDENTITY columns (default: 1, or >= 65536 for high throughput)
   -h, --help            Show this help message
 
 This command:
@@ -130,6 +132,7 @@ Examples:
   let fromEmpty = false;
   let includeHeader = true;
   let force = false;
+  let identityCache: number | undefined;
 
   // Parse arguments
   for (let i = 0; i < args.length; i++) {
@@ -150,6 +153,13 @@ Examples:
       includeHeader = false;
     } else if (arg === "--force") {
       force = true;
+    } else if (arg === "--identity-cache") {
+      const val = args[++i];
+      identityCache = Number(val);
+      if (!val || isNaN(identityCache)) {
+        console.error("Error: --identity-cache requires a numeric value");
+        process.exit(1);
+      }
     } else if (arg && !arg.startsWith("-")) {
       schemaPath = arg;
     }
@@ -232,6 +242,7 @@ Examples:
   const transformResult = transformMigration(rawSql, {
     includeHeader,
     force,
+    ...(identityCache !== undefined && { identityCache }),
   });
 
   // Check for unsupported statements
@@ -281,10 +292,11 @@ Usage:
   npx prisma migrate diff ... --script | npm run dsql-transform
 
 Options:
-  -o, --output <file>   Write output to file instead of stdout
-  --force               Force transformation even with unsupported statements
-  --no-header           Omit the generated header comment
-  -h, --help            Show this help message
+  -o, --output <file>        Write output to file instead of stdout
+  --force                    Force transformation even with unsupported statements
+  --no-header                Omit the generated header comment
+  --identity-cache <value>   CACHE value for IDENTITY columns (default: 1, or >= 65536 for high throughput)
+  -h, --help                 Show this help message
 
 Examples:
   # Transform from file to file
@@ -303,6 +315,7 @@ Examples:
   let outputFile: string | undefined;
   let includeHeader = true;
   let force = false;
+  let identityCache: number | undefined;
 
   // Parse arguments
   for (let i = 0; i < args.length; i++) {
@@ -313,6 +326,13 @@ Examples:
       includeHeader = false;
     } else if (arg === "--force") {
       force = true;
+    } else if (arg === "--identity-cache") {
+      const val = args[++i];
+      identityCache = Number(val);
+      if (!val || isNaN(identityCache)) {
+        console.error("Error: --identity-cache requires a numeric value");
+        process.exit(1);
+      }
     } else if (arg && !arg.startsWith("-")) {
       inputFile = arg;
     }
@@ -342,7 +362,11 @@ Examples:
   }
 
   // Transform
-  const result = transformMigration(sql, { includeHeader, force });
+  const result = transformMigration(sql, {
+    includeHeader,
+    force,
+    ...(identityCache !== undefined && { identityCache }),
+  });
 
   // Check for unsupported statements
   if (result.unsupportedStatements.length > 0 && !force) {
