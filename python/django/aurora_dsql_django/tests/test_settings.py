@@ -27,9 +27,10 @@ USE_TZ = True
 
 # Add other necessary Django settings
 INSTALLED_APPS = [
+    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
-    # Add other apps as needed
+    "django.contrib.sessions",
 ]
 
 # Disable Django's transaction management
