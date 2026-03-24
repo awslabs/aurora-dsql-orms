@@ -9,20 +9,19 @@ against a real DSQL cluster. These migrations exercise ALTER COLUMN, DROP COLUMN
 and ADD COLUMN operations that require the adapter's table recreation support.
 """
 
+import unittest
+
 from django.core.management import call_command
 from django.db import connection
-from django.test import TransactionTestCase
 
 
-class TestContribMigrations(TransactionTestCase):
+class TestContribMigrations(unittest.TestCase):
     """
     Run Django's contrib migrations against a real DSQL cluster.
 
     Verifies that all default Django contrib app migrations complete
     successfully and produce the expected schema.
     """
-
-    databases = {"default"}
 
     @classmethod
     def setUpClass(cls):

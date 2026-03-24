@@ -12,13 +12,18 @@ adapted from Django's SQLite backend.
 """
 
 import copy
+import logging
+import time
 
 from django.apps.registry import Apps
+from django.db import OperationalError
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.ddl_references import Statement
 from django.db.backends.postgresql import schema
 from django.db.backends.utils import strip_quotes
 from django.db.models import CheckConstraint
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
@@ -51,6 +56,28 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # https://github.com/django/django/pull/15687#discussion_r1041503991.
         self.connection.ensure_connection()
         return self
+
+    def _execute_with_retry(self, fn, max_retries=3, delay=1.0):
+        """
+        Execute a callable with retries on OC001 (SerializationFailure).
+
+        DSQL may reject DDL that follows another DDL on the same schema
+        object because its schema cache hasn't propagated yet. The standard
+        fix is to retry after a brief delay.
+        """
+        for attempt in range(max_retries):
+            try:
+                return fn()
+            except OperationalError:
+                if attempt == max_retries - 1:
+                    raise
+                logger.debug(
+                    "OC001 on attempt %d/%d, retrying in %.1fs",
+                    attempt + 1,
+                    max_retries,
+                    delay,
+                )
+                time.sleep(delay)
 
     def add_index(self, model, index, concurrently=False):
         if index.contains_expressions and not self.connection.features.supports_expression_indexes:
@@ -243,18 +270,22 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # Delete the old table
         self.delete_model(model, handle_autom2m=False)
 
-        # Rename the new table to the original name
-        self.alter_db_table(
-            new_model,
-            new_model._meta.db_table,
-            model._meta.db_table,
+        # Rename the new table to the original name.
+        # The preceding DROP may trigger an OC001 (SerializationFailure)
+        # because DSQL's schema cache hasn't propagated yet. Retry briefly.
+        self._execute_with_retry(
+            lambda: self.alter_db_table(
+                new_model,
+                new_model._meta.db_table,
+                model._meta.db_table,
+            )
         )
 
         # Run deferred SQL (indexes) on the correctly-named table.
         # Each execute() auto-commits (can_rollback_ddl = False), so each
         # CREATE INDEX ASYNC runs in its own transaction as DSQL requires.
         for sql in self.deferred_sql:
-            self.execute(sql)
+            self._execute_with_retry(lambda sql=sql: self.execute(sql))
         self.deferred_sql = []
         # Fix any PK-removed field
         if restore_pk_field:

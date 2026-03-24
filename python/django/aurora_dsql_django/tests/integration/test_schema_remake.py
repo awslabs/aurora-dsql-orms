@@ -9,8 +9,9 @@ The adapter handles these through a table recreation pattern. These tests verify
 that pattern works correctly against a real DSQL cluster.
 """
 
+import unittest
+
 from django.db import connection, models
-from django.test import TransactionTestCase
 
 
 def _drop_table_if_exists(table_name):
@@ -21,10 +22,8 @@ def _drop_table_if_exists(table_name):
         cursor.execute("COMMIT")
 
 
-class TestRemakeTableAlterField(TransactionTestCase):
+class TestRemakeTableAlterField(unittest.TestCase):
     """Test _alter_field via table recreation on a real DSQL cluster."""
-
-    databases = {"default"}
 
     def setUp(self):
         _drop_table_if_exists("test_alter_field")
@@ -166,10 +165,8 @@ class TestRemakeTableAlterField(TransactionTestCase):
             self.assertEqual(rows[0][0], "test_value")
 
 
-class TestRemakeTableRemoveField(TransactionTestCase):
+class TestRemakeTableRemoveField(unittest.TestCase):
     """Test remove_field via table recreation on a real DSQL cluster."""
-
-    databases = {"default"}
 
     def setUp(self):
         _drop_table_if_exists("test_remove_field")
@@ -258,10 +255,8 @@ class TestRemakeTableRemoveField(TransactionTestCase):
             self.assertEqual(rows[0][0], "keep_this")
 
 
-class TestRemakeTableAddField(TransactionTestCase):
+class TestRemakeTableAddField(unittest.TestCase):
     """Test add_field via table recreation on a real DSQL cluster."""
-
-    databases = {"default"}
 
     def setUp(self):
         _drop_table_if_exists("test_add_field")
