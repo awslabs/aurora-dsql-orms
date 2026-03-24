@@ -11,10 +11,10 @@ and ADD COLUMN operations that require the adapter's table recreation support.
 
 from django.core.management import call_command
 from django.db import connection
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 
-class TestContribMigrations(TestCase):
+class TestContribMigrations(TransactionTestCase):
     """
     Run Django's contrib migrations against a real DSQL cluster.
 

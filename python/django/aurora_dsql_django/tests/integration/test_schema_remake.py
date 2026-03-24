@@ -10,7 +10,7 @@ that pattern works correctly against a real DSQL cluster.
 """
 
 from django.db import connection, models
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 
 def _drop_table_if_exists(table_name):
@@ -21,7 +21,7 @@ def _drop_table_if_exists(table_name):
         cursor.execute("COMMIT")
 
 
-class TestRemakeTableAlterField(TestCase):
+class TestRemakeTableAlterField(TransactionTestCase):
     """Test _alter_field via table recreation on a real DSQL cluster."""
 
     databases = {"default"}
@@ -166,7 +166,7 @@ class TestRemakeTableAlterField(TestCase):
             self.assertEqual(rows[0][0], "test_value")
 
 
-class TestRemakeTableRemoveField(TestCase):
+class TestRemakeTableRemoveField(TransactionTestCase):
     """Test remove_field via table recreation on a real DSQL cluster."""
 
     databases = {"default"}
@@ -258,7 +258,7 @@ class TestRemakeTableRemoveField(TestCase):
             self.assertEqual(rows[0][0], "keep_this")
 
 
-class TestRemakeTableAddField(TestCase):
+class TestRemakeTableAddField(TransactionTestCase):
     """Test add_field via table recreation on a real DSQL cluster."""
 
     databases = {"default"}
