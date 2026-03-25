@@ -13,10 +13,11 @@ adapted from Django's SQLite backend.
 
 import copy
 import logging
+import re
 import time
 
 from django.apps.registry import Apps
-from django.db import OperationalError
+from django.db import OperationalError, ProgrammingError
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.ddl_references import Statement
 from django.db.backends.postgresql import schema
@@ -72,6 +73,13 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             return exc.__cause__.sqlstate in ("OC000", "OC001")
         return False
 
+    @staticmethod
+    def _is_duplicate_relation_error(exc):
+        """Check whether a ProgrammingError is a duplicate relation (sqlstate 42P07)."""
+        if hasattr(exc, "__cause__") and hasattr(exc.__cause__, "sqlstate"):
+            return exc.__cause__.sqlstate == "42P07"
+        return False
+
     def execute(self, sql, params=()):
         """
         Execute SQL with automatic retry on DSQL OCC errors.
@@ -79,10 +87,32 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         DSQL may reject operations with SerializationFailure (OC000/OC001)
         when concurrent schema changes conflict. Since can_rollback_ddl=False,
         each execute() auto-commits independently, making retries safe.
+
+        Also handles "already exists" errors on CREATE INDEX ASYNC statements.
+        DSQL creates indexes asynchronously, and an in-progress ASYNC index
+        may survive a DROP TABLE, leaving an orphaned index name. When this
+        happens, the existing index is dropped and the CREATE is retried.
         """
         for attempt in range(_OCC_MAX_RETRIES):
             try:
                 return super().execute(sql, params)
+            except ProgrammingError as e:
+                # DSQL's ASYNC index creation can leave orphaned index names
+                # that survive DROP TABLE. If a CREATE INDEX hits "already
+                # exists" (42P07), drop the stale index and retry once.
+                sql_str = str(sql)
+                if attempt == 0 and self._is_duplicate_relation_error(e) and "INDEX" in sql_str:
+                    # Extract the index name: it's the first quoted identifier
+                    # after "INDEX" (or "INDEX ASYNC") in the SQL.
+                    match = re.search(r"INDEX\s+(?:ASYNC\s+)?(?:IF\s+NOT\s+EXISTS\s+)?(\S+)", sql_str)
+                    if match:
+                        index_name = strip_quotes(match.group(1))
+                        logger.debug("Index %s already exists, dropping and retrying", index_name)
+                        self.connection.close()
+                        self.connection.ensure_connection()
+                        super().execute(f"DROP INDEX IF EXISTS {self.quote_name(index_name)}")
+                        continue
+                raise
             except OperationalError as e:
                 if not self._is_occ_error(e) or attempt == _OCC_MAX_RETRIES - 1:
                     raise
