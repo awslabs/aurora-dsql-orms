@@ -381,12 +381,13 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # Step 3: Copy data from the frozen old table into the new table.
         # DSQL has a ~3000 row limit per transaction. Copy in batches to
         # stay within the limit. Each batch auto-commits independently
-        # (can_rollback_ddl = False). The source table is frozen (renamed),
-        # so the OFFSET-based pagination is stable.
+        # (can_rollback_ddl = False). ORDER BY the primary key guarantees
+        # deterministic, non-overlapping slices across batches.
         dst_cols = ", ".join(self.quote_name(x) for x in mapping)
         src_exprs = ", ".join(mapping.values())
         dst_table = self.quote_name(new_model._meta.db_table)
         src_table = self.quote_name(old_table)
+        order_by = self.quote_name(model._meta.pk.column)
 
         with self.connection.cursor() as cursor:
             cursor.execute(f"SELECT COUNT(*) FROM {src_table}")
@@ -396,8 +397,24 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             self.execute(
                 f"INSERT INTO {dst_table} ({dst_cols})"
                 f" SELECT {src_exprs} FROM {src_table}"
+                f" ORDER BY {order_by}"
                 f" LIMIT {_COPY_BATCH_SIZE} OFFSET {offset}"
             )
+
+        # Verify the copy is complete before dropping the source.
+        if total_rows > 0:
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"SELECT COUNT(*) FROM {dst_table}")
+                copied_rows = cursor.fetchone()[0]
+            if copied_rows != total_rows:
+                # Abort: recover by renaming old__ back to original.
+                self.execute(f"DROP TABLE IF EXISTS {dst_table}")
+                self.execute(f"ALTER TABLE {self.quote_name(old_table)} RENAME TO {self.quote_name(original_table)}")
+                raise RuntimeError(
+                    f"_remake_table copy verification failed for "
+                    f"'{original_table}': expected {total_rows} rows, "
+                    f"got {copied_rows}. Original table has been restored."
+                )
 
         # Step 4: Drop the old (frozen) table.
         self.execute(self.sql_delete_table % {"table": self.quote_name(old_table)})
