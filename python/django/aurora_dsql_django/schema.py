@@ -156,10 +156,16 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # one-DDL-per-transaction rule without any special transaction handling.
     # OCC errors (OC000/OC001) are retried automatically via execute().
     #
+    # Data safety: the source table (old__) is kept until the copy is
+    # verified by row count. Any failure before that point recovers from
+    # old__. After verification, old__ is dropped and any subsequent
+    # failure recovers from new__. No path loses data silently.
+    #
     # WARNING: This is designed for development iteration, not production
-    # use on tables with significant data. The table is unavailable during
-    # the recreation window, and the batched copy holds no cross-batch
-    # transactional guarantee.
+    # use on tables with significant data. The table is unavailable under
+    # its original name during the recreation window (between steps 1
+    # and 5). For production schema changes, consider blue/green
+    # deployments or manual migration strategies.
     # -------------------------------------------------------------------------
 
     def _table_exists(self, table_name):
@@ -202,8 +208,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             This is designed for **development and iteration**, not
             production use on tables with significant data. The table is
             unavailable under its original name during the recreation
-            window, and the batched copy holds no cross-batch transactional
-            guarantee. For production schema changes, consider blue/green
+            window. For production schema changes, consider blue/green
             deployments or manual migration strategies.
         """
         # Work out the new fields dict / mapping
@@ -277,26 +282,8 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
         constraints = list(model._meta.constraints)
 
-        # Provide isolated instances of the fields to the new model body so
-        # that the existing model's internals aren't interfered with when
-        # the dummy model is constructed.
-        body_copy = copy.deepcopy(body)
-
-        # Construct a new model for FK resolution (never materialized as a table).
-        meta_contents = {
-            "app_label": model._meta.app_label,
-            "db_table": model._meta.db_table,
-            "unique_together": unique_together,
-            "indexes": indexes,
-            "constraints": constraints,
-            "apps": apps,
-        }
-        meta = type("Meta", (), meta_contents)
-        body_copy["Meta"] = meta
-        body_copy["__module__"] = model.__module__
-        type(model._meta.object_name, model.__bases__, body_copy)
-
         # Construct a model with the new__<table> name for creating the new schema.
+        # Use deep copies so the existing model's internals aren't modified.
         body_copy = copy.deepcopy(body)
         meta_contents = {
             "app_label": model._meta.app_label,
@@ -385,31 +372,31 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # deterministic, non-overlapping slices across batches.
         dst_cols = ", ".join(self.quote_name(x) for x in mapping)
         src_exprs = ", ".join(mapping.values())
-        dst_table = self.quote_name(new_model._meta.db_table)
-        src_table = self.quote_name(old_table)
-        order_by = self.quote_name(model._meta.pk.column)
+        q_new = self.quote_name(new_table)
+        q_old = self.quote_name(old_table)
+        q_pk = self.quote_name(model._meta.pk.column)
 
         with self.connection.cursor() as cursor:
-            cursor.execute(f"SELECT COUNT(*) FROM {src_table}")
+            cursor.execute(f"SELECT COUNT(*) FROM {q_old}")
             total_rows = cursor.fetchone()[0]
 
         for offset in range(0, total_rows, _COPY_BATCH_SIZE):
             self.execute(
-                f"INSERT INTO {dst_table} ({dst_cols})"
-                f" SELECT {src_exprs} FROM {src_table}"
-                f" ORDER BY {order_by}"
+                f"INSERT INTO {q_new} ({dst_cols})"
+                f" SELECT {src_exprs} FROM {q_old}"
+                f" ORDER BY {q_pk}"
                 f" LIMIT {_COPY_BATCH_SIZE} OFFSET {offset}"
             )
 
         # Verify the copy is complete before dropping the source.
         if total_rows > 0:
             with self.connection.cursor() as cursor:
-                cursor.execute(f"SELECT COUNT(*) FROM {dst_table}")
+                cursor.execute(f"SELECT COUNT(*) FROM {q_new}")
                 copied_rows = cursor.fetchone()[0]
             if copied_rows != total_rows:
                 # Abort: recover by renaming old__ back to original.
-                self.execute(f"DROP TABLE IF EXISTS {dst_table}")
-                self.execute(f"ALTER TABLE {self.quote_name(old_table)} RENAME TO {self.quote_name(original_table)}")
+                self.execute(f"DROP TABLE IF EXISTS {q_new}")
+                self.execute(f"ALTER TABLE {q_old} RENAME TO {self.quote_name(original_table)}")
                 raise RuntimeError(
                     f"_remake_table copy verification failed for "
                     f"'{original_table}': expected {total_rows} rows, "
