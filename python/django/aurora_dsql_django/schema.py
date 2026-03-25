@@ -362,6 +362,14 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         original_table = model._meta.db_table
         old_table = f"old__{strip_quotes(original_table)}"
         new_table = new_model._meta.db_table
+
+        if len(old_table) > 63 or len(new_table) > 63:
+            raise ValueError(
+                f"Cannot remake table '{original_table}': prefixed names "
+                f"exceed PostgreSQL's 63-byte identifier limit. "
+                f"Rename the table to a shorter name first."
+            )
+
         remake_tables = (original_table, old_table, new_table)
 
         def _clear_deferred_sql_for_remake():

@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 
 import django
 from django.conf import settings
-from django.db import models
+from django.db import OperationalError, models
 
 if not settings.configured:
     settings.configure(
@@ -236,6 +236,82 @@ class TestRemakeTableVerification(unittest.TestCase):
         calls = _get_sql_strings(mock_execute)
         inserts = [c for c in calls if "INSERT" in c]
         self.assertEqual(len(inserts), 0, f"Expected no INSERT for empty table, got: {calls}")
+
+    @patch.object(DatabaseSchemaEditor, "alter_db_table")
+    @patch.object(DatabaseSchemaEditor, "create_model")
+    @patch.object(DatabaseSchemaEditor, "execute")
+    @patch.object(DatabaseSchemaEditor, "_query_with_retry")
+    @patch.object(DatabaseSchemaEditor, "_table_exists")
+    def test_multi_batch_copy(self, mock_exists, mock_query, mock_execute, mock_create, mock_alter):
+        """A table with 2500 rows requires 3 batches of 1000."""
+        mock_exists.return_value = True
+
+        # _query_with_retry calls in order:
+        # 1. COUNT(*) FROM old__ → 2500
+        # 2. SELECT pk ... LIMIT 1 → seed pk
+        # 3. SELECT pk ... OFFSET → pk 1001 (next batch start)
+        # 4. SELECT pk ... OFFSET → pk 2001 (next batch start)
+        # 5. SELECT pk ... OFFSET → [] (no more rows)
+        # 6. COUNT(*) FROM new__ → 2500 (verification passes)
+        mock_query.side_effect = [
+            [(2500,)],  # total_rows
+            [(1,)],  # seed pk
+            [(1001,)],  # next batch start
+            [(2001,)],  # next batch start
+            [],  # no more rows
+            [(2500,)],  # copied_rows (matches)
+        ]
+
+        Model = _make_model()
+        old_field = Model._meta.get_field("name")
+        new_field = Model._meta.get_field("name")
+        self.editor._remake_table(Model, alter_fields=[(old_field, new_field)])
+
+        calls = _get_sql_strings(mock_execute)
+        inserts = [c for c in calls if "INSERT" in c]
+        self.assertEqual(len(inserts), 3, f"Expected 3 INSERT calls for 2500 rows, got: {inserts}")
+
+
+def _make_occ_error(sqlstate="OC001"):
+    """Create a mock OperationalError with a DSQL OCC sqlstate on __cause__."""
+    cause = Exception()
+    cause.sqlstate = sqlstate
+    exc = OperationalError()
+    exc.__cause__ = cause
+    return exc
+
+
+class TestOccRetry(unittest.TestCase):
+    """Test _occ_retry behavior for OCC error handling."""
+
+    def setUp(self):
+        self.editor = _setup_editor()
+
+    def test_occ_retry_succeeds_on_first_attempt(self):
+        """fn() succeeds immediately, verify called once."""
+        fn = MagicMock(return_value="ok")
+        result = self.editor._occ_retry(fn)
+        self.assertEqual(result, "ok")
+        fn.assert_called_once()
+
+    @patch("aurora_dsql_django.schema.time.sleep")
+    def test_occ_retry_succeeds_after_retry(self, mock_sleep):
+        """fn() raises OCC error on first call, succeeds on second."""
+        fn = MagicMock(side_effect=[_make_occ_error("OC001"), "ok"])
+        result = self.editor._occ_retry(fn)
+        self.assertEqual(result, "ok")
+        self.assertEqual(fn.call_count, 2)
+
+    def test_occ_retry_raises_non_occ_error(self):
+        """fn() raises a non-OCC OperationalError, verify it's raised immediately."""
+        cause = Exception()
+        cause.sqlstate = "42P01"  # Not an OCC error
+        exc = OperationalError()
+        exc.__cause__ = cause
+        fn = MagicMock(side_effect=exc)
+        with self.assertRaises(OperationalError):
+            self.editor._occ_retry(fn)
+        fn.assert_called_once()
 
 
 if __name__ == "__main__":
