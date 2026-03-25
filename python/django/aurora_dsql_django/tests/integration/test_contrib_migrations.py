@@ -9,6 +9,7 @@ against a real DSQL cluster. These migrations exercise ALTER COLUMN, DROP COLUMN
 and ADD COLUMN operations that require the adapter's table recreation support.
 """
 
+import time
 import unittest
 
 from django.core.management import call_command
@@ -64,12 +65,24 @@ class TestContribMigrations(unittest.TestCase):
           - contenttypes.0002: AlterField (nullability) + RemoveField
           - auth.0002-0012: AlterField (varchar length, nullability changes)
         """
-        # Run migrate -- this will apply all migrations for INSTALLED_APPS
-        # (django.contrib.contenttypes and django.contrib.auth per test_settings.py)
-        try:
-            call_command("migrate", verbosity=1, no_color=True)
-        except Exception as e:
-            self.fail(f"Django migrate failed: {e}")
+        # Run migrate -- this will apply all migrations for INSTALLED_APPS.
+        # DSQL may throw OC001 if schema changes from _clean_database haven't
+        # fully propagated. Retry with a fresh connection as recommended.
+        last_error = None
+        for attempt in range(3):
+            try:
+                call_command("migrate", verbosity=1, no_color=True)
+                last_error = None
+                break
+            except Exception as e:
+                last_error = e
+                if "OC001" in str(e) and attempt < 2:
+                    connection.close()
+                    time.sleep(2)
+                    continue
+                break
+        if last_error is not None:
+            self.fail(f"Django migrate failed: {last_error}")
 
         # Verify the key tables exist with the correct final schema
         with connection.cursor() as cursor:
