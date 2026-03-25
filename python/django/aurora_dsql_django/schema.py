@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 _OCC_MAX_RETRIES = 3
 _OCC_RETRY_DELAY = 1.0
 
+# DSQL has a 3000 row limit per transaction. Use a smaller batch size
+# to stay well within the limit when copying data during table recreation.
+_COPY_BATCH_SIZE = 1000
+
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     """
@@ -137,7 +141,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # prevent silent data loss from concurrent writes:
     #   1. RENAME original → old__<table>  (freezes the source)
     #   2. CREATE new__<table>             (new schema)
-    #   3. INSERT INTO new__<table> SELECT FROM old__<table>
+    #   3. INSERT INTO new__<table> SELECT FROM old__<table> (batched)
     #   4. DROP old__<table>
     #   5. RENAME new__<table> → original
     #
@@ -294,14 +298,25 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         self.create_model(new_model)
 
         # Step 4: Copy data from the frozen old table into the new table.
-        self.execute(
-            "INSERT INTO {} ({}) SELECT {} FROM {}".format(
-                self.quote_name(new_model._meta.db_table),
-                ", ".join(self.quote_name(x) for x in mapping),
-                ", ".join(mapping.values()),
-                self.quote_name(old_table),
+        # DSQL has a ~3000 row limit per transaction. Copy in batches to
+        # stay within the limit. Each batch auto-commits independently
+        # (can_rollback_ddl = False). The source table is frozen (renamed),
+        # so the OFFSET-based pagination is stable.
+        dst_cols = ", ".join(self.quote_name(x) for x in mapping)
+        src_exprs = ", ".join(mapping.values())
+        dst_table = self.quote_name(new_model._meta.db_table)
+        src_table = self.quote_name(old_table)
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT COUNT(*) FROM {src_table}")
+            total_rows = cursor.fetchone()[0]
+
+        for offset in range(0, max(total_rows, 1), _COPY_BATCH_SIZE):
+            self.execute(
+                f"INSERT INTO {dst_table} ({dst_cols})"
+                f" SELECT {src_exprs} FROM {src_table}"
+                f" LIMIT {_COPY_BATCH_SIZE} OFFSET {offset}"
             )
-        )
 
         # Step 5: Drop the old (frozen) table.
         self.execute(self.sql_delete_table % {"table": self.quote_name(old_table)})
