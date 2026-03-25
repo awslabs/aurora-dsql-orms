@@ -67,18 +67,15 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         return self
 
     @staticmethod
-    def _is_occ_error(exc):
-        """Check whether an OperationalError is a DSQL OCC conflict (OC000/OC001)."""
-        if hasattr(exc, "__cause__") and hasattr(exc.__cause__, "sqlstate"):
-            return exc.__cause__.sqlstate in ("OC000", "OC001")
-        return False
+    def _get_sqlstate(exc):
+        """Extract the PostgreSQL sqlstate from a Django database exception."""
+        cause = getattr(exc, "__cause__", None)
+        return getattr(cause, "sqlstate", None)
 
-    @staticmethod
-    def _is_duplicate_relation_error(exc):
-        """Check whether a ProgrammingError is a duplicate relation (sqlstate 42P07)."""
-        if hasattr(exc, "__cause__") and hasattr(exc.__cause__, "sqlstate"):
-            return exc.__cause__.sqlstate == "42P07"
-        return False
+    @classmethod
+    def _is_occ_error(cls, exc):
+        """Check whether an OperationalError is a DSQL OCC conflict (OC000/OC001)."""
+        return cls._get_sqlstate(exc) in ("OC000", "OC001")
 
     def execute(self, sql, params=()):
         """
@@ -101,7 +98,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                 # that survive DROP TABLE. If a CREATE INDEX hits "already
                 # exists" (42P07), drop the stale index and retry once.
                 sql_str = str(sql)
-                if attempt == 0 and self._is_duplicate_relation_error(e) and "INDEX" in sql_str:
+                if attempt == 0 and self._get_sqlstate(e) == "42P07" and "INDEX" in sql_str:
                     # Extract the index name: it's the first quoted identifier
                     # after "INDEX" (or "INDEX ASYNC") in the SQL.
                     match = re.search(r"INDEX\s+(?:ASYNC\s+)?(?:IF\s+NOT\s+EXISTS\s+)?(\S+)", sql_str)
@@ -118,7 +115,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                     raise
                 logger.debug(
                     "DSQL OCC error (sqlstate=%s) on attempt %d/%d, retrying in %.1fs",
-                    e.__cause__.sqlstate,
+                    self._get_sqlstate(e),
                     attempt + 1,
                     _OCC_MAX_RETRIES,
                     _OCC_RETRY_DELAY,
@@ -206,19 +203,34 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # deployments or manual migration strategies.
     # -------------------------------------------------------------------------
 
-    def _query_with_retry(self, sql, params=None):
-        """Execute a read query with OCC retry, returning all rows."""
+    def _occ_retry(self, fn):
+        """Run fn() with automatic retry on DSQL OCC errors (OC000/OC001)."""
         for attempt in range(_OCC_MAX_RETRIES):
             try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(sql, params)
-                    return cursor.fetchall()
+                return fn()
             except OperationalError as e:
                 if not self._is_occ_error(e) or attempt == _OCC_MAX_RETRIES - 1:
                     raise
+                logger.debug(
+                    "DSQL OCC error (sqlstate=%s) on attempt %d/%d, retrying in %.1fs",
+                    self._get_sqlstate(e),
+                    attempt + 1,
+                    _OCC_MAX_RETRIES,
+                    _OCC_RETRY_DELAY,
+                )
                 self.connection.close()
                 self.connection.ensure_connection()
                 time.sleep(_OCC_RETRY_DELAY)
+
+    def _query_with_retry(self, sql, params=None):
+        """Execute a read query with OCC retry, returning all rows."""
+
+        def _do_query():
+            with self.connection.cursor() as cursor:
+                cursor.execute(sql, params)
+                return cursor.fetchall()
+
+        return self._occ_retry(_do_query)
 
     def _table_exists(self, table_name):
         """Check whether a table exists in the current schema."""
