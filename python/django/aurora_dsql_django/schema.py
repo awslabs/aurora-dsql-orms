@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 _OCC_MAX_RETRIES = 3
 _OCC_RETRY_DELAY = 1.0
 
-# DSQL has a ~3000 row limit per transaction. Use a smaller batch size
+# DSQL has a 3000 row limit per transaction. Use a smaller batch size
 # to stay well within the limit when copying data during table recreation.
 _COPY_BATCH_SIZE = 1000
 
@@ -366,7 +366,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         self.create_model(new_model)
 
         # Step 3: Copy data from the frozen old table into the new table.
-        # DSQL has a ~3000 row limit per transaction. Copy in batches to
+        # DSQL has a 3000 row limit per transaction. Copy in batches to
         # stay within the limit. Each batch auto-commits independently
         # (can_rollback_ddl = False). ORDER BY the primary key guarantees
         # deterministic, non-overlapping slices across batches.
