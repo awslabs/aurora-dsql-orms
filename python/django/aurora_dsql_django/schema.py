@@ -25,6 +25,10 @@ from django.db.models import CheckConstraint
 
 logger = logging.getLogger(__name__)
 
+# OCC retry settings for DSQL schema operations.
+_OCC_MAX_RETRIES = 3
+_OCC_RETRY_DELAY = 1.0
+
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     """
@@ -57,29 +61,29 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         self.connection.ensure_connection()
         return self
 
-    def _execute_with_retry(self, fn, max_retries=3, delay=1.0):
+    def execute(self, sql, params=()):
         """
-        Execute a callable with retries on OC001 (SerializationFailure).
+        Execute SQL with automatic retry on DSQL OCC errors.
 
-        DSQL may reject DDL that follows another DDL on the same schema
-        object because its schema cache hasn't propagated yet. The standard
-        fix is to retry after a brief delay.
+        DSQL may reject operations with SerializationFailure (OC000/OC001)
+        when concurrent schema changes conflict. Since can_rollback_ddl=False,
+        each execute() auto-commits independently, making retries safe.
         """
-        for attempt in range(max_retries):
+        for attempt in range(_OCC_MAX_RETRIES):
             try:
-                return fn()
+                return super().execute(sql, params)
             except OperationalError:
-                if attempt == max_retries - 1:
+                if attempt == _OCC_MAX_RETRIES - 1:
                     raise
                 logger.debug(
-                    "OC001 on attempt %d/%d, retrying in %.1fs",
+                    "DSQL OCC error on attempt %d/%d, retrying in %.1fs",
                     attempt + 1,
-                    max_retries,
-                    delay,
+                    _OCC_MAX_RETRIES,
+                    _OCC_RETRY_DELAY,
                 )
                 self.connection.close()
                 self.connection.ensure_connection()
-                time.sleep(delay)
+                time.sleep(_OCC_RETRY_DELAY)
 
     def add_index(self, model, index, concurrently=False):
         if index.contains_expressions and not self.connection.features.supports_expression_indexes:
@@ -138,6 +142,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # Transaction safety: since can_rollback_ddl = False, each self.execute()
     # call auto-commits independently. This naturally satisfies DSQL's
     # one-DDL-per-transaction rule without any special transaction handling.
+    # OCC errors (OC000/OC001) are retried automatically via execute().
     # -------------------------------------------------------------------------
 
     def _remake_table(self, model, create_field=None, delete_field=None, alter_fields=None):
@@ -192,7 +197,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             if new_field.generated:
                 continue
             if old_field.null and not new_field.null:
-                # Transitioning from NULL to NOT NULL — use coalesce to fill
+                # Transitioning from NULL to NOT NULL -- use coalesce to fill
                 # existing NULLs with the new default.
                 if not new_field.has_db_default():
                     default = self.quote_value(self.effective_default(new_field))
@@ -278,21 +283,17 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         self.delete_model(model, handle_autom2m=False)
 
         # Rename the new table to the original name.
-        # The preceding DROP may trigger an OC001 (SerializationFailure)
-        # because DSQL's schema cache hasn't propagated yet. Retry briefly.
-        self._execute_with_retry(
-            lambda: self.alter_db_table(
-                new_model,
-                new_model._meta.db_table,
-                model._meta.db_table,
-            )
+        self.alter_db_table(
+            new_model,
+            new_model._meta.db_table,
+            model._meta.db_table,
         )
 
         # Run deferred SQL (indexes) on the correctly-named table.
         # Each execute() auto-commits (can_rollback_ddl = False), so each
         # CREATE INDEX ASYNC runs in its own transaction as DSQL requires.
         for sql in self.deferred_sql:
-            self._execute_with_retry(lambda sql=sql: self.execute(sql))
+            self.execute(sql)
         self.deferred_sql = []
         # Fix any PK-removed field
         if restore_pk_field:
@@ -303,7 +304,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         if handle_autom2m:
             super().delete_model(model)
         else:
-            # Delete the table only (no M2M cleanup) — used by _remake_table.
+            # Delete the table only (no M2M cleanup) -- used by _remake_table.
             self.execute(
                 self.sql_delete_table
                 % {
@@ -343,7 +344,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         """
         Add a field to a model.
 
-        Aurora DSQL's ADD COLUMN only supports 'column_name data_type' — no
+        Aurora DSQL's ADD COLUMN only supports 'column_name data_type' -- no
         DEFAULT, NOT NULL, UNIQUE, or PRIMARY KEY inline. Fields requiring
         any of these use table recreation instead.
         """
@@ -370,7 +371,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         Aurora DSQL does not support ALTER TABLE DROP COLUMN, so non-M2M
         field removal requires table recreation.
         """
-        # M2M fields are a special case — just drop the through table.
+        # M2M fields are a special case -- just drop the through table.
         if field.many_to_many:
             if field.remote_field.through._meta.auto_created:
                 self.delete_model(field.remote_field.through)

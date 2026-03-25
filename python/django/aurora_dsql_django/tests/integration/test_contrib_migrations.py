@@ -13,7 +13,44 @@ import time
 import unittest
 
 from django.core.management import call_command
-from django.db import connection
+from django.db import connection, OperationalError
+
+
+def _drop_tables_with_retry(tables, max_retries=3, delay=1.0):
+    """
+    Drop tables one by one, retrying on DSQL OCC errors.
+
+    DSQL may return SerializationFailure (OC000/OC001) when schema changes
+    conflict. Each DROP is retried independently with a fresh connection.
+    """
+    for table in tables:
+        for attempt in range(max_retries):
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        f"DROP TABLE IF EXISTS {connection.ops.quote_name(table)}"
+                    )
+                break
+            except OperationalError:
+                if attempt == max_retries - 1:
+                    break  # Best-effort cleanup -- don't fail teardown
+                connection.close()
+                time.sleep(delay)
+
+
+# All tables that Django contrib migrations create, in dependency order.
+_DJANGO_TABLES = [
+    "django_admin_log",
+    "auth_user_user_permissions",
+    "auth_user_groups",
+    "auth_permission",
+    "auth_group_permissions",
+    "auth_group",
+    "auth_user",
+    "django_content_type",
+    "django_session",
+    "django_migrations",
+]
 
 
 class TestContribMigrations(unittest.TestCase):
@@ -29,32 +66,15 @@ class TestContribMigrations(unittest.TestCase):
         """Drop all Django tables to start from a clean state."""
         super().setUpClass()
         connection.close()
-        cls._clean_database()
-
-    @classmethod
-    def _clean_database(cls):
-        """Drop all tables that Django migrations would create."""
-        tables_to_drop = [
-            "django_admin_log",
-            "auth_user_user_permissions",
-            "auth_user_groups",
-            "auth_permission",
-            "auth_group_permissions",
-            "auth_group",
-            "auth_user",
-            "django_content_type",
-            "django_session",
-            "django_migrations",
-        ]
-        with connection.cursor() as cursor:
-            for table in tables_to_drop:
-                cursor.execute(f"DROP TABLE IF EXISTS {connection.ops.quote_name(table)}")
+        _drop_tables_with_retry(_DJANGO_TABLES)
+        # Let schema changes propagate before running migrations.
+        time.sleep(2)
 
     @classmethod
     def tearDownClass(cls):
         """Clean up all tables created by migrations."""
         connection.close()
-        cls._clean_database()
+        _drop_tables_with_retry(_DJANGO_TABLES)
         super().tearDownClass()
 
     def test_migrate_contenttypes_and_auth(self):
@@ -66,20 +86,26 @@ class TestContribMigrations(unittest.TestCase):
           - auth.0002-0012: AlterField (varchar length, nullability changes)
         """
         # Run migrate -- this will apply all migrations for INSTALLED_APPS.
-        # DSQL may throw OC001 if schema changes from _clean_database haven't
-        # fully propagated. Retry with a fresh connection as recommended.
+        # DSQL may throw OCC errors (OC000/OC001) if schema changes haven't
+        # fully propagated. Retry with a fresh connection.
         last_error = None
         for attempt in range(3):
             try:
+                connection.close()
                 call_command("migrate", verbosity=1, no_color=True)
                 last_error = None
                 break
+            except OperationalError as e:
+                last_error = e
+                if attempt < 2:
+                    connection.close()
+                    # Clean up partial migration state before retrying.
+                    _drop_tables_with_retry(_DJANGO_TABLES)
+                    time.sleep(3)
+                    continue
+                break
             except Exception as e:
                 last_error = e
-                if "OC001" in str(e) and attempt < 2:
-                    connection.close()
-                    time.sleep(2)
-                    continue
                 break
         if last_error is not None:
             self.fail(f"Django migrate failed: {last_error}")
