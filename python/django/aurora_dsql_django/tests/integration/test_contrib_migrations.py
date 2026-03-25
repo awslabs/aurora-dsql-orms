@@ -50,6 +50,11 @@ _DJANGO_TABLES = [
     "django_migrations",
 ]
 
+# Temp tables that _remake_table may leave behind on failure.
+_TEMP_TABLES = []
+for _t in _DJANGO_TABLES:
+    _TEMP_TABLES.extend([f"old__{_t}", f"new__{_t}"])
+
 
 class TestContribMigrations(unittest.TestCase):
     """
@@ -64,7 +69,7 @@ class TestContribMigrations(unittest.TestCase):
         """Drop all Django tables to start from a clean state."""
         super().setUpClass()
         connection.close()
-        _drop_tables_with_retry(_DJANGO_TABLES)
+        _drop_tables_with_retry(_TEMP_TABLES + _DJANGO_TABLES)
         # Let schema changes propagate before running migrations.
         time.sleep(2)
 
@@ -72,7 +77,7 @@ class TestContribMigrations(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up all tables created by migrations."""
         connection.close()
-        _drop_tables_with_retry(_DJANGO_TABLES)
+        _drop_tables_with_retry(_TEMP_TABLES + _DJANGO_TABLES)
         super().tearDownClass()
 
     def test_migrate_contenttypes_and_auth(self):

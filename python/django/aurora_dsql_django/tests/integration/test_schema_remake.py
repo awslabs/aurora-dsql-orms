@@ -23,13 +23,17 @@ def _drop_table_if_exists(table_name):
 class TestRemakeTableAlterField(unittest.TestCase):
     """Test _alter_field via table recreation on a real DSQL cluster."""
 
+    TABLE = "test_alter_field"
+
     def setUp(self):
         connection.close()
-        _drop_table_if_exists("test_alter_field")
+        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
+            _drop_table_if_exists(t)
 
     def tearDown(self):
         connection.close()
-        _drop_table_if_exists("test_alter_field")
+        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
+            _drop_table_if_exists(t)
 
     def _create_test_table(self, fields):
         """Create a test table using the schema editor."""
@@ -155,13 +159,17 @@ class TestRemakeTableAlterField(unittest.TestCase):
 class TestRemakeTableRemoveField(unittest.TestCase):
     """Test remove_field via table recreation on a real DSQL cluster."""
 
+    TABLE = "test_remove_field"
+
     def setUp(self):
         connection.close()
-        _drop_table_if_exists("test_remove_field")
+        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
+            _drop_table_if_exists(t)
 
     def tearDown(self):
         connection.close()
-        _drop_table_if_exists("test_remove_field")
+        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
+            _drop_table_if_exists(t)
 
     def _create_test_table(self, fields):
         meta = type(
@@ -245,13 +253,17 @@ class TestRemakeTableRemoveField(unittest.TestCase):
 class TestRemakeTableAddField(unittest.TestCase):
     """Test add_field via table recreation on a real DSQL cluster."""
 
+    TABLE = "test_add_field"
+
     def setUp(self):
         connection.close()
-        _drop_table_if_exists("test_add_field")
+        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
+            _drop_table_if_exists(t)
 
     def tearDown(self):
         connection.close()
-        _drop_table_if_exists("test_add_field")
+        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
+            _drop_table_if_exists(t)
 
     def _create_test_table(self, fields):
         meta = type(

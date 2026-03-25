@@ -163,10 +163,10 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # -------------------------------------------------------------------------
 
     def _table_exists(self, table_name):
-        """Check whether a table exists in the database."""
+        """Check whether a table exists in the current schema."""
         with self.connection.cursor() as cursor:
             cursor.execute(
-                "SELECT 1 FROM information_schema.tables WHERE table_name = %s",
+                "SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = %s",
                 [strip_quotes(table_name)],
             )
             return cursor.fetchone() is not None
@@ -362,11 +362,20 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             if new_exists:
                 self.execute(f"DROP TABLE IF EXISTS {self.quote_name(new_table)}")
 
+        # Remove any pre-existing deferred SQL for the original table
+        # (from earlier operations in this schema editor session) before we
+        # replace it. create_model() below will generate fresh deferred SQL
+        # for the new table, and alter_db_table() will rename those references.
+        for sql in list(self.deferred_sql):
+            if isinstance(sql, Statement) and sql.references_table(original_table):
+                self.deferred_sql.remove(sql)
+
         # Step 1: Rename the original table to freeze it against concurrent writes.
         # Any writes to the original table name will now fail loudly.
         self.execute(f"ALTER TABLE {self.quote_name(original_table)} RENAME TO {self.quote_name(old_table)}")
 
         # Step 2: Create the new table with the updated schema.
+        # This adds deferred SQL (indexes) referencing new__<table>.
         self.create_model(new_model)
 
         # Step 3: Copy data from the frozen old table into the new table.
@@ -383,7 +392,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             cursor.execute(f"SELECT COUNT(*) FROM {src_table}")
             total_rows = cursor.fetchone()[0]
 
-        for offset in range(0, max(total_rows, 1), _COPY_BATCH_SIZE):
+        for offset in range(0, total_rows, _COPY_BATCH_SIZE):
             self.execute(
                 f"INSERT INTO {dst_table} ({dst_cols})"
                 f" SELECT {src_exprs} FROM {src_table}"
@@ -392,12 +401,10 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
         # Step 4: Drop the old (frozen) table.
         self.execute(self.sql_delete_table % {"table": self.quote_name(old_table)})
-        # Remove any deferred statements referencing the old table.
-        for sql in list(self.deferred_sql):
-            if isinstance(sql, Statement) and sql.references_table(original_table):
-                self.deferred_sql.remove(sql)
 
         # Step 5: Rename the new table to the original name.
+        # alter_db_table also updates deferred SQL references from
+        # new__<table> to the original table name.
         self.alter_db_table(
             new_model,
             new_model._meta.db_table,
@@ -413,23 +420,6 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # Fix any PK-removed field
         if restore_pk_field:
             restore_pk_field.primary_key = True
-
-    def delete_model(self, model, handle_autom2m=True):
-        """Delete a model from the database, with optional M2M handling."""
-        if handle_autom2m:
-            super().delete_model(model)
-        else:
-            # Delete the table only (no M2M cleanup) -- used by _remake_table.
-            self.execute(
-                self.sql_delete_table
-                % {
-                    "table": self.quote_name(model._meta.db_table),
-                }
-            )
-            # Remove all deferred statements referencing the deleted table.
-            for sql in list(self.deferred_sql):
-                if isinstance(sql, Statement) and sql.references_table(model._meta.db_table):
-                    self.deferred_sql.remove(sql)
 
     def _alter_field(
         self,
