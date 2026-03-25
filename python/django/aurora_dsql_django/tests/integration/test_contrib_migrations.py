@@ -92,7 +92,8 @@ class TestContribMigrations(unittest.TestCase):
         # DSQL may throw OCC errors (OC000/OC001) if schema changes haven't
         # fully propagated. Retry with a fresh connection.
         last_error = None
-        for attempt in range(3):
+        max_retries = 5
+        for attempt in range(max_retries):
             try:
                 connection.close()
                 call_command("migrate", verbosity=1, no_color=True)
@@ -100,11 +101,11 @@ class TestContribMigrations(unittest.TestCase):
                 break
             except OperationalError as e:
                 last_error = e
-                if attempt < 2:
+                if attempt < max_retries - 1:
                     connection.close()
                     # Clean up partial migration state before retrying.
                     _drop_tables_with_retry(_DJANGO_TABLES)
-                    time.sleep(3)
+                    time.sleep(5)
                     continue
                 break
             except Exception as e:

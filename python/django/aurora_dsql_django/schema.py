@@ -206,14 +206,27 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # deployments or manual migration strategies.
     # -------------------------------------------------------------------------
 
+    def _query_with_retry(self, sql, params=None):
+        """Execute a read query with OCC retry, returning all rows."""
+        for attempt in range(_OCC_MAX_RETRIES):
+            try:
+                with self.connection.cursor() as cursor:
+                    cursor.execute(sql, params)
+                    return cursor.fetchall()
+            except OperationalError as e:
+                if not self._is_occ_error(e) or attempt == _OCC_MAX_RETRIES - 1:
+                    raise
+                self.connection.close()
+                self.connection.ensure_connection()
+                time.sleep(_OCC_RETRY_DELAY)
+
     def _table_exists(self, table_name):
         """Check whether a table exists in the current schema."""
-        with self.connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = %s",
-                [strip_quotes(table_name)],
-            )
-            return cursor.fetchone() is not None
+        rows = self._query_with_retry(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = %s",
+            [strip_quotes(table_name)],
+        )
+        return len(rows) > 0
 
     def _remake_table(self, model, create_field=None, delete_field=None, alter_fields=None):
         """
@@ -429,15 +442,11 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         q_old = self.quote_name(old_table)
         q_pk = self.quote_name(model._meta.pk.column)
 
-        with self.connection.cursor() as cursor:
-            cursor.execute(f"SELECT COUNT(*) FROM {q_old}")
-            total_rows = cursor.fetchone()[0]
+        total_rows = self._query_with_retry(f"SELECT COUNT(*) FROM {q_old}")[0][0]
 
         if total_rows > 0:
             # Seed: fetch the first PK value (MIN() doesn't support UUID).
-            with self.connection.cursor() as cursor:
-                cursor.execute(f"SELECT {q_pk} FROM {q_old} ORDER BY {q_pk} LIMIT 1")
-                last_pk = cursor.fetchone()[0]
+            last_pk = self._query_with_retry(f"SELECT {q_pk} FROM {q_old} ORDER BY {q_pk} LIMIT 1")[0][0]
 
             copied = 0
             while copied < total_rows:
@@ -450,21 +459,17 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                     [last_pk],
                 )
                 # Advance the cursor past the batch we just copied.
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f"SELECT {q_pk} FROM {q_old} WHERE {q_pk} >= %s ORDER BY {q_pk} LIMIT 1 OFFSET {_COPY_BATCH_SIZE}",
-                        [last_pk],
-                    )
-                    row = cursor.fetchone()
-                if row is None:
+                rows = self._query_with_retry(
+                    f"SELECT {q_pk} FROM {q_old} WHERE {q_pk} >= %s ORDER BY {q_pk} LIMIT 1 OFFSET {_COPY_BATCH_SIZE}",
+                    [last_pk],
+                )
+                if not rows:
                     break  # No more rows
-                last_pk = row[0]
+                last_pk = rows[0][0]
                 copied += _COPY_BATCH_SIZE
 
             # Verify the copy is complete before dropping the source.
-            with self.connection.cursor() as cursor:
-                cursor.execute(f"SELECT COUNT(*) FROM {q_new}")
-                copied_rows = cursor.fetchone()[0]
+            copied_rows = self._query_with_retry(f"SELECT COUNT(*) FROM {q_new}")[0][0]
             if copied_rows != total_rows:
                 # Abort: recover by renaming old__ back to original.
                 self.execute(f"DROP TABLE IF EXISTS {q_new}")
