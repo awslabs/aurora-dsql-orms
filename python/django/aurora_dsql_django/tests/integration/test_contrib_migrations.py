@@ -27,6 +27,7 @@ class TestContribMigrations(unittest.TestCase):
     def setUpClass(cls):
         """Drop all Django tables to start from a clean state."""
         super().setUpClass()
+        connection.close()
         cls._clean_database()
 
     @classmethod
@@ -46,13 +47,12 @@ class TestContribMigrations(unittest.TestCase):
         ]
         with connection.cursor() as cursor:
             for table in tables_to_drop:
-                cursor.execute("BEGIN")
                 cursor.execute(f"DROP TABLE IF EXISTS {connection.ops.quote_name(table)}")
-                cursor.execute("COMMIT")
 
     @classmethod
     def tearDownClass(cls):
         """Clean up all tables created by migrations."""
+        connection.close()
         cls._clean_database()
         super().tearDownClass()
 
@@ -64,7 +64,7 @@ class TestContribMigrations(unittest.TestCase):
           - contenttypes.0002: AlterField (nullability) + RemoveField
           - auth.0002-0012: AlterField (varchar length, nullability changes)
         """
-        # Run migrate — this will apply all migrations for INSTALLED_APPS
+        # Run migrate -- this will apply all migrations for INSTALLED_APPS
         # (django.contrib.contenttypes and django.contrib.auth per test_settings.py)
         try:
             call_command("migrate", verbosity=1, no_color=True)
@@ -87,7 +87,7 @@ class TestContribMigrations(unittest.TestCase):
             self.assertNotIn("name", ct_columns, "contenttypes.0002 should remove the 'name' column")
 
             # auth_user should exist with the final column sizes
-            # (auth.0008 changes username max_length 30→150, etc.)
+            # (auth.0008 changes username max_length 30->150, etc.)
             cursor.execute(
                 "SELECT column_name, character_maximum_length "
                 "FROM information_schema.columns "
@@ -108,7 +108,7 @@ class TestContribMigrations(unittest.TestCase):
             self.assertEqual(row[0], "YES", "last_login should be nullable after auth.0005")
 
             # auth_permission.name should have max_length 255
-            # (auth.0002 changes it from 50→255)
+            # (auth.0002 changes it from 50->255)
             cursor.execute(
                 "SELECT character_maximum_length "
                 "FROM information_schema.columns "

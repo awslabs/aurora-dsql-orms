@@ -17,23 +17,22 @@ from django.db import connection, models
 def _drop_table_if_exists(table_name):
     """Drop a table if it exists, ignoring errors."""
     with connection.cursor() as cursor:
-        cursor.execute("BEGIN")
         cursor.execute(f"DROP TABLE IF EXISTS {connection.ops.quote_name(table_name)}")
-        cursor.execute("COMMIT")
 
 
 class TestRemakeTableAlterField(unittest.TestCase):
     """Test _alter_field via table recreation on a real DSQL cluster."""
 
     def setUp(self):
+        connection.close()
         _drop_table_if_exists("test_alter_field")
 
     def tearDown(self):
+        connection.close()
         _drop_table_if_exists("test_alter_field")
 
     def _create_test_table(self, fields):
         """Create a test table using the schema editor."""
-        # Build a dynamic model class
         meta = type(
             "Meta",
             (),
@@ -63,15 +62,6 @@ class TestRemakeTableAlterField(unittest.TestCase):
                 [table_name, column_name],
             )
             return cursor.fetchone()
-
-    def _table_exists(self, table_name):
-        """Check if a table exists."""
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = %s",
-                [table_name],
-            )
-            return cursor.fetchone()[0] > 0
 
     def _get_columns(self, table_name):
         """Get all column names for a table."""
@@ -103,7 +93,6 @@ class TestRemakeTableAlterField(unittest.TestCase):
 
         info = self._get_column_info("test_alter_field", "name")
         self.assertIsNotNone(info, "Column 'name' should exist after alter")
-        # character_maximum_length should be updated
         self.assertEqual(info[1], 255)
 
     def test_alter_field_set_nullable(self):
@@ -139,12 +128,10 @@ class TestRemakeTableAlterField(unittest.TestCase):
 
         # Insert test data
         with connection.cursor() as cursor:
-            cursor.execute("BEGIN")
             cursor.execute(
                 "INSERT INTO test_alter_field (name) VALUES (%s)",
                 ["test_value"],
             )
-            cursor.execute("COMMIT")
 
         old_field = models.CharField(max_length=50)
         old_field.set_attributes_from_name("name")
@@ -169,9 +156,11 @@ class TestRemakeTableRemoveField(unittest.TestCase):
     """Test remove_field via table recreation on a real DSQL cluster."""
 
     def setUp(self):
+        connection.close()
         _drop_table_if_exists("test_remove_field")
 
     def tearDown(self):
+        connection.close()
         _drop_table_if_exists("test_remove_field")
 
     def _create_test_table(self, fields):
@@ -234,12 +223,10 @@ class TestRemakeTableRemoveField(unittest.TestCase):
 
         # Insert test data
         with connection.cursor() as cursor:
-            cursor.execute("BEGIN")
             cursor.execute(
                 "INSERT INTO test_remove_field (name, code) VALUES (%s, %s)",
                 ["to_remove", "keep_this"],
             )
-            cursor.execute("COMMIT")
 
         field_to_remove = models.CharField(max_length=100, null=True)
         field_to_remove.set_attributes_from_name("name")
@@ -259,9 +246,11 @@ class TestRemakeTableAddField(unittest.TestCase):
     """Test add_field via table recreation on a real DSQL cluster."""
 
     def setUp(self):
+        connection.close()
         _drop_table_if_exists("test_add_field")
 
     def tearDown(self):
+        connection.close()
         _drop_table_if_exists("test_add_field")
 
     def _create_test_table(self, fields):
@@ -305,7 +294,7 @@ class TestRemakeTableAddField(unittest.TestCase):
     def test_add_not_null_field_with_default(self):
         """Test adding a NOT NULL field with a default to an existing table.
 
-        DSQL's ADD COLUMN only supports 'column_name data_type' — no DEFAULT
+        DSQL's ADD COLUMN only supports 'column_name data_type' -- no DEFAULT
         or NOT NULL inline. This must go through table recreation.
         """
         Model = self._create_test_table(
@@ -316,12 +305,10 @@ class TestRemakeTableAddField(unittest.TestCase):
 
         # Insert a row before adding the field
         with connection.cursor() as cursor:
-            cursor.execute("BEGIN")
             cursor.execute(
                 "INSERT INTO test_add_field (name) VALUES (%s)",
                 ["existing_row"],
             )
-            cursor.execute("COMMIT")
 
         new_field = models.CharField(max_length=50, default="pending")
         new_field.set_attributes_from_name("status")
@@ -342,7 +329,7 @@ class TestRemakeTableAddField(unittest.TestCase):
             self.assertEqual(rows[0][1], "pending")
 
     def test_add_nullable_field(self):
-        """Test adding a nullable field — should use simple ADD COLUMN."""
+        """Test adding a nullable field -- should use simple ADD COLUMN."""
         Model = self._create_test_table(
             {
                 "name": models.CharField(max_length=100),
