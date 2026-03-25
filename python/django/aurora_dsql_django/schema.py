@@ -414,6 +414,9 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
         # Step 2: Create the new table with the updated schema.
         # This adds deferred SQL (indexes) referencing new__<table>.
+        # Track where new deferred SQL starts so we only flush what
+        # create_model adds, preserving deferred SQL from other tables.
+        pre_deferred_count = len(self.deferred_sql)
         self.create_model(new_model)
 
         # Step 3: Copy data from the frozen old table into the new table.
@@ -483,9 +486,12 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # Step 6: Run deferred SQL (indexes) on the correctly-named table.
         # Each execute() auto-commits (can_rollback_ddl = False), so each
         # CREATE INDEX ASYNC runs in its own transaction as DSQL requires.
-        for sql in self.deferred_sql:
+        # Only flush SQL added by create_model for this table; preserve
+        # deferred SQL from other tables queued earlier in the session.
+        remake_deferred = self.deferred_sql[pre_deferred_count:]
+        self.deferred_sql = self.deferred_sql[:pre_deferred_count]
+        for sql in remake_deferred:
             self.execute(sql)
-        self.deferred_sql = []
         # Fix any PK-removed field
         if restore_pk_field:
             restore_pk_field.primary_key = True
