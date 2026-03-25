@@ -13,7 +13,7 @@ import time
 import unittest
 
 from django.core.management import call_command
-from django.db import connection, OperationalError
+from django.db import OperationalError, connection
 
 
 def _drop_tables_with_retry(tables, max_retries=3, delay=1.0):
@@ -27,9 +27,7 @@ def _drop_tables_with_retry(tables, max_retries=3, delay=1.0):
         for attempt in range(max_retries):
             try:
                 with connection.cursor() as cursor:
-                    cursor.execute(
-                        f"DROP TABLE IF EXISTS {connection.ops.quote_name(table)}"
-                    )
+                    cursor.execute(f"DROP TABLE IF EXISTS {connection.ops.quote_name(table)}")
                 break
             except OperationalError:
                 if attempt == max_retries - 1:

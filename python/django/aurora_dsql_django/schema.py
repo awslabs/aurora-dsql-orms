@@ -262,9 +262,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         new_model = type(f"New{model._meta.object_name}", model.__bases__, body_copy)
 
         # Drop any leftover temp table from a previous failed _remake_table.
-        self.execute(
-            f"DROP TABLE IF EXISTS {self.quote_name(new_model._meta.db_table)}"
-        )
+        self.execute(f"DROP TABLE IF EXISTS {self.quote_name(new_model._meta.db_table)}")
 
         # Create a new table with the updated schema.
         self.create_model(new_model)
