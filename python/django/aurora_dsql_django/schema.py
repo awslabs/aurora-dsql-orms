@@ -77,6 +77,8 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                     max_retries,
                     delay,
                 )
+                self.connection.close()
+                self.connection.ensure_connection()
                 time.sleep(delay)
 
     def add_index(self, model, index, concurrently=False):
@@ -253,6 +255,11 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         body_copy["Meta"] = meta
         body_copy["__module__"] = model.__module__
         new_model = type(f"New{model._meta.object_name}", model.__bases__, body_copy)
+
+        # Drop any leftover temp table from a previous failed _remake_table.
+        self.execute(
+            f"DROP TABLE IF EXISTS {self.quote_name(new_model._meta.db_table)}"
+        )
 
         # Create a new table with the updated schema.
         self.create_model(new_model)
