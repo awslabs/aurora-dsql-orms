@@ -90,39 +90,31 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         may survive a DROP TABLE, leaving an orphaned index name. When this
         happens, the existing index is dropped and the CREATE is retried.
         """
-        for attempt in range(_OCC_MAX_RETRIES):
+        _super_execute = super().execute
+        _index_dropped = False
+
+        def _do_execute():
+            nonlocal _index_dropped
             try:
-                return super().execute(sql, params)
+                return _super_execute(sql, params)
             except ProgrammingError as e:
                 # DSQL's ASYNC index creation can leave orphaned index names
                 # that survive DROP TABLE. If a CREATE INDEX hits "already
                 # exists" (42P07), drop the stale index and retry once.
                 sql_str = str(sql)
-                if attempt == 0 and self._get_sqlstate(e) == "42P07" and "INDEX" in sql_str:
-                    # Extract the index name: it's the first quoted identifier
-                    # after "INDEX" (or "INDEX ASYNC") in the SQL.
+                if not _index_dropped and self._get_sqlstate(e) == "42P07" and "INDEX" in sql_str:
                     match = re.search(r"INDEX\s+(?:ASYNC\s+)?(?:IF\s+NOT\s+EXISTS\s+)?(\S+)", sql_str)
                     if match:
                         index_name = strip_quotes(match.group(1))
                         logger.debug("Index %s already exists, dropping and retrying", index_name)
                         self.connection.close()
                         self.connection.ensure_connection()
-                        super().execute(f"DROP INDEX IF EXISTS {self.quote_name(index_name)}")
-                        continue
+                        _super_execute(f"DROP INDEX IF EXISTS {self.quote_name(index_name)}")
+                        _index_dropped = True
+                        return _super_execute(sql, params)
                 raise
-            except OperationalError as e:
-                if not self._is_occ_error(e) or attempt == _OCC_MAX_RETRIES - 1:
-                    raise
-                logger.debug(
-                    "DSQL OCC error (sqlstate=%s) on attempt %d/%d, retrying in %.1fs",
-                    self._get_sqlstate(e),
-                    attempt + 1,
-                    _OCC_MAX_RETRIES,
-                    _OCC_RETRY_DELAY,
-                )
-                self.connection.close()
-                self.connection.ensure_connection()
-                time.sleep(_OCC_RETRY_DELAY)
+
+        return self._occ_retry(_do_execute)
 
     def add_index(self, model, index, concurrently=False):
         if index.contains_expressions and not self.connection.features.supports_expression_indexes:
@@ -470,6 +462,13 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                     f" LIMIT {_COPY_BATCH_SIZE}",
                     [last_pk],
                 )
+                copied += _COPY_BATCH_SIZE
+                logger.info(
+                    "_remake_table %s: copied %d/%d rows",
+                    original_table,
+                    min(copied, total_rows),
+                    total_rows,
+                )
                 # Advance the cursor past the batch we just copied.
                 rows = self._query_with_retry(
                     f"SELECT {q_pk} FROM {q_old} WHERE {q_pk} >= %s ORDER BY {q_pk} LIMIT 1 OFFSET {_COPY_BATCH_SIZE}",
@@ -478,7 +477,6 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                 if not rows:
                     break  # No more rows
                 last_pk = rows[0][0]
-                copied += _COPY_BATCH_SIZE
 
             # Verify the copy is complete before dropping the source.
             copied_rows = self._query_with_retry(f"SELECT COUNT(*) FROM {q_new}")[0][0]
