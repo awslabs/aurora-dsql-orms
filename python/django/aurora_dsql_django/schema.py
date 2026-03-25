@@ -65,6 +65,13 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         self.connection.ensure_connection()
         return self
 
+    @staticmethod
+    def _is_occ_error(exc):
+        """Check whether an OperationalError is a DSQL OCC conflict (OC000/OC001)."""
+        if hasattr(exc, "__cause__") and hasattr(exc.__cause__, "sqlstate"):
+            return exc.__cause__.sqlstate in ("OC000", "OC001")
+        return False
+
     def execute(self, sql, params=()):
         """
         Execute SQL with automatic retry on DSQL OCC errors.
@@ -76,11 +83,12 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         for attempt in range(_OCC_MAX_RETRIES):
             try:
                 return super().execute(sql, params)
-            except OperationalError:
-                if attempt == _OCC_MAX_RETRIES - 1:
+            except OperationalError as e:
+                if not self._is_occ_error(e) or attempt == _OCC_MAX_RETRIES - 1:
                     raise
                 logger.debug(
-                    "DSQL OCC error on attempt %d/%d, retrying in %.1fs",
+                    "DSQL OCC error (sqlstate=%s) on attempt %d/%d, retrying in %.1fs",
+                    e.__cause__.sqlstate,
                     attempt + 1,
                     _OCC_MAX_RETRIES,
                     _OCC_RETRY_DELAY,
@@ -124,7 +132,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     def _create_like_index_sql(self, model, field):
         # Aurora DSQL doesn't support LIKE indexes which use postgres
-        # opsclasses
+        # opclasses
         return None
 
     # -------------------------------------------------------------------------
@@ -281,6 +289,12 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             indexes = [index for index in indexes if delete_field.name not in index.fields]
 
         constraints = list(model._meta.constraints)
+        if delete_field:
+            constraints = [
+                constraint
+                for constraint in constraints
+                if not (hasattr(constraint, "fields") and delete_field.name in constraint.fields)
+            ]
 
         # Construct a model with the new__<table> name for creating the new schema.
         # Use deep copies so the existing model's internals aren't modified.
@@ -301,6 +315,18 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         original_table = model._meta.db_table
         old_table = f"old__{strip_quotes(original_table)}"
         new_table = new_model._meta.db_table
+        remake_tables = (original_table, old_table, new_table)
+
+        def _clear_deferred_sql_for_remake():
+            """Remove deferred SQL referencing any of the three remake tables."""
+            self.deferred_sql = [
+                sql
+                for sql in self.deferred_sql
+                if not (
+                    isinstance(sql, Statement)
+                    and any(sql.references_table(t) for t in remake_tables)
+                )
+            ]
 
         # Step 0: Recover from a previous failed _remake_table.
         #
@@ -321,9 +347,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                     original_table,
                 )
                 self.execute(f"ALTER TABLE {self.quote_name(new_table)} RENAME TO {self.quote_name(original_table)}")
-                # Clean up deferred SQL from the partial run, then fall
-                # through to redo the full _remake_table from scratch.
-                self.deferred_sql = []
+                _clear_deferred_sql_for_remake()
             elif old_exists:
                 # Failed after RENAME original → old__ but before completing.
                 # old__table has the data. Rename it back to the original.
@@ -335,7 +359,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                 )
                 self.execute(f"DROP TABLE IF EXISTS {self.quote_name(new_table)}")
                 self.execute(f"ALTER TABLE {self.quote_name(old_table)} RENAME TO {self.quote_name(original_table)}")
-                self.deferred_sql = []
+                _clear_deferred_sql_for_remake()
             else:
                 raise RuntimeError(
                     f"Cannot recover _remake_table for '{original_table}': "
@@ -366,10 +390,9 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         self.create_model(new_model)
 
         # Step 3: Copy data from the frozen old table into the new table.
-        # DSQL has a 3000 row limit per transaction. Copy in batches to
-        # stay within the limit. Each batch auto-commits independently
-        # (can_rollback_ddl = False). ORDER BY the primary key guarantees
-        # deterministic, non-overlapping slices across batches.
+        # DSQL has a 3000 row limit per transaction. Copy in batches using
+        # cursor-based pagination (WHERE pk >= last_pk) for O(n) performance.
+        # Each batch auto-commits independently (can_rollback_ddl = False).
         dst_cols = ", ".join(self.quote_name(x) for x in mapping)
         src_exprs = ", ".join(mapping.values())
         q_new = self.quote_name(new_table)
@@ -380,16 +403,38 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             cursor.execute(f"SELECT COUNT(*) FROM {q_old}")
             total_rows = cursor.fetchone()[0]
 
-        for offset in range(0, total_rows, _COPY_BATCH_SIZE):
-            self.execute(
-                f"INSERT INTO {q_new} ({dst_cols})"
-                f" SELECT {src_exprs} FROM {q_old}"
-                f" ORDER BY {q_pk}"
-                f" LIMIT {_COPY_BATCH_SIZE} OFFSET {offset}"
-            )
-
-        # Verify the copy is complete before dropping the source.
         if total_rows > 0:
+            # Seed: fetch the minimum PK to start from
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"SELECT MIN({q_pk}) FROM {q_old}")
+                last_pk = cursor.fetchone()[0]
+
+            copied = 0
+            while copied < total_rows:
+                self.execute(
+                    f"INSERT INTO {q_new} ({dst_cols})"
+                    f" SELECT {src_exprs} FROM {q_old}"
+                    f" WHERE {q_pk} >= %s"
+                    f" ORDER BY {q_pk}"
+                    f" LIMIT {_COPY_BATCH_SIZE}",
+                    [last_pk],
+                )
+                # Advance the cursor past the batch we just copied.
+                with self.connection.cursor() as cursor:
+                    cursor.execute(
+                        f"SELECT {q_pk} FROM {q_old}"
+                        f" WHERE {q_pk} >= %s"
+                        f" ORDER BY {q_pk}"
+                        f" LIMIT 1 OFFSET {_COPY_BATCH_SIZE}",
+                        [last_pk],
+                    )
+                    row = cursor.fetchone()
+                if row is None:
+                    break  # No more rows
+                last_pk = row[0]
+                copied += _COPY_BATCH_SIZE
+
+            # Verify the copy is complete before dropping the source.
             with self.connection.cursor() as cursor:
                 cursor.execute(f"SELECT COUNT(*) FROM {q_new}")
                 copied_rows = cursor.fetchone()[0]
@@ -440,7 +485,10 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         renames; otherwise recreate the table.
         """
         # Use "ALTER TABLE ... RENAME COLUMN" if only the column name changed.
-        if old_field.column != new_field.column and self.column_sql(model, old_field) == self.column_sql(model, new_field):
+        if (
+            old_field.column != new_field.column
+            and self.column_sql(model, old_field) == self.column_sql(model, new_field)
+        ):
             return self.execute(self._rename_field_sql(model._meta.db_table, old_field, new_field, new_type))
         # Everything else: recreate the table.
         self._remake_table(model, alter_fields=[(old_field, new_field)])

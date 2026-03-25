@@ -20,10 +20,15 @@ def _drop_table_if_exists(table_name):
         cursor.execute(f"DROP TABLE IF EXISTS {connection.ops.quote_name(table_name)}")
 
 
-class TestRemakeTableAlterField(unittest.TestCase):
-    """Test _alter_field via table recreation on a real DSQL cluster."""
+class RemakeTableTestCase(unittest.TestCase):
+    """Base class for table recreation integration tests.
 
-    TABLE = "test_alter_field"
+    Subclasses must define TABLE (the test table name) and MODEL_NAME
+    (the dynamic model class name).
+    """
+
+    TABLE = None
+    MODEL_NAME = None
 
     def setUp(self):
         connection.close()
@@ -42,7 +47,7 @@ class TestRemakeTableAlterField(unittest.TestCase):
             (),
             {
                 "app_label": "test",
-                "db_table": "test_alter_field",
+                "db_table": self.TABLE,
             },
         )
         attrs = {
@@ -50,7 +55,7 @@ class TestRemakeTableAlterField(unittest.TestCase):
             "Meta": meta,
         }
         attrs.update(fields)
-        Model = type("TestAlterField", (models.Model,), attrs)
+        Model = type(self.MODEL_NAME, (models.Model,), attrs)
 
         with connection.schema_editor() as editor:
             editor.create_model(Model)
@@ -75,6 +80,13 @@ class TestRemakeTableAlterField(unittest.TestCase):
                 [table_name],
             )
             return [row[0] for row in cursor.fetchall()]
+
+
+class TestRemakeTableAlterField(RemakeTableTestCase):
+    """Test _alter_field via table recreation on a real DSQL cluster."""
+
+    TABLE = "test_alter_field"
+    MODEL_NAME = "TestAlterField"
 
     def test_alter_field_change_varchar_length(self):
         """Test that varchar max_length changes work via table recreation."""
@@ -156,48 +168,11 @@ class TestRemakeTableAlterField(unittest.TestCase):
             self.assertEqual(rows[0][0], "test_value")
 
 
-class TestRemakeTableRemoveField(unittest.TestCase):
+class TestRemakeTableRemoveField(RemakeTableTestCase):
     """Test remove_field via table recreation on a real DSQL cluster."""
 
     TABLE = "test_remove_field"
-
-    def setUp(self):
-        connection.close()
-        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
-            _drop_table_if_exists(t)
-
-    def tearDown(self):
-        connection.close()
-        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
-            _drop_table_if_exists(t)
-
-    def _create_test_table(self, fields):
-        meta = type(
-            "Meta",
-            (),
-            {
-                "app_label": "test",
-                "db_table": "test_remove_field",
-            },
-        )
-        attrs = {
-            "__module__": "aurora_dsql_django.tests.integration",
-            "Meta": meta,
-        }
-        attrs.update(fields)
-        Model = type("TestRemoveField", (models.Model,), attrs)
-
-        with connection.schema_editor() as editor:
-            editor.create_model(Model)
-        return Model
-
-    def _get_columns(self, table_name):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT column_name FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position",
-                [table_name],
-            )
-            return [row[0] for row in cursor.fetchall()]
+    MODEL_NAME = "TestRemoveField"
 
     def test_remove_field(self):
         """Test that column removal works via table recreation."""
@@ -250,58 +225,11 @@ class TestRemakeTableRemoveField(unittest.TestCase):
             self.assertEqual(rows[0][0], "keep_this")
 
 
-class TestRemakeTableAddField(unittest.TestCase):
+class TestRemakeTableAddField(RemakeTableTestCase):
     """Test add_field via table recreation on a real DSQL cluster."""
 
     TABLE = "test_add_field"
-
-    def setUp(self):
-        connection.close()
-        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
-            _drop_table_if_exists(t)
-
-    def tearDown(self):
-        connection.close()
-        for t in [self.TABLE, f"old__{self.TABLE}", f"new__{self.TABLE}"]:
-            _drop_table_if_exists(t)
-
-    def _create_test_table(self, fields):
-        meta = type(
-            "Meta",
-            (),
-            {
-                "app_label": "test",
-                "db_table": "test_add_field",
-            },
-        )
-        attrs = {
-            "__module__": "aurora_dsql_django.tests.integration",
-            "Meta": meta,
-        }
-        attrs.update(fields)
-        Model = type("TestAddField", (models.Model,), attrs)
-
-        with connection.schema_editor() as editor:
-            editor.create_model(Model)
-        return Model
-
-    def _get_column_info(self, table_name, column_name):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT data_type, character_maximum_length, is_nullable "
-                "FROM information_schema.columns "
-                "WHERE table_name = %s AND column_name = %s",
-                [table_name, column_name],
-            )
-            return cursor.fetchone()
-
-    def _get_columns(self, table_name):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT column_name FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position",
-                [table_name],
-            )
-            return [row[0] for row in cursor.fetchall()]
+    MODEL_NAME = "TestAddField"
 
     def test_add_not_null_field_with_default(self):
         """Test adding a NOT NULL field with a default to an existing table.
