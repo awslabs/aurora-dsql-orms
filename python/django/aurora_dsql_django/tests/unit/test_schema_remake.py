@@ -9,6 +9,7 @@ verification paths in _remake_table behave correctly without requiring
 a real DSQL cluster.
 """
 
+import itertools
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -25,9 +26,13 @@ if not settings.configured:
 
 from aurora_dsql_django.schema import DatabaseSchemaEditor
 
+# Counter for unique model names to avoid Django re-registration warnings.
+_model_counter = itertools.count()
+
 
 def _make_model(table_name="test_table"):
     """Create a minimal dynamic model for _remake_table tests."""
+    n = next(_model_counter)
     meta = type(
         "Meta",
         (),
@@ -37,7 +42,7 @@ def _make_model(table_name="test_table"):
         },
     )
     return type(
-        "TestModel",
+        f"RemakeTestModel{n}",
         (models.Model,),
         {
             "__module__": "django.contrib.contenttypes.models",
@@ -69,6 +74,11 @@ def _setup_editor():
     return editor
 
 
+def _get_sql_strings(mock_execute):
+    """Extract SQL strings from mock execute call_args_list."""
+    return [str(c) for c in mock_execute.call_args_list]
+
+
 class TestRemakeTableRecovery(unittest.TestCase):
     """Test _remake_table step 0: recovery from prior failed attempts."""
 
@@ -90,12 +100,14 @@ class TestRemakeTableRecovery(unittest.TestCase):
         new_field = Model._meta.get_field("name")
         self.editor._remake_table(Model, alter_fields=[(old_field, new_field)])
 
-        execute_calls = [str(c) for c in mock_execute.call_args_list]
-        # Should DROP new__ (if exists) then RENAME old__ → original.
-        drop_new = any("DROP" in c and "new__" in c for c in execute_calls)
-        rename_old = any("RENAME" in c and "old__" in c for c in execute_calls)
-        self.assertTrue(drop_new, f"Expected DROP new__ in recovery, got: {execute_calls}")
-        self.assertTrue(rename_old, f"Expected RENAME old__ back in recovery, got: {execute_calls}")
+        calls = _get_sql_strings(mock_execute)
+        # First two calls should be the recovery: DROP new__ (cleanup) then RENAME old__ → original.
+        self.assertGreaterEqual(len(calls), 2, f"Expected at least 2 execute calls, got: {calls}")
+        self.assertIn("DROP", calls[0])
+        self.assertIn("new__", calls[0])
+        self.assertIn("RENAME", calls[1])
+        self.assertIn("old__", calls[1])
+        self.assertIn("test_table", calls[1])
 
     @patch.object(DatabaseSchemaEditor, "alter_db_table")
     @patch.object(DatabaseSchemaEditor, "create_model")
@@ -112,9 +124,12 @@ class TestRemakeTableRecovery(unittest.TestCase):
         new_field = Model._meta.get_field("name")
         self.editor._remake_table(Model, alter_fields=[(old_field, new_field)])
 
-        execute_calls = [str(c) for c in mock_execute.call_args_list]
-        rename_new = any("RENAME" in c and "new__" in c for c in execute_calls)
-        self.assertTrue(rename_new, f"Expected RENAME new__ back in recovery, got: {execute_calls}")
+        calls = _get_sql_strings(mock_execute)
+        # First call should be recovery: RENAME new__ → original.
+        self.assertGreaterEqual(len(calls), 1, f"Expected at least 1 execute call, got: {calls}")
+        self.assertIn("RENAME", calls[0])
+        self.assertIn("new__", calls[0])
+        self.assertIn("test_table", calls[0])
 
     @patch.object(DatabaseSchemaEditor, "execute")
     @patch.object(DatabaseSchemaEditor, "_table_exists")
@@ -129,6 +144,7 @@ class TestRemakeTableRecovery(unittest.TestCase):
             self.editor._remake_table(Model, alter_fields=[(old_field, new_field)])
 
         self.assertIn("Manual intervention required", str(ctx.exception))
+        self.assertIn("test_table", str(ctx.exception))
 
     @patch.object(DatabaseSchemaEditor, "alter_db_table")
     @patch.object(DatabaseSchemaEditor, "create_model")
@@ -136,7 +152,7 @@ class TestRemakeTableRecovery(unittest.TestCase):
     @patch.object(DatabaseSchemaEditor, "_query_with_retry")
     @patch.object(DatabaseSchemaEditor, "_table_exists")
     def test_cleanup_leftover_temp_tables(self, mock_exists, mock_query, mock_execute, mock_create, mock_alter):
-        """When original exists with leftover old__/new__, clean them up."""
+        """When original exists with leftover old__/new__, clean them up before proceeding."""
         mock_exists.side_effect = _table_exists_factory(original=True, old=True, new=True)
         mock_query.return_value = [(0,)]
 
@@ -145,11 +161,13 @@ class TestRemakeTableRecovery(unittest.TestCase):
         new_field = Model._meta.get_field("name")
         self.editor._remake_table(Model, alter_fields=[(old_field, new_field)])
 
-        execute_calls = [str(c) for c in mock_execute.call_args_list]
-        drop_old = any("DROP" in c and "old__" in c for c in execute_calls)
-        drop_new = any("DROP" in c and "new__" in c for c in execute_calls)
-        self.assertTrue(drop_old, f"Expected DROP old__ cleanup, got: {execute_calls}")
-        self.assertTrue(drop_new, f"Expected DROP new__ cleanup, got: {execute_calls}")
+        calls = _get_sql_strings(mock_execute)
+        # First two calls should be cleanup: DROP old__ then DROP new__.
+        self.assertGreaterEqual(len(calls), 2, f"Expected at least 2 execute calls, got: {calls}")
+        self.assertIn("DROP", calls[0])
+        self.assertIn("old__", calls[0])
+        self.assertIn("DROP", calls[1])
+        self.assertIn("new__", calls[1])
 
 
 class TestRemakeTableVerification(unittest.TestCase):
@@ -191,12 +209,14 @@ class TestRemakeTableVerification(unittest.TestCase):
         self.assertIn("got 3", error_msg)
         self.assertIn("Original table has been restored", error_msg)
 
-        # Verify it tried to restore: DROP new__ + RENAME old__ → original.
-        execute_calls = [str(c) for c in mock_execute.call_args_list]
-        drop_new = any("DROP" in c and "new__" in c for c in execute_calls)
-        rename_back = any("RENAME" in c and "old__" in c for c in execute_calls)
-        self.assertTrue(drop_new, f"Expected DROP new__ on verification failure, got: {execute_calls}")
-        self.assertTrue(rename_back, f"Expected RENAME old__ back on verification failure, got: {execute_calls}")
+        # Last two execute calls before the exception should be the restore:
+        # DROP new__ then RENAME old__ → original.
+        calls = _get_sql_strings(mock_execute)
+        self.assertIn("DROP", calls[-2])
+        self.assertIn("new__", calls[-2])
+        self.assertIn("RENAME", calls[-1])
+        self.assertIn("old__", calls[-1])
+        self.assertIn("test_table", calls[-1])
 
     @patch.object(DatabaseSchemaEditor, "alter_db_table")
     @patch.object(DatabaseSchemaEditor, "create_model")
@@ -213,10 +233,9 @@ class TestRemakeTableVerification(unittest.TestCase):
         new_field = Model._meta.get_field("name")
         self.editor._remake_table(Model, alter_fields=[(old_field, new_field)])
 
-        # Should not have any INSERT calls.
-        execute_calls = [str(c) for c in mock_execute.call_args_list]
-        inserts = [c for c in execute_calls if "INSERT" in c]
-        self.assertEqual(len(inserts), 0, f"Expected no INSERT for empty table, got: {execute_calls}")
+        calls = _get_sql_strings(mock_execute)
+        inserts = [c for c in calls if "INSERT" in c]
+        self.assertEqual(len(inserts), 0, f"Expected no INSERT for empty table, got: {calls}")
 
 
 if __name__ == "__main__":
