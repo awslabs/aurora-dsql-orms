@@ -322,10 +322,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             self.deferred_sql = [
                 sql
                 for sql in self.deferred_sql
-                if not (
-                    isinstance(sql, Statement)
-                    and any(sql.references_table(t) for t in remake_tables)
-                )
+                if not (isinstance(sql, Statement) and any(sql.references_table(t) for t in remake_tables))
             ]
 
         # Step 0: Recover from a previous failed _remake_table.
@@ -404,9 +401,9 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             total_rows = cursor.fetchone()[0]
 
         if total_rows > 0:
-            # Seed: fetch the minimum PK to start from
+            # Seed: fetch the first PK value (MIN() doesn't support UUID).
             with self.connection.cursor() as cursor:
-                cursor.execute(f"SELECT MIN({q_pk}) FROM {q_old}")
+                cursor.execute(f"SELECT {q_pk} FROM {q_old} ORDER BY {q_pk} LIMIT 1")
                 last_pk = cursor.fetchone()[0]
 
             copied = 0
@@ -422,10 +419,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                 # Advance the cursor past the batch we just copied.
                 with self.connection.cursor() as cursor:
                     cursor.execute(
-                        f"SELECT {q_pk} FROM {q_old}"
-                        f" WHERE {q_pk} >= %s"
-                        f" ORDER BY {q_pk}"
-                        f" LIMIT 1 OFFSET {_COPY_BATCH_SIZE}",
+                        f"SELECT {q_pk} FROM {q_old} WHERE {q_pk} >= %s ORDER BY {q_pk} LIMIT 1 OFFSET {_COPY_BATCH_SIZE}",
                         [last_pk],
                     )
                     row = cursor.fetchone()
@@ -485,10 +479,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         renames; otherwise recreate the table.
         """
         # Use "ALTER TABLE ... RENAME COLUMN" if only the column name changed.
-        if (
-            old_field.column != new_field.column
-            and self.column_sql(model, old_field) == self.column_sql(model, new_field)
-        ):
+        if old_field.column != new_field.column and self.column_sql(model, old_field) == self.column_sql(model, new_field):
             return self.execute(self._rename_field_sql(model._meta.db_table, old_field, new_field, new_type))
         # Everything else: recreate the table.
         self._remake_table(model, alter_fields=[(old_field, new_field)])
