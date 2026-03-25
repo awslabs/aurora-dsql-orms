@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 _OCC_MAX_RETRIES = 3
 _OCC_RETRY_DELAY = 1.0
 
-# DSQL has a 3000 row limit per transaction. Use a smaller batch size
+# DSQL has a ~3000 row limit per transaction. Use a smaller batch size
 # to stay well within the limit when copying data during table recreation.
 _COPY_BATCH_SIZE = 1000
 
@@ -211,11 +211,16 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             window. For production schema changes, consider blue/green
             deployments or manual migration strategies.
         """
+        # Deleting an M2M field just drops the through table -- no recreation.
+        if delete_field:
+            if delete_field.many_to_many and delete_field.remote_field.through._meta.auto_created:
+                return self.delete_model(delete_field.remote_field.through)
+
         # Work out the new fields dict / mapping
         body = {f.name: f for f in model._meta.local_concrete_fields}
         # Since mapping might mix column names and default values,
         # its values must be already quoted.
-        mapping = {f.column: self.quote_name(f.column) for f in model._meta.local_concrete_fields if f.generated is False}
+        mapping = {f.column: self.quote_name(f.column) for f in model._meta.local_concrete_fields if not f.generated}
         # This maps field names (not columns) for things like unique_together
         rename_mapping = {}
         # If any of the new or altered fields is introducing a new PK,
@@ -243,8 +248,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             ):
                 mapping[create_field.column] = self.quote_value(self.effective_default(create_field))
         # Add in any altered fields
-        for alter_field in alter_fields:
-            old_field, new_field = alter_field
+        for old_field, new_field in alter_fields:
             body.pop(old_field.name, None)
             mapping.pop(old_field.column, None)
             body[new_field.name] = new_field
@@ -258,17 +262,13 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                     default = self.quote_value(self.effective_default(new_field))
                 else:
                     default, _ = self.db_default_sql(new_field)
-                case_sql = f"coalesce({self.quote_name(old_field.column)}, {default})"
-                mapping[new_field.column] = case_sql
+                mapping[new_field.column] = f"coalesce({self.quote_name(old_field.column)}, {default})"
             else:
                 mapping[new_field.column] = self.quote_name(old_field.column)
         # Remove any deleted fields
         if delete_field:
             del body[delete_field.name]
             mapping.pop(delete_field.column, None)
-            # Remove any implicit M2M tables
-            if delete_field.many_to_many and delete_field.remote_field.through._meta.auto_created:
-                return self.delete_model(delete_field.remote_field.through)
         # Work inside a new app registry
         apps = Apps()
 
@@ -353,9 +353,9 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # (from earlier operations in this schema editor session) before we
         # replace it. create_model() below will generate fresh deferred SQL
         # for the new table, and alter_db_table() will rename those references.
-        for sql in list(self.deferred_sql):
-            if isinstance(sql, Statement) and sql.references_table(original_table):
-                self.deferred_sql.remove(sql)
+        self.deferred_sql = [
+            sql for sql in self.deferred_sql if not (isinstance(sql, Statement) and sql.references_table(original_table))
+        ]
 
         # Step 1: Rename the original table to freeze it against concurrent writes.
         # Any writes to the original table name will now fail loudly.
@@ -404,16 +404,12 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
                 )
 
         # Step 4: Drop the old (frozen) table.
-        self.execute(self.sql_delete_table % {"table": self.quote_name(old_table)})
+        self.execute(self.sql_delete_table % {"table": q_old})
 
         # Step 5: Rename the new table to the original name.
         # alter_db_table also updates deferred SQL references from
         # new__<table> to the original table name.
-        self.alter_db_table(
-            new_model,
-            new_model._meta.db_table,
-            original_table,
-        )
+        self.alter_db_table(new_model, new_table, original_table)
 
         # Step 6: Run deferred SQL (indexes) on the correctly-named table.
         # Each execute() auto-commits (can_rollback_ddl = False), so each
