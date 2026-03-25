@@ -133,8 +133,15 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     #   - DROP COLUMN
     #
     # For migrations that require these, we recreate the table with the new
-    # schema and copy data across. This is adapted from Django's SQLite
-    # backend (_remake_table) but simplified for DSQL:
+    # schema and copy data across. This uses a rename-first pattern to
+    # prevent silent data loss from concurrent writes:
+    #   1. RENAME original → old__<table>  (freezes the source)
+    #   2. CREATE new__<table>             (new schema)
+    #   3. INSERT INTO new__<table> SELECT FROM old__<table>
+    #   4. DROP old__<table>
+    #   5. RENAME new__<table> → original
+    #
+    # Adapted from Django's SQLite backend but simplified for DSQL:
     #   - No foreign key handling (DSQL doesn't support FKs)
     #   - No check constraint handling (already skipped via _check_sql)
     #   - Uses quote_value instead of prepare_default (PostgreSQL-style quoting)
@@ -147,14 +154,25 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     def _remake_table(self, model, create_field=None, delete_field=None, alter_fields=None):
         """
-        Recreate a table with modified schema.
+        Recreate a table with modified schema using the rename-first pattern.
 
-        This follows the pattern:
-          1. Create a table with the updated definition called "new__<table>"
-          2. Copy data from the existing table to the new table
-          3. Drop the old table
-          4. Rename the new table to the original name
-          5. Restore indexes via deferred SQL
+        Aurora DSQL doesn't support ALTER COLUMN or DROP COLUMN. This method
+        recreates the table with the new schema. To prevent silent data loss
+        from concurrent writes, the original table is renamed first to freeze
+        it before copying data.
+
+        The pattern:
+          1. Rename the original table to "old__<table>" (freezes writes)
+          2. Clean up any leftover "new__<table>" from a previous failure
+          3. Create "new__<table>" with the updated schema
+          4. Copy data from "old__<table>" into "new__<table>"
+          5. Drop "old__<table>"
+          6. Rename "new__<table>" to the original name
+          7. Restore indexes via deferred SQL
+
+        Availability drops temporarily between steps 1 and 6 (the original
+        table name doesn't exist), but no data is silently lost -- writes
+        to the old name fail loudly instead of disappearing.
         """
         # Work out the new fields dict / mapping
         body = {f.name: f for f in model._meta.local_concrete_fields}
@@ -246,7 +264,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         body_copy["__module__"] = model.__module__
         type(model._meta.object_name, model.__bases__, body_copy)
 
-        # Construct a model with a renamed table name.
+        # Construct a model with the new__<table> name for creating the new schema.
         body_copy = copy.deepcopy(body)
         meta_contents = {
             "app_label": model._meta.app_label,
@@ -261,33 +279,45 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         body_copy["__module__"] = model.__module__
         new_model = type(f"New{model._meta.object_name}", model.__bases__, body_copy)
 
-        # Drop any leftover temp table from a previous failed _remake_table.
+        original_table = model._meta.db_table
+        old_table = f"old__{strip_quotes(original_table)}"
+
+        # Step 1: Clean up any leftover temp tables from a previous failed run.
+        self.execute(f"DROP TABLE IF EXISTS {self.quote_name(old_table)}")
         self.execute(f"DROP TABLE IF EXISTS {self.quote_name(new_model._meta.db_table)}")
 
-        # Create a new table with the updated schema.
+        # Step 2: Rename the original table to freeze it against concurrent writes.
+        # Any writes to the original table name will now fail loudly.
+        self.execute(f"ALTER TABLE {self.quote_name(original_table)} RENAME TO {self.quote_name(old_table)}")
+
+        # Step 3: Create the new table with the updated schema.
         self.create_model(new_model)
 
-        # Copy data from the old table into the new table
+        # Step 4: Copy data from the frozen old table into the new table.
         self.execute(
             "INSERT INTO {} ({}) SELECT {} FROM {}".format(
                 self.quote_name(new_model._meta.db_table),
                 ", ".join(self.quote_name(x) for x in mapping),
                 ", ".join(mapping.values()),
-                self.quote_name(model._meta.db_table),
+                self.quote_name(old_table),
             )
         )
 
-        # Delete the old table
-        self.delete_model(model, handle_autom2m=False)
+        # Step 5: Drop the old (frozen) table.
+        self.execute(self.sql_delete_table % {"table": self.quote_name(old_table)})
+        # Remove any deferred statements referencing the old table.
+        for sql in list(self.deferred_sql):
+            if isinstance(sql, Statement) and sql.references_table(original_table):
+                self.deferred_sql.remove(sql)
 
-        # Rename the new table to the original name.
+        # Step 6: Rename the new table to the original name.
         self.alter_db_table(
             new_model,
             new_model._meta.db_table,
-            model._meta.db_table,
+            original_table,
         )
 
-        # Run deferred SQL (indexes) on the correctly-named table.
+        # Step 7: Run deferred SQL (indexes) on the correctly-named table.
         # Each execute() auto-commits (can_rollback_ddl = False), so each
         # CREATE INDEX ASYNC runs in its own transaction as DSQL requires.
         for sql in self.deferred_sql:
