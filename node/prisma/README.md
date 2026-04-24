@@ -12,8 +12,9 @@ CLI tools for using [Prisma ORM](https://www.prisma.io/) with [Amazon Aurora DSQ
 This package provides:
 
 1. **Schema Validator** - Validates Prisma schemas for DSQL compatibility
-2. **Migration Transformer** - Converts Prisma migrations to DSQL-compatible SQL
-3. **All-in-one Migrate Command** - Validates, generates, and transforms in one step
+2. **Migration Transformer** - Converts Prisma migrations to DSQL-compatible SQL using [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint)
+3. **Migration Linter** - Checks SQL migrations for DSQL compatibility without modifying them
+4. **All-in-one Migrate Command** - Validates, generates, and transforms in one step
 
 Aurora DSQL has [specific PostgreSQL compatibility limitations](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html). These tools help you catch issues early and automate the required transformations.
 
@@ -24,6 +25,18 @@ npm install --save-dev @aws/aurora-dsql-prisma-tools
 ```
 
 **Supported Node.js versions:** 20+ (Active and LTS releases)
+
+### Prerequisites
+
+This package requires [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for SQL transformation and linting. Install it via:
+
+```bash
+cargo install dsql-lint
+```
+
+Or download a prebuilt binary from [GitHub Releases](https://github.com/awslabs/aurora-dsql-tools/releases) and add it to your PATH.
+
+You can also set the `DSQL_LINT_PATH` environment variable to point to the binary location.
 
 ## Quick Start
 
@@ -79,7 +92,7 @@ Transform Prisma-generated migrations to be DSQL-compatible:
 # Transform from file
 npx aurora-dsql-prisma transform raw.sql -o migration.sql
 
-# Transform using pipes
+# Transform using pipes (stdin)
 npx prisma migrate diff \
     --from-empty \
     --to-schema prisma/schema.prisma \
@@ -88,11 +101,24 @@ npx prisma migrate diff \
 
 #### What the Transformer Does
 
+The transform command uses [`dsql-lint --fix`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) to apply DSQL compatibility fixes. Key transformations include:
+
 | Transformation                                  | Reason                                                |
 | ----------------------------------------------- | ----------------------------------------------------- |
-| Wraps each statement in `BEGIN/COMMIT`          | DSQL requires one DDL statement per transaction       |
 | Converts `CREATE INDEX` to `CREATE INDEX ASYNC` | DSQL requires asynchronous index creation             |
 | Removes foreign key constraints                 | DSQL requires application-layer referential integrity |
+| Replaces `SERIAL` types with `BIGINT IDENTITY`  | DSQL does not support SERIAL                          |
+| Replaces `JSON`/`JSONB` with `TEXT`             | DSQL does not support JSON types                      |
+| Splits multi-DDL transactions                   | DSQL requires one DDL statement per transaction       |
+| Many additional rules                           | See [dsql-lint README](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for the full list |
+
+### Lint Migrations
+
+Check a SQL migration file for DSQL compatibility without applying fixes:
+
+```bash
+npx aurora-dsql-prisma lint migration.sql
+```
 
 ### All-in-One Migrate
 
@@ -124,14 +150,7 @@ This requires a `prisma.config.ts` that provides database credentials. See the [
 
 ### Handling Unsupported Statements
 
-Sometimes Prisma generates `DROP CONSTRAINT` statements when comparing against a live database. DSQL doesn't support `DROP CONSTRAINT`, so use `--force` to skip these if the constraint isn't actually changing:
-
-```bash
-npx aurora-dsql-prisma migrate prisma/schema.prisma \
-    -o prisma/migrations/002_add_email/migration.sql \
-    --from-config-datasource \
-    --force
-```
+Sometimes Prisma generates `DROP CONSTRAINT` statements when comparing against a live database. DSQL doesn't support `DROP CONSTRAINT`. If `dsql-lint` reports unfixable errors, review its output and manually adjust the migration.
 
 ## Prisma Schema Requirements
 

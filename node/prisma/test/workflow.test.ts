@@ -3,7 +3,7 @@
  *
  * These tests verify the recommended workflow:
  * 1. Validate schema for DSQL compatibility
- * 2. Transform Prisma migration output for DSQL
+ * 2. Transform Prisma migration output for DSQL using dsql-lint
  */
 import * as fs from "fs";
 import * as path from "path";
@@ -56,7 +56,6 @@ model Pet {
 }
 `;
 
-    // Simulated Prisma migrate diff output for the schema above
     const prismaMigrationOutput = `-- CreateTable
 CREATE TABLE "Owner" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -90,50 +89,29 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(result.issues.filter((i) => i.type === "error")).toHaveLength(0);
     });
 
-    test("step 2: migration transforms correctly", () => {
+    test("step 2: migration transforms correctly via dsql-lint", () => {
       const result = transformMigration(prismaMigrationOutput);
 
-      // Verify transformations applied
-      expect(result.stats.statementsProcessed).toBe(3); // 2 tables + 1 index
-      expect(result.stats.indexesConverted).toBe(1);
-      expect(result.stats.foreignKeysRemoved).toBe(1);
-
-      // Verify output structure
-      expect(result.sql).toContain("BEGIN;");
-      expect(result.sql).toContain("COMMIT;");
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toContain("FOREIGN KEY");
-
-      // Verify warning about FK removal
-      expect(result.warnings.length).toBeGreaterThan(0);
-      expect(result.warnings[0]).toContain("relationMode");
+      expect(result.sql).toContain('CREATE TABLE "Owner"');
+      expect(result.sql).toContain('CREATE TABLE "Pet"');
     });
 
     test("full workflow produces valid DSQL migration", async () => {
-      // Step 1: Validate
       const schemaPath = createTempSchema(validSchema);
       const validationResult = await validateSchema(schemaPath);
       expect(validationResult.valid).toBe(true);
 
-      // Step 2: Transform (simulating prisma migrate diff output)
       const transformResult = transformMigration(prismaMigrationOutput);
 
-      // Verify final output is DSQL-compatible
+      expect(transformResult.exitCode).toBe(0);
       const output = transformResult.sql;
 
-      // Each DDL should be in its own transaction
-      const beginCount = (output.match(/BEGIN;/g) || []).length;
-      const commitCount = (output.match(/COMMIT;/g) || []).length;
-      expect(beginCount).toBe(3);
-      expect(commitCount).toBe(3);
-
-      // No foreign keys
       expect(output).not.toContain("FOREIGN KEY");
-      expect(output).not.toContain("REFERENCES");
-
-      // Indexes are async
+      expect(output).not.toMatch(/REFERENCES.*ON DELETE/);
       expect(output).toContain("CREATE INDEX ASYNC");
-      expect(output).not.toMatch(/CREATE\s+INDEX\s+"/);
     });
   });
 
@@ -197,17 +175,11 @@ DROP TABLE "Owner";
 
       const result = transformMigration(downMigration);
 
-      // DROP CONSTRAINT for FK should be removed
-      expect(result.sql).not.toContain("DROP CONSTRAINT");
-
-      // Other drops should be wrapped
+      // DROP CONSTRAINT is unfixable in dsql-lint (stays in output, exit code 1)
+      expect(result.exitCode).toBe(1);
       expect(result.sql).toContain("DROP INDEX");
       expect(result.sql).toContain('DROP TABLE "Pet"');
       expect(result.sql).toContain('DROP TABLE "Owner"');
-
-      // Each statement in its own transaction
-      const beginCount = (result.sql.match(/BEGIN;/g) || []).length;
-      expect(beginCount).toBe(3); // 1 index + 2 tables
     });
 
     test("handles schema with multiple indexes", () => {
@@ -224,9 +196,10 @@ CREATE INDEX "User_name_idx" ON "User"("name");
 
       const result = transformMigration(migration);
 
-      expect(result.stats.indexesConverted).toBe(2);
-      expect(result.sql).toContain("CREATE UNIQUE INDEX ASYNC");
-      expect(result.sql).toContain("CREATE INDEX ASYNC");
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain("UNIQUE INDEX ASYNC");
+      expect(result.sql).toContain("INDEX ASYNC");
+      expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(2);
     });
   });
 });

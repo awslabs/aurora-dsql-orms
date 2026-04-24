@@ -22,7 +22,8 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "validate": "tsx src/cli/index.ts validate",
     "dsql-transform": "tsx src/cli/index.ts transform",
-    "dsql-migrate": "tsx src/cli/index.ts migrate"
+    "dsql-migrate": "tsx src/cli/index.ts migrate",
+    "dsql-lint": "tsx src/cli/index.ts lint"
   },
   "keywords": [
     "prisma",

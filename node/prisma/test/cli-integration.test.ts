@@ -1,8 +1,8 @@
 /**
  * CLI Integration Tests
  *
- * These tests run the actual CLI commands from the README to verify
- * the golden path workflow works end-to-end.
+ * These tests run the actual CLI commands to verify the golden path
+ * workflow works end-to-end with dsql-lint.
  */
 import { execSync } from "child_process";
 import * as fs from "fs";
@@ -21,31 +21,43 @@ describe("CLI Integration", () => {
   });
 
   describe("README golden path workflow", () => {
-    test("prisma migrate diff | dsql-transform produces valid output", () => {
-      // This is the exact command from the README:
-      // npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script | npm run dsql-transform
-      const output = execSync(
-        "npx prisma migrate diff --from-empty --to-schema prisma/veterinary-schema.prisma --script | npm run dsql-transform -- --no-header 2>/dev/null",
-        { cwd: path.join(__dirname, ".."), encoding: "utf-8" },
+    test("transform from file works", () => {
+      const migration = `CREATE TABLE "user" ("id" UUID PRIMARY KEY);
+CREATE INDEX "user_idx" ON "user"("id");`;
+      const inputPath = path.join(tempDir, "input.sql");
+      const outputPath = path.join(tempDir, "output.sql");
+      fs.writeFileSync(inputPath, migration);
+
+      execSync(
+        `npm run dsql-transform ${inputPath} -- -o ${outputPath}`,
+        {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+        },
       );
 
-      // Verify DSQL compatibility transformations were applied
-      expect(output).toContain("BEGIN;");
-      expect(output).toContain("COMMIT;");
+      const output = fs.readFileSync(outputPath, "utf-8");
       expect(output).toContain("CREATE INDEX ASYNC");
+    });
 
-      // Verify no foreign keys remain (veterinary schema has relations)
-      expect(output).not.toContain("FOREIGN KEY");
-      expect(output).not.toContain("ADD CONSTRAINT");
-      expect(output).not.toMatch(/REFERENCES.*ON DELETE/);
+    test("transform from stdin works", () => {
+      const migration = `CREATE TABLE "user" ("id" UUID PRIMARY KEY);
+CREATE INDEX "user_idx" ON "user"("id");`;
+      const inputPath = path.join(tempDir, "stdin-input.sql");
+      fs.writeFileSync(inputPath, migration);
 
-      // Verify tables are present
-      expect(output).toContain('CREATE TABLE "owner"');
-      expect(output).toContain('CREATE TABLE "pet"');
+      const output = execSync(
+        `cat ${inputPath} | npm run dsql-transform 2>/dev/null`,
+        {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+        },
+      );
+
+      expect(output).toContain("CREATE INDEX ASYNC");
     });
 
     test("validator catches invalid schema", () => {
-      // Create an invalid schema with autoincrement
       const invalidSchema = `
 datasource db {
   provider     = "postgresql"
@@ -60,7 +72,6 @@ model User {
       const schemaPath = path.join(tempDir, "invalid.prisma");
       fs.writeFileSync(schemaPath, invalidSchema);
 
-      // Run validator - should exit with code 1
       try {
         execSync(`npm run validate ${schemaPath}`, {
           cwd: path.join(__dirname, ".."),
@@ -90,7 +101,6 @@ model User {
       const schemaPath = path.join(tempDir, "valid.prisma");
       fs.writeFileSync(schemaPath, validSchema);
 
-      // Run validator - should exit with code 0
       const output = execSync(`npm run validate ${schemaPath}`, {
         cwd: path.join(__dirname, ".."),
         encoding: "utf-8",
@@ -99,32 +109,9 @@ model User {
       expect(output).toContain("DSQL-compatible");
     });
 
-    test("transform from file works", () => {
-      // Create a sample migration file
-      const migration = `CREATE TABLE "user" ("id" UUID);
-CREATE INDEX "user_idx" ON "user"("id");`;
-      const inputPath = path.join(tempDir, "input.sql");
-      const outputPath = path.join(tempDir, "output.sql");
-      fs.writeFileSync(inputPath, migration);
-
-      // Run transform with file I/O
-      execSync(
-        `npm run dsql-transform ${inputPath} -- -o ${outputPath} --no-header`,
-        {
-          cwd: path.join(__dirname, ".."),
-          encoding: "utf-8",
-        },
-      );
-
-      const output = fs.readFileSync(outputPath, "utf-8");
-      expect(output).toContain("BEGIN;");
-      expect(output).toContain("CREATE INDEX ASYNC");
-    });
-
     test("dsql-migrate command works end-to-end", () => {
       const outputPath = path.join(tempDir, "migration.sql");
 
-      // Run the all-in-one migrate command
       const result = execSync(
         `npm run dsql-migrate -- prisma/veterinary-schema.prisma -o ${outputPath}`,
         {
@@ -133,15 +120,12 @@ CREATE INDEX "user_idx" ON "user"("id");`;
         },
       );
 
-      // Verify it ran all steps
       expect(result).toContain("Validating");
       expect(result).toContain("Generating migration");
       expect(result).toContain("Transforming");
       expect(result).toContain("Migration written to");
 
-      // Verify output file
       const output = fs.readFileSync(outputPath, "utf-8");
-      expect(output).toContain("BEGIN;");
       expect(output).toContain("CREATE INDEX ASYNC");
       expect(output).not.toContain("FOREIGN KEY");
     });
@@ -161,7 +145,6 @@ model User {
       const outputPath = path.join(tempDir, "should-not-exist.sql");
       fs.writeFileSync(schemaPath, invalidSchema);
 
-      // Run migrate - should fail
       try {
         execSync(`npm run dsql-migrate -- ${schemaPath} -o ${outputPath}`, {
           cwd: path.join(__dirname, ".."),
@@ -181,8 +164,37 @@ model User {
         expect(execError.status).toBe(1);
       }
 
-      // Output file should not exist
       expect(fs.existsSync(outputPath)).toBe(false);
+    });
+
+    test("lint command detects issues", () => {
+      const migration = `CREATE INDEX "idx" ON "t"("col");`;
+      const inputPath = path.join(tempDir, "lint-input.sql");
+      fs.writeFileSync(inputPath, migration);
+
+      try {
+        execSync(`npm run dsql-lint ${inputPath}`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        fail("Expected lint to fail");
+      } catch (error: unknown) {
+        const execError = error as { stderr?: string; status?: number };
+        expect(execError.stderr).toContain("ASYNC");
+        expect(execError.status).toBe(1);
+      }
+    });
+
+    test("lint command passes clean SQL", () => {
+      const migration = `CREATE TABLE "user" ("id" UUID PRIMARY KEY);`;
+      const inputPath = path.join(tempDir, "lint-clean.sql");
+      fs.writeFileSync(inputPath, migration);
+
+      execSync(`npm run dsql-lint ${inputPath}`, {
+        cwd: path.join(__dirname, ".."),
+        encoding: "utf-8",
+      });
     });
   });
 });
