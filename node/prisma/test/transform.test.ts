@@ -28,9 +28,7 @@ describe("dsql-lint binary resolution", () => {
     try {
       process.env["DSQL_LINT_PATH"] = "/nonexistent/dsql-lint";
 
-      expect(() => transformMigration("SELECT 1;")).toThrow(
-        /does not exist/,
-      );
+      expect(() => transformMigration("SELECT 1;")).toThrow(/does not exist/);
     } finally {
       if (originalPath !== undefined) {
         process.env["DSQL_LINT_PATH"] = originalPath;
@@ -243,10 +241,7 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
     test("returns exit code 0 for clean SQL", () => {
       const filePath = path.join(tempDir, "clean.sql");
-      fs.writeFileSync(
-        filePath,
-        `CREATE TABLE "t" ("id" UUID PRIMARY KEY);`,
-      );
+      fs.writeFileSync(filePath, `CREATE TABLE "t" ("id" UUID PRIMARY KEY);`);
 
       const result = lintMigration(filePath);
 
@@ -255,10 +250,7 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
     test("returns exit code 1 for SQL with issues", () => {
       const filePath = path.join(tempDir, "issues.sql");
-      fs.writeFileSync(
-        filePath,
-        `CREATE INDEX "idx" ON "t"("col");`,
-      );
+      fs.writeFileSync(filePath, `CREATE INDEX "idx" ON "t"("col");`);
 
       const result = lintMigration(filePath);
 

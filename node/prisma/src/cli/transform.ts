@@ -11,10 +11,7 @@ export interface TransformResult {
 
 function cleanStderr(stderr: string, tempDir: string): string {
   const escapedDir = tempDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const tempFilePattern = new RegExp(
-    `${escapedDir}/input\\.sql:\\d+: `,
-    "g",
-  );
+  const tempFilePattern = new RegExp(`${escapedDir}/input\\.sql:\\d+: `, "g");
   return stderr
     .replace(tempFilePattern, "")
     .replace(new RegExp(`${escapedDir}/output\\.sql`, "g"), "<output>")

@@ -103,13 +103,13 @@ npx prisma migrate diff \
 
 The transform command uses [`dsql-lint --fix`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) to apply DSQL compatibility fixes. Key transformations include:
 
-| Transformation                                  | Reason                                                |
-| ----------------------------------------------- | ----------------------------------------------------- |
-| Converts `CREATE INDEX` to `CREATE INDEX ASYNC` | DSQL requires asynchronous index creation             |
-| Removes foreign key constraints                 | DSQL requires application-layer referential integrity |
-| Replaces `SERIAL` types with `BIGINT IDENTITY`  | DSQL does not support SERIAL                          |
-| Replaces `JSON`/`JSONB` with `TEXT`             | DSQL does not support JSON types                      |
-| Splits multi-DDL transactions                   | DSQL requires one DDL statement per transaction       |
+| Transformation                                  | Reason                                                                                                     |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Converts `CREATE INDEX` to `CREATE INDEX ASYNC` | DSQL requires asynchronous index creation                                                                  |
+| Removes foreign key constraints                 | DSQL requires application-layer referential integrity                                                      |
+| Replaces `SERIAL` types with `BIGINT IDENTITY`  | DSQL does not support SERIAL                                                                               |
+| Replaces `JSON`/`JSONB` with `TEXT`             | DSQL does not support JSON types                                                                           |
+| Splits multi-DDL transactions                   | DSQL requires one DDL statement per transaction                                                            |
 | Many additional rules                           | See [dsql-lint README](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for the full list |
 
 ### Lint Migrations

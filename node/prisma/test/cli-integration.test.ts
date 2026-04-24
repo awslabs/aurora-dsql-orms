@@ -28,13 +28,10 @@ CREATE INDEX "user_idx" ON "user"("id");`;
       const outputPath = path.join(tempDir, "output.sql");
       fs.writeFileSync(inputPath, migration);
 
-      execSync(
-        `npm run dsql-transform ${inputPath} -- -o ${outputPath}`,
-        {
-          cwd: path.join(__dirname, ".."),
-          encoding: "utf-8",
-        },
-      );
+      execSync(`npm run dsql-transform ${inputPath} -- -o ${outputPath}`, {
+        cwd: path.join(__dirname, ".."),
+        encoding: "utf-8",
+      });
 
       const output = fs.readFileSync(outputPath, "utf-8");
       expect(output).toContain("CREATE INDEX ASYNC");
