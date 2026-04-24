@@ -1,5 +1,6 @@
-import { execFileSync, spawnSync } from "child_process";
+import { spawnSync } from "child_process";
 import * as fs from "fs";
+import * as path from "path";
 
 function findDsqlLint(): string {
   const envPath = process.env["DSQL_LINT_PATH"];
@@ -12,14 +13,12 @@ function findDsqlLint(): string {
     return envPath;
   }
 
-  try {
-    const result = execFileSync("which", ["dsql-lint"], {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    return result.trim();
-  } catch {
-    // not in PATH
+  const pathDirs = (process.env["PATH"] ?? "").split(path.delimiter);
+  for (const dir of pathDirs) {
+    const candidate = path.join(dir, "dsql-lint");
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
   }
 
   throw new Error(
