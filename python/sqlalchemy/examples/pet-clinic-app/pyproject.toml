@@ -11,5 +11,5 @@ testpaths = ["test"]
 [project.optional-dependencies]
 # Dependencies required to run the example and tests
 run = ["aurora-dsql-sqlalchemy", "pytest"]
-psycopg2 = ["psycopg2-binary>=2.9.11"]
+psycopg2 = ["psycopg2-binary>=2.9.12"]
 psycopg = ["psycopg[binary]>=3.3.3"]
