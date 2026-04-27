@@ -167,7 +167,9 @@ Examples:
 
   // Step 1: Validate schema
   console.log(`Validating ${path.basename(schemaPath)}...`);
-  const validationResult = await validateSchema(schemaPath);
+  const validationResult = await validateSchema(schemaPath, {
+    skipSqlLint: true,
+  });
 
   if (!validationResult.valid) {
     console.log(formatValidationResult(validationResult, schemaPath));

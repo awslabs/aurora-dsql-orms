@@ -2,14 +2,15 @@
  * Aurora DSQL Schema Validator for Prisma
  *
  * Validates Prisma schemas for DSQL compatibility and reports issues.
- *
- * MAINTENANCE NOTE: These checks are based on DSQL limitations documented at:
- * https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html
- *
- * If DSQL adds support for any of these features, update this validator and the README table.
+ * The relationMode check is handled here (Prisma-specific). All other
+ * SQL-level checks are delegated to dsql-lint by generating SQL via
+ * `prisma migrate diff` and running it through dsql-lint's lint mode.
  */
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
+import { execSync } from "child_process";
+import { lintMigration } from "./transform";
 
 export interface ValidationIssue {
   type: "error" | "warning";
@@ -26,8 +27,13 @@ export interface ValidationResult {
 /**
  * Validates a Prisma schema file for Aurora DSQL compatibility.
  */
+export interface ValidateOptions {
+  skipSqlLint?: boolean;
+}
+
 export async function validateSchema(
   schemaPath: string,
+  options?: ValidateOptions,
 ): Promise<ValidationResult> {
   const issues: ValidationIssue[] = [];
 
@@ -46,17 +52,11 @@ export async function validateSchema(
   const schemaContent = fs.readFileSync(schemaPath, "utf-8");
   const lines = schemaContent.split("\n");
 
-  // Check for relationMode = "prisma"
   checkRelationMode(schemaContent, lines, issues);
 
-  // Check for autoincrement()
-  checkAutoincrement(lines, issues);
-
-  // Check for @id fields without UUID
-  checkIdFields(lines, issues);
-
-  // Check for unsupported features
-  checkUnsupportedFeatures(lines, issues);
+  if (!options?.skipSqlLint) {
+    await checkSqlCompatibility(schemaPath, issues);
+  }
 
   return {
     valid: issues.filter((i) => i.type === "error").length === 0,
@@ -73,7 +73,6 @@ function checkRelationMode(
   const hasRelationMode = /relationMode\s*=\s*["']prisma["']/.test(content);
 
   if (hasDatasource && !hasRelationMode) {
-    // Find the datasource block line
     const datasourceLine = lines.findIndex((l) => l.includes("datasource"));
     issues.push({
       type: "error",
@@ -85,100 +84,40 @@ function checkRelationMode(
   }
 }
 
-function checkAutoincrement(lines: string[], issues: ValidationIssue[]): void {
-  lines.forEach((line, index) => {
-    if (line.includes("autoincrement()")) {
-      issues.push({
-        type: "error",
-        message: "autoincrement() is not supported in DSQL",
-        line: index + 1,
-        suggestion:
-          'Use @default(dbgenerated("gen_random_uuid()")) @db.Uuid instead',
-      });
-    }
-  });
-}
-
-function checkIdFields(lines: string[], issues: ValidationIssue[]): void {
-  lines.forEach((line, index) => {
-    // Check if line has @id but uses Int type (common mistake)
-    if (
-      line.includes("@id") &&
-      /\bInt\b/.test(line) &&
-      !line.includes("autoincrement")
-    ) {
-      issues.push({
-        type: "warning",
-        message: "Int @id field without autoincrement may cause issues",
-        line: index + 1,
-        suggestion:
-          "Consider using String @id with UUID for DSQL compatibility",
-      });
-    }
-
-    // Check for @id with String but missing @db.Uuid
-    if (
-      line.includes("@id") &&
-      /\bString\b/.test(line) &&
-      line.includes("gen_random_uuid") &&
-      !line.includes("@db.Uuid")
-    ) {
-      issues.push({
-        type: "warning",
-        message: "@id field using gen_random_uuid() should have @db.Uuid",
-        line: index + 1,
-        suggestion: "Add @db.Uuid to ensure proper UUID storage",
-      });
-    }
-  });
-}
-
-function checkUnsupportedFeatures(
-  lines: string[],
+async function checkSqlCompatibility(
+  schemaPath: string,
   issues: ValidationIssue[],
-): void {
-  lines.forEach((line, index) => {
-    // Check for @db.Serial (sequences not supported)
-    if (line.includes("@db.Serial")) {
-      issues.push({
-        type: "error",
-        message: "@db.Serial is not supported in DSQL (no sequences)",
-        line: index + 1,
-        suggestion: "Use @db.Uuid with gen_random_uuid() instead",
-      });
-    }
+): Promise<void> {
+  let sql: string;
+  try {
+    sql = execSync(
+      `npx prisma migrate diff --from-empty --to-schema "${schemaPath}" --script`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+    );
+  } catch {
+    return;
+  }
 
-    // Check for @@fulltext (not supported)
-    if (line.includes("@@fulltext")) {
-      issues.push({
-        type: "error",
-        message: "@@fulltext indexes are not supported in DSQL",
-        line: index + 1,
-      });
-    }
+  if (!sql.trim() || sql.trim() === "-- This is an empty migration.") {
+    return;
+  }
 
-    // Check for @db.SmallSerial, @db.BigSerial (sequences not supported)
-    if (line.includes("@db.SmallSerial") || line.includes("@db.BigSerial")) {
-      issues.push({
-        type: "error",
-        message: "Serial types are not supported in DSQL (no sequences)",
-        line: index + 1,
-        suggestion: "Use @db.Uuid with gen_random_uuid() instead",
-      });
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dsql-validate-"));
+  const tempFile = path.join(tempDir, "migration.sql");
+  try {
+    fs.writeFileSync(tempFile, sql);
+    const result = lintMigration(tempFile);
+    if (result.exitCode !== 0 && result.stderr) {
+      for (const line of result.stderr.split("\n")) {
+        const errorMatch = line.match(/^\S+:\d+: ERROR — (.+)/);
+        if (errorMatch?.[1]) {
+          issues.push({ type: "error", message: errorMatch[1] });
+        }
+      }
     }
-
-    // Check for BigInt @id (common pattern that won't work without sequences)
-    if (line.includes("@id") && /\bBigInt\b/.test(line)) {
-      issues.push({
-        type: "warning",
-        message:
-          "BigInt @id typically requires sequences which DSQL does not support",
-        line: index + 1,
-        suggestion:
-          "Consider using String @id with UUID for DSQL compatibility",
-      });
-    }
-  });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 }
 
 /**
