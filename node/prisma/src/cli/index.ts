@@ -108,7 +108,7 @@ Options:
 This command:
   1. Validates your schema for DSQL compatibility
   2. Generates migration SQL using Prisma
-  3. Transforms the SQL for DSQL using dsql-lint --fix
+  3. Transforms the SQL for DSQL compatibility using dsql-lint
 `);
     process.exit(0);
   }

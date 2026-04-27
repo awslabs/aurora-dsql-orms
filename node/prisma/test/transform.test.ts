@@ -82,6 +82,7 @@ CREATE TABLE "post" (
 
       expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
+      expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
     });
 
     test("converts CREATE UNIQUE INDEX to CREATE UNIQUE INDEX ASYNC", () => {
@@ -90,7 +91,7 @@ CREATE TABLE "post" (
       const result = transformMigration(input);
 
       expect(result.exitCode).toBe(0);
-      expect(result.sql).toContain("UNIQUE INDEX ASYNC");
+      expect(result.sql).toContain("CREATE UNIQUE INDEX ASYNC");
     });
 
     test("does not double-convert already ASYNC indexes", () => {
@@ -112,6 +113,17 @@ CREATE UNIQUE INDEX "idx3" ON "user"("username");`;
 
       expect(result.exitCode).toBe(0);
       expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(3);
+    });
+
+    test("handles partially transformed indexes", () => {
+      const input = `CREATE INDEX ASYNC "idx1" ON "user"("email");
+CREATE INDEX "idx2" ON "user"("name");`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).not.toContain("ASYNC ASYNC");
+      expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(2);
     });
   });
 
@@ -146,6 +158,27 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
       expect(result.sql).not.toContain("REFERENCES");
       expect(result.sql).toContain('CREATE TABLE "post"');
     });
+
+    test("removes FK with ON DELETE CASCADE", () => {
+      const input = `ALTER TABLE "post" ADD CONSTRAINT "fk_author" FOREIGN KEY ("authorId") REFERENCES "user"("id") ON DELETE CASCADE;`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).not.toContain("FOREIGN KEY");
+      expect(result.sql.trim()).toBe("");
+    });
+
+    test("DROP CONSTRAINT for foreign keys is unfixable", () => {
+      const input = `ALTER TABLE "Pet" DROP CONSTRAINT "Pet_ownerId_fkey";`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("unfixable");
+      expect(result.sql).toContain("DROP CONSTRAINT");
+    });
   });
 
   describe("real-world Prisma output", () => {
@@ -179,8 +212,32 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toContain("FOREIGN KEY");
+      expect(result.sql).not.toContain("REFERENCES");
       expect(result.sql).toContain('CREATE TABLE "owner"');
       expect(result.sql).toContain('CREATE TABLE "pet"');
+      expect(result.sql).toContain("gen_random_uuid()");
+    });
+  });
+
+  describe("DROP statements (down migrations)", () => {
+    test("preserves DROP TABLE statements", () => {
+      const input = `DROP TABLE IF EXISTS "user";
+DROP TABLE IF EXISTS "post";`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain('DROP TABLE IF EXISTS "user"');
+      expect(result.sql).toContain('DROP TABLE IF EXISTS "post"');
+    });
+
+    test("preserves DROP INDEX statements", () => {
+      const input = `DROP INDEX IF EXISTS "user_email_idx";`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain("DROP INDEX");
     });
   });
 
@@ -205,6 +262,7 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       const result = transformMigration(input);
 
       expect(result.sql).toContain("ALTER TABLE");
+      expect(result.sql).toContain("ADD COLUMN");
       expect(result.sql).toContain("email");
     });
 
@@ -215,6 +273,29 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("unfixable");
+    });
+
+    test("compound ALTER TABLE with DROP CONSTRAINT is unfixable", () => {
+      const input = `ALTER TABLE "vet" DROP CONSTRAINT "vet_pkey",
+ADD COLUMN     "phone" VARCHAR(20),
+ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("unfixable");
+      expect(result.sql).toContain("ADD COLUMN");
+      expect(result.sql).toContain("phone");
+    });
+
+    test("handles table/column names containing reserved words", () => {
+      const input = `CREATE TABLE "references" ("foreign_key" VARCHAR(100));`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain('CREATE TABLE "references"');
+      expect(result.sql).toContain("foreign_key");
     });
 
     test("does not leak temp file paths in stderr", () => {
