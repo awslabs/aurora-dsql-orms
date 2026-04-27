@@ -1,14 +1,9 @@
 #!/usr/bin/env node
-/**
- * Aurora DSQL Prisma CLI
- *
- * Tools for working with Prisma and Aurora DSQL.
- */
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
 import { validateSchema, formatValidationResult } from "./validate";
-import { transformMigration, formatTransformStats } from "./transform";
+import { transformMigration, lintMigration } from "./transform";
 
 const HELP = `
 Aurora DSQL Prisma Tools
@@ -16,26 +11,25 @@ Aurora DSQL Prisma Tools
 Usage:
   npm run dsql-migrate <schema> -o <output>    Validate, generate, and transform migration
   npm run validate <schema>                    Validate schema for DSQL compatibility
-  npm run dsql-transform [input] [-o output]   Transform migration for DSQL
+  npm run dsql-transform [input] [-o output]   Transform migration for DSQL (via dsql-lint)
+  npm run dsql-lint [input]                    Lint migration for DSQL compatibility
 
 Commands:
   migrate <schema> -o <output> [--from-url <url>]
     All-in-one command: validates schema, generates migration, and transforms for DSQL.
-    Exits on validation failure so you can fix and re-run.
-    Use --from-url for incremental migrations against an existing database.
+    Uses dsql-lint --fix for SQL transformation.
 
   validate <schema>
     Validates a Prisma schema file for DSQL compatibility.
     Reports errors for unsupported features like autoincrement, foreign keys, etc.
 
   transform [input] [-o output]
-    Transforms Prisma-generated SQL migrations to be DSQL-compatible.
-    - Wraps each statement in BEGIN/COMMIT
-    - Converts CREATE INDEX to CREATE INDEX ASYNC
-    - Removes foreign key constraints
-
+    Transforms SQL migrations to be DSQL-compatible using dsql-lint --fix.
     If no input file is specified, reads from stdin.
     If no output file is specified, writes to stdout.
+
+  lint [input]
+    Lints a SQL migration file for DSQL compatibility using dsql-lint.
 
 Examples:
   # All-in-one migration (recommended)
@@ -46,7 +40,8 @@ Examples:
 
   # Manual workflow
   npm run validate prisma/schema.prisma
-  npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script | npm run dsql-transform > migration.sql
+  npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > raw.sql
+  npm run dsql-transform raw.sql -o migration.sql
 `;
 
 async function main(): Promise<void> {
@@ -83,6 +78,11 @@ async function main(): Promise<void> {
       break;
     }
 
+    case "lint": {
+      handleLint(args.slice(1));
+      break;
+    }
+
     default:
       console.error(`Unknown command: ${command}`);
       console.log(HELP);
@@ -91,7 +91,6 @@ async function main(): Promise<void> {
 }
 
 async function handleMigrate(args: string[]): Promise<void> {
-  // Check for help flag
   if (args.includes("--help") || args.includes("-h")) {
     console.log(`
 DSQL Migration Generator - All-in-one migration workflow
@@ -100,18 +99,16 @@ Usage:
   npm run dsql-migrate <schema.prisma> -o <output.sql> [--from-url <url>]
 
 Options:
-  -o, --output <file>   Output file for the migration (required)
-  --from-url <url>      Compare against existing database (for incremental migrations)
-  --force               Force transformation even with unsupported statements
-  --no-header           Omit the generated header comment
-  -h, --help            Show this help message
+  -o, --output <file>          Output file for the migration (required)
+  --from-url <url>             Compare against existing database
+  --from-config-datasource     Compare against datasource in prisma.config.ts
+  --from-empty                 Generate from empty (default)
+  -h, --help                   Show this help message
 
 This command:
   1. Validates your schema for DSQL compatibility
   2. Generates migration SQL using Prisma
-  3. Transforms the SQL for DSQL (wraps in transactions, async indexes, removes FKs)
-
-If validation fails, the command exits so you can fix your schema and re-run.
+  3. Transforms the SQL for DSQL compatibility using dsql-lint
 
 Examples:
   # Initial migration
@@ -128,10 +125,7 @@ Examples:
   let fromUrl: string | undefined;
   let fromConfigDatasource = false;
   let fromEmpty = false;
-  let includeHeader = true;
-  let force = false;
 
-  // Parse arguments
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "-o" || arg === "--output") {
@@ -146,10 +140,6 @@ Examples:
       fromConfigDatasource = true;
     } else if (arg === "--from-empty") {
       fromEmpty = true;
-    } else if (arg === "--no-header") {
-      includeHeader = false;
-    } else if (arg === "--force") {
-      force = true;
     } else if (arg && !arg.startsWith("-")) {
       schemaPath = arg;
     }
@@ -171,7 +161,6 @@ Examples:
     process.exit(1);
   }
 
-  // Default to --from-empty if no --from-* option specified
   if (!fromUrl && !fromConfigDatasource && !fromEmpty) {
     fromEmpty = true;
   }
@@ -186,7 +175,6 @@ Examples:
     process.exit(1);
   }
 
-  // Show warnings if any
   const warnings = validationResult.issues.filter((i) => i.type === "warning");
   if (warnings.length > 0) {
     console.log(formatValidationResult(validationResult, schemaPath));
@@ -221,36 +209,22 @@ Examples:
     process.exit(1);
   }
 
-  // Check if migration is empty
   if (!rawSql.trim() || rawSql.trim() === "-- This is an empty migration.") {
     console.log("\n✓ No changes detected - schema is up to date");
     process.exit(0);
   }
 
-  // Step 3: Transform for DSQL
-  console.log("Transforming for DSQL compatibility...");
-  const transformResult = transformMigration(rawSql, {
-    includeHeader,
-    force,
-  });
+  // Step 3: Transform for DSQL using dsql-lint
+  console.log("Transforming for DSQL compatibility (dsql-lint --fix)...");
+  const transformResult = transformMigration(rawSql);
 
-  // Check for unsupported statements
-  if (transformResult.unsupportedStatements.length > 0 && !force) {
-    console.error("\n✗ Migration contains unsupported DSQL statements:\n");
-    for (const stmt of transformResult.unsupportedStatements) {
-      console.error(`  ${stmt}`);
-    }
-    console.error("\nDSQL doesn't support ALTER TABLE DROP CONSTRAINT.");
+  if (transformResult.stderr) {
+    console.error(transformResult.stderr);
+  }
+
+  if (transformResult.exitCode !== 0) {
     console.error(
-      "This typically happens when Prisma regenerates primary key constraints",
-    );
-    console.error("even though they haven't changed.\n");
-    console.error("Check your schema:");
-    console.error(
-      "  - If the primary key columns are the same, use --force to skip these",
-    );
-    console.error(
-      "  - If you're actually changing the primary key, recreate the table instead",
+      `\n✗ dsql-lint failed (exit ${transformResult.exitCode}). Review the errors above.`,
     );
     process.exit(1);
   }
@@ -261,64 +235,39 @@ Examples:
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  // Write output
   fs.writeFileSync(outputFile, transformResult.sql);
-
-  console.log(
-    formatTransformStats(transformResult.stats, transformResult.warnings),
-  );
   console.log(`\n✓ Migration written to: ${outputFile}`);
 }
 
 async function handleTransform(args: string[]): Promise<void> {
-  // Check for help flag
   if (args.includes("--help") || args.includes("-h")) {
     console.log(`
-Migration Transformer - Convert Prisma migrations for Aurora DSQL
+Migration Transformer - Convert SQL migrations for Aurora DSQL
+
+Uses dsql-lint --fix under the hood.
 
 Usage:
-  npm run dsql-transform [input.sql] [-o output.sql] [--no-header]
-  npx prisma migrate diff ... --script | npm run dsql-transform
+  npm run dsql-transform [input.sql] [-o output.sql]
 
 Options:
   -o, --output <file>   Write output to file instead of stdout
-  --force               Force transformation even with unsupported statements
-  --no-header           Omit the generated header comment
   -h, --help            Show this help message
-
-Examples:
-  # Transform from file to file
-  npm run dsql-transform raw.sql -o migration.sql
-
-  # Transform using pipes
-  npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script | npm run dsql-transform > migration.sql
-
-  # Without header comment
-  npm run dsql-transform raw.sql --no-header -o migration.sql
 `);
     process.exit(0);
   }
 
   let inputFile: string | undefined;
   let outputFile: string | undefined;
-  let includeHeader = true;
-  let force = false;
 
-  // Parse arguments
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "-o" || arg === "--output") {
       outputFile = args[++i];
-    } else if (arg === "--no-header") {
-      includeHeader = false;
-    } else if (arg === "--force") {
-      force = true;
     } else if (arg && !arg.startsWith("-")) {
       inputFile = arg;
     }
   }
 
-  // Read input
   let sql: string;
   if (inputFile) {
     if (!fs.existsSync(inputFile)) {
@@ -327,49 +276,70 @@ Examples:
     }
     sql = fs.readFileSync(inputFile, "utf-8");
   } else {
-    // Read from stdin
     sql = await readStdin();
     if (!sql.trim()) {
       console.error("Error: No input provided");
       console.error(
         "Usage: npm run dsql-transform [input.sql] [-o output.sql]",
       );
-      console.error(
-        "       npx prisma migrate diff ... --script | npm run dsql-transform",
-      );
       process.exit(1);
     }
   }
 
-  // Transform
-  const result = transformMigration(sql, { includeHeader, force });
+  const result = transformMigration(sql);
 
-  // Check for unsupported statements
-  if (result.unsupportedStatements.length > 0 && !force) {
-    console.error("\n✗ Migration contains unsupported DSQL statements:\n");
-    for (const stmt of result.unsupportedStatements) {
-      console.error(`  ${stmt}`);
-    }
-    console.error("\nDSQL doesn't support ALTER TABLE DROP CONSTRAINT.");
-    console.error("Use --force to skip these statements.");
+  if (result.stderr) {
+    console.error(result.stderr);
+  }
+
+  if (result.exitCode !== 0) {
+    process.exit(result.exitCode);
+  }
+
+  if (outputFile) {
+    fs.writeFileSync(outputFile, result.sql);
+  } else {
+    process.stdout.write(result.sql);
+  }
+}
+
+function handleLint(args: string[]): void {
+  if (args.includes("--help") || args.includes("-h")) {
+    console.log(`
+Migration Linter - Check SQL migrations for Aurora DSQL compatibility
+
+Uses dsql-lint under the hood.
+
+Usage:
+  npm run dsql-lint <input.sql>
+
+Options:
+  -h, --help    Show this help message
+`);
+    process.exit(0);
+  }
+
+  const inputFile = args.find((a) => !a.startsWith("-"));
+  if (!inputFile) {
+    console.error("Error: Input file required");
+    console.error("Usage: npm run dsql-lint <input.sql>");
     process.exit(1);
   }
 
-  // Write output
-  if (outputFile) {
-    fs.writeFileSync(outputFile, result.sql);
-    console.error(formatTransformStats(result.stats, result.warnings));
-    console.error(`Output written to: ${outputFile}`);
-  } else {
-    // Write SQL to stdout, stats to stderr
-    console.log(result.sql);
-    console.error(formatTransformStats(result.stats, result.warnings));
+  if (!fs.existsSync(inputFile)) {
+    console.error(`Error: Input file not found: ${inputFile}`);
+    process.exit(1);
   }
+
+  const result = lintMigration(inputFile);
+  if (result.stderr) {
+    console.error(result.stderr);
+  }
+  process.exit(result.exitCode);
 }
 
 function readStdin(): Promise<string> {
   return new Promise((resolve) => {
-    // Check if stdin is a TTY (interactive terminal)
     if (process.stdin.isTTY) {
       resolve("");
       return;
@@ -377,7 +347,7 @@ function readStdin(): Promise<string> {
 
     let data = "";
     process.stdin.setEncoding("utf-8");
-    process.stdin.on("data", (chunk) => {
+    process.stdin.on("data", (chunk: string) => {
       data += chunk;
     });
     process.stdin.on("end", () => {

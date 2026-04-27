@@ -1,12 +1,47 @@
-import {
-  transformMigration,
-  formatTransformStats,
-  TransformResult,
-} from "../src/cli/transform";
+import { transformMigration, lintMigration } from "../src/cli/transform";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
 
-describe("Migration Transformer", () => {
+describe("dsql-lint binary resolution", () => {
+  test("throws helpful error when dsql-lint is not found", () => {
+    const originalPath = process.env["DSQL_LINT_PATH"];
+    const originalPATH = process.env["PATH"];
+    try {
+      process.env["DSQL_LINT_PATH"] = "";
+      delete process.env["DSQL_LINT_PATH"];
+      process.env["PATH"] = "/nonexistent";
+
+      expect(() => transformMigration("SELECT 1;")).toThrow(
+        /dsql-lint not found/,
+      );
+    } finally {
+      if (originalPath !== undefined) {
+        process.env["DSQL_LINT_PATH"] = originalPath;
+      }
+      process.env["PATH"] = originalPATH;
+    }
+  });
+
+  test("throws when DSQL_LINT_PATH points to nonexistent file", () => {
+    const originalPath = process.env["DSQL_LINT_PATH"];
+    try {
+      process.env["DSQL_LINT_PATH"] = "/nonexistent/dsql-lint";
+
+      expect(() => transformMigration("SELECT 1;")).toThrow(/does not exist/);
+    } finally {
+      if (originalPath !== undefined) {
+        process.env["DSQL_LINT_PATH"] = originalPath;
+      } else {
+        delete process.env["DSQL_LINT_PATH"];
+      }
+    }
+  });
+});
+
+describe("Migration Transformer (dsql-lint)", () => {
   describe("basic transformations", () => {
-    test("wraps single CREATE TABLE in BEGIN/COMMIT", () => {
+    test("passes through clean CREATE TABLE unchanged", () => {
       const input = `CREATE TABLE "user" (
     "id" UUID NOT NULL,
     "name" VARCHAR(100),
@@ -15,13 +50,12 @@ describe("Migration Transformer", () => {
 
       const result = transformMigration(input);
 
-      expect(result.sql).toContain("BEGIN;");
-      expect(result.sql).toContain("COMMIT;");
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain('CREATE TABLE "user"');
-      expect(result.stats.statementsProcessed).toBe(1);
+      expect(result.sql).toContain("PRIMARY KEY");
     });
 
-    test("wraps multiple statements separately", () => {
+    test("handles multiple statements", () => {
       const input = `CREATE TABLE "user" (
     "id" UUID NOT NULL,
     PRIMARY KEY ("id")
@@ -34,26 +68,9 @@ CREATE TABLE "post" (
 
       const result = transformMigration(input);
 
-      // Count BEGIN/COMMIT pairs
-      const beginCount = (result.sql.match(/BEGIN;/g) || []).length;
-      const commitCount = (result.sql.match(/COMMIT;/g) || []).length;
-
-      expect(beginCount).toBe(2);
-      expect(commitCount).toBe(2);
-      expect(result.stats.statementsProcessed).toBe(2);
-    });
-
-    test("preserves comments before statements", () => {
-      const input = `-- CreateTable
-CREATE TABLE "user" (
-    "id" UUID NOT NULL,
-    PRIMARY KEY ("id")
-);`;
-
-      const result = transformMigration(input);
-
-      expect(result.sql).toContain("-- CreateTable");
-      expect(result.sql).toContain("BEGIN;");
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain('CREATE TABLE "user"');
+      expect(result.sql).toContain('CREATE TABLE "post"');
     });
   });
 
@@ -63,9 +80,9 @@ CREATE TABLE "user" (
 
       const result = transformMigration(input);
 
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
-      expect(result.stats.indexesConverted).toBe(1);
     });
 
     test("converts CREATE UNIQUE INDEX to CREATE UNIQUE INDEX ASYNC", () => {
@@ -73,8 +90,8 @@ CREATE TABLE "user" (
 
       const result = transformMigration(input);
 
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE UNIQUE INDEX ASYNC");
-      expect(result.stats.indexesConverted).toBe(1);
     });
 
     test("does not double-convert already ASYNC indexes", () => {
@@ -82,10 +99,9 @@ CREATE TABLE "user" (
 
       const result = transformMigration(input);
 
-      // Should not have "ASYNC ASYNC"
+      expect(result.exitCode).toBe(0);
       expect(result.sql).not.toContain("ASYNC ASYNC");
       expect(result.sql).toContain("CREATE INDEX ASYNC");
-      expect(result.stats.indexesConverted).toBe(0);
     });
 
     test("handles multiple indexes", () => {
@@ -93,11 +109,21 @@ CREATE TABLE "user" (
 CREATE INDEX "idx2" ON "user"("name");
 CREATE UNIQUE INDEX "idx3" ON "user"("username");`;
 
-      const result = transformMigration(input, { includeHeader: false });
+      const result = transformMigration(input);
 
-      expect(result.stats.indexesConverted).toBe(3);
-      // 2 regular indexes + 1 unique index = 3 total ASYNC conversions
+      expect(result.exitCode).toBe(0);
       expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(3);
+    });
+
+    test("handles partially transformed indexes", () => {
+      const input = `CREATE INDEX ASYNC "idx1" ON "user"("email");
+CREATE INDEX "idx2" ON "user"("name");`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).not.toContain("ASYNC ASYNC");
+      expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(2);
     });
   });
 
@@ -113,85 +139,45 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
 
       const result = transformMigration(input);
 
+      expect(result.exitCode).toBe(0);
       expect(result.sql).not.toContain("FOREIGN KEY");
       expect(result.sql).not.toContain("REFERENCES");
       expect(result.sql).toContain('CREATE TABLE "post"');
-      expect(result.stats.foreignKeysRemoved).toBe(1);
     });
 
-    test("removes inline REFERENCES constraints", () => {
+    test("removes inline REFERENCES from CREATE TABLE", () => {
+      const input = `CREATE TABLE "post" (
+    "id" UUID NOT NULL,
+    "authorId" UUID REFERENCES "user"("id"),
+    PRIMARY KEY ("id")
+);`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).toContain('CREATE TABLE "post"');
+    });
+
+    test("removes FK with ON DELETE CASCADE", () => {
       const input = `ALTER TABLE "post" ADD CONSTRAINT "fk_author" FOREIGN KEY ("authorId") REFERENCES "user"("id") ON DELETE CASCADE;`;
 
       const result = transformMigration(input);
 
+      expect(result.exitCode).toBe(0);
       expect(result.sql).not.toContain("REFERENCES");
-      expect(result.stats.foreignKeysRemoved).toBe(1);
+      expect(result.sql).not.toContain("FOREIGN KEY");
+      expect(result.sql.trim()).toBe("");
     });
 
-    test("removes DROP CONSTRAINT for foreign keys", () => {
+    test("DROP CONSTRAINT for foreign keys is unfixable", () => {
       const input = `ALTER TABLE "Pet" DROP CONSTRAINT "Pet_ownerId_fkey";`;
 
       const result = transformMigration(input);
 
-      expect(result.sql).not.toContain("DROP CONSTRAINT");
-      expect(result.stats.foreignKeysRemoved).toBe(1);
-    });
-
-    test("emits warning when foreign keys are removed", () => {
-      const input = `ALTER TABLE "post" ADD CONSTRAINT "fk" FOREIGN KEY ("authorId") REFERENCES "user"("id");`;
-
-      const result = transformMigration(input);
-
-      expect(result.warnings).toHaveLength(1);
-      expect(result.warnings[0]).toContain("relationMode");
-      expect(result.warnings[0]).toContain("application-layer");
-    });
-
-    test("no warning when no foreign keys present", () => {
-      const input = `CREATE TABLE "user" ("id" UUID);`;
-
-      const result = transformMigration(input);
-
-      expect(result.warnings).toHaveLength(0);
-    });
-  });
-
-  describe("already wrapped statements", () => {
-    test("does not double-wrap statements already in BEGIN/COMMIT", () => {
-      const input = `BEGIN;
-CREATE TABLE "user" (
-    "id" UUID NOT NULL,
-    PRIMARY KEY ("id")
-);
-COMMIT;`;
-
-      const result = transformMigration(input);
-
-      // Should only have one BEGIN/COMMIT pair
-      const beginCount = (result.sql.match(/BEGIN;/g) || []).length;
-      expect(beginCount).toBe(1);
-    });
-  });
-
-  describe("DROP statements (down migrations)", () => {
-    test("wraps DROP TABLE statements", () => {
-      const input = `DROP TABLE IF EXISTS "user";
-DROP TABLE IF EXISTS "post";`;
-
-      const result = transformMigration(input);
-
-      expect(result.stats.statementsProcessed).toBe(2);
-      expect((result.sql.match(/BEGIN;/g) || []).length).toBe(2);
-    });
-
-    test("wraps DROP INDEX statements", () => {
-      const input = `DROP INDEX IF EXISTS "user_email_idx";`;
-
-      const result = transformMigration(input);
-
-      expect(result.sql).toContain("BEGIN;");
-      expect(result.sql).toContain("DROP INDEX");
-      expect(result.sql).toContain("COMMIT;");
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("unfixable");
+      expect(result.sql).toContain("DROP CONSTRAINT");
     });
   });
 
@@ -223,77 +209,35 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       const result = transformMigration(input);
 
-      // Should have 3 statements (2 tables + 1 index, FK removed)
-      expect(result.stats.statementsProcessed).toBe(3);
-      expect(result.stats.indexesConverted).toBe(1);
-      expect(result.stats.foreignKeysRemoved).toBe(1);
-
-      // Verify structure
-      expect(result.sql).toContain("-- CreateTable");
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toContain("FOREIGN KEY");
-      expect(result.sql).not.toContain("AddForeignKey");
+      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).toContain('CREATE TABLE "owner"');
+      expect(result.sql).toContain('CREATE TABLE "pet"');
+      expect(result.sql).toContain("gen_random_uuid()");
     });
   });
 
-  describe("header comment", () => {
-    test("includes header by default", () => {
-      const input = `CREATE TABLE "user" ("id" UUID);`;
+  describe("DROP statements (down migrations)", () => {
+    test("preserves DROP TABLE statements", () => {
+      const input = `DROP TABLE IF EXISTS "user";
+DROP TABLE IF EXISTS "post";`;
 
       const result = transformMigration(input);
 
-      expect(result.sql).toContain("Transformed for Aurora DSQL");
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain('DROP TABLE IF EXISTS "user"');
+      expect(result.sql).toContain('DROP TABLE IF EXISTS "post"');
     });
 
-    test("can exclude header", () => {
-      const input = `CREATE TABLE "user" ("id" UUID);`;
+    test("preserves DROP INDEX statements", () => {
+      const input = `DROP INDEX IF EXISTS "user_email_idx";`;
 
-      const result = transformMigration(input, { includeHeader: false });
+      const result = transformMigration(input);
 
-      expect(result.sql).not.toContain("Transformed for Aurora DSQL");
-    });
-  });
-
-  describe("formatTransformStats", () => {
-    test("formats stats correctly", () => {
-      const stats: TransformResult["stats"] = {
-        statementsProcessed: 5,
-        indexesConverted: 2,
-        foreignKeysRemoved: 1,
-      };
-
-      const output = formatTransformStats(stats);
-
-      expect(output).toContain("5 statement(s)");
-      expect(output).toContain("2 index(es)");
-      expect(output).toContain("1 foreign key");
-    });
-
-    test("omits zero counts", () => {
-      const stats: TransformResult["stats"] = {
-        statementsProcessed: 3,
-        indexesConverted: 0,
-        foreignKeysRemoved: 0,
-      };
-
-      const output = formatTransformStats(stats);
-
-      expect(output).toContain("3 statement(s)");
-      expect(output).not.toContain("index");
-      expect(output).not.toContain("foreign key");
-    });
-
-    test("includes warnings when provided", () => {
-      const stats: TransformResult["stats"] = {
-        statementsProcessed: 1,
-        indexesConverted: 0,
-        foreignKeysRemoved: 1,
-      };
-      const warnings = ["Test warning message"];
-
-      const output = formatTransformStats(stats, warnings);
-
-      expect(output).toContain("⚠ Test warning message");
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain("DROP INDEX");
     });
   });
 
@@ -302,7 +246,6 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       const result = transformMigration("");
 
       expect(result.sql.trim()).toBe("");
-      expect(result.stats.statementsProcessed).toBe(0);
     });
 
     test("handles input with only comments", () => {
@@ -310,133 +253,90 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       const result = transformMigration(input);
 
-      expect(result.stats.statementsProcessed).toBe(0);
-    });
-
-    test("handles statements without trailing semicolon", () => {
-      const input = `CREATE TABLE "user" ("id" UUID)`;
-
-      const result = transformMigration(input);
-
-      expect(result.sql).toContain("BEGIN;");
-      expect(result.sql).toContain("COMMIT;");
-      // Should add semicolon
-      expect(result.sql).toMatch(/\);?\s*\nCOMMIT;/);
-    });
-
-    test("handles mixed wrapped and unwrapped statements", () => {
-      const input = `BEGIN;
-CREATE TABLE "user" ("id" UUID);
-COMMIT;
-
-CREATE TABLE "post" ("id" UUID);`;
-
-      const result = transformMigration(input, { includeHeader: false });
-
-      // Should have 2 statements total
-      expect(result.stats.statementsProcessed).toBe(2);
-      // Should have 2 BEGIN/COMMIT pairs (one original, one added)
-      expect((result.sql.match(/BEGIN;/g) || []).length).toBe(2);
-    });
-
-    test("handles partially transformed indexes", () => {
-      const input = `CREATE INDEX ASYNC "idx1" ON "user"("email");
-CREATE INDEX "idx2" ON "user"("name");`;
-
-      const result = transformMigration(input, { includeHeader: false });
-
-      // Only idx2 should be converted
-      expect(result.stats.indexesConverted).toBe(1);
-      // Both should be wrapped
-      expect(result.stats.statementsProcessed).toBe(2);
+      expect(result.sql.trim()).toBe("");
     });
 
     test("preserves non-FK ALTER TABLE statements", () => {
       const input = `ALTER TABLE "user" ADD COLUMN "email" VARCHAR(255);`;
 
-      const result = transformMigration(input, { includeHeader: false });
+      const result = transformMigration(input);
 
       expect(result.sql).toContain("ALTER TABLE");
       expect(result.sql).toContain("ADD COLUMN");
-      expect(result.stats.statementsProcessed).toBe(1);
-      expect(result.stats.foreignKeysRemoved).toBe(0);
+      expect(result.sql).toContain("email");
     });
 
-    test("handles compound ALTER TABLE with DROP/ADD CONSTRAINT for pkey", () => {
-      // Prisma generates this when comparing against live database
+    test("returns exit code 1 for unfixable errors", () => {
+      const input = `ALTER TABLE "t" DROP CONSTRAINT "t_pkey";`;
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("unfixable");
+    });
+
+    test("compound ALTER TABLE with DROP CONSTRAINT is unfixable", () => {
       const input = `ALTER TABLE "vet" DROP CONSTRAINT "vet_pkey",
 ADD COLUMN     "phone" VARCHAR(20),
 ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
 
-      // Without --force, should report unsupported statements
-      // ADD CONSTRAINT for same PK is also skipped (paired with DROP)
-      const result = transformMigration(input, { includeHeader: false });
+      const result = transformMigration(input);
 
-      expect(result.unsupportedStatements).toHaveLength(1);
-      expect(result.unsupportedStatements[0]).toContain("DROP CONSTRAINT");
-      // Only ADD COLUMN should be in output (ADD CONSTRAINT skipped since paired with DROP)
-      expect(result.sql).toContain("ADD COLUMN");
-      expect(result.sql).not.toContain("ADD CONSTRAINT");
-      expect(result.sql).not.toContain("PRIMARY KEY");
-    });
-
-    test("with --force, removes DROP/ADD CONSTRAINT and keeps ADD COLUMN", () => {
-      const input = `ALTER TABLE "vet" DROP CONSTRAINT "vet_pkey",
-ADD COLUMN     "phone" VARCHAR(20),
-ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
-
-      const result = transformMigration(input, {
-        includeHeader: false,
-        force: true,
-      });
-
-      // Should keep ADD COLUMN but remove DROP/ADD CONSTRAINT
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("unfixable");
       expect(result.sql).toContain("ADD COLUMN");
       expect(result.sql).toContain("phone");
-      expect(result.sql).not.toContain("DROP CONSTRAINT");
-      expect(result.sql).not.toContain("PRIMARY KEY");
-      expect(result.stats.statementsProcessed).toBe(1);
-      expect(result.unsupportedStatements).toHaveLength(1); // Still tracked
-    });
-
-    test("removes empty ALTER TABLE after filtering with --force", () => {
-      // If only DROP/ADD CONSTRAINT, statement should be removed entirely
-      const input = `ALTER TABLE "vet" DROP CONSTRAINT "vet_pkey",
-ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
-
-      const result = transformMigration(input, {
-        includeHeader: false,
-        force: true,
-      });
-
-      expect(result.sql.trim()).toBe("");
-      expect(result.stats.statementsProcessed).toBe(0);
-    });
-
-    test("without --force, skips paired ADD CONSTRAINT", () => {
-      // Without force, we skip ADD CONSTRAINT that's paired with DROP
-      // This avoids outputting partial SQL that would fail anyway
-      const input = `ALTER TABLE "vet" DROP CONSTRAINT "vet_pkey",
-ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
-
-      const result = transformMigration(input, { includeHeader: false });
-
-      // DROP is tracked as unsupported
-      expect(result.unsupportedStatements).toHaveLength(1);
-      // Statement is empty after filtering, so nothing in output
-      expect(result.sql.trim()).toBe("");
-      expect(result.stats.statementsProcessed).toBe(0);
     });
 
     test("handles table/column names containing reserved words", () => {
       const input = `CREATE TABLE "references" ("foreign_key" VARCHAR(100));`;
 
-      const result = transformMigration(input, { includeHeader: false });
+      const result = transformMigration(input);
 
-      // Should NOT be removed - it's a table, not an FK constraint
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain('CREATE TABLE "references"');
-      expect(result.stats.statementsProcessed).toBe(1);
-      expect(result.stats.foreignKeysRemoved).toBe(0);
+      expect(result.sql).toContain("foreign_key");
+    });
+
+    test("does not leak temp file paths in stderr", () => {
+      const input = `CREATE INDEX "idx" ON "t"("col");`;
+
+      const result = transformMigration(input);
+
+      expect(result.stderr).not.toMatch(/\/tmp\//);
+      expect(result.stderr).not.toMatch(/\/var\/folders\//);
+      expect(result.stderr).not.toContain("dsql-transform-");
+    });
+  });
+
+  describe("lintMigration", () => {
+    let tempDir: string;
+
+    beforeAll(() => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "lint-test-"));
+    });
+
+    afterAll(() => {
+      fs.rmSync(tempDir, { recursive: true });
+    });
+
+    test("returns exit code 0 for clean SQL", () => {
+      const filePath = path.join(tempDir, "clean.sql");
+      fs.writeFileSync(filePath, `CREATE TABLE "t" ("id" UUID PRIMARY KEY);`);
+
+      const result = lintMigration(filePath);
+
+      expect(result.exitCode).toBe(0);
+    });
+
+    test("returns exit code 1 for SQL with issues", () => {
+      const filePath = path.join(tempDir, "issues.sql");
+      fs.writeFileSync(filePath, `CREATE INDEX "idx" ON "t"("col");`);
+
+      const result = lintMigration(filePath);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("ASYNC");
     });
   });
 });
