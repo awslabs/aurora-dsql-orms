@@ -59,8 +59,8 @@ model User {
     });
   });
 
-  describe("autoincrement validation", () => {
-    test("fails when autoincrement() is used", async () => {
+  describe("dsql-lint SQL validation", () => {
+    test("fails when autoincrement() is used (SERIAL in SQL)", async () => {
       const schema = `
 datasource db {
   provider     = "postgresql"
@@ -74,109 +74,12 @@ model User {
 `;
       const result = await validateSchema(createTempSchema(schema));
       expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("autoincrement")),
-      ).toBe(true);
-    });
-  });
-
-  describe("ID field validation", () => {
-    test("warns when Int @id is used without autoincrement", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   Int    @id
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.issues.some((i) => i.message.includes("Int @id"))).toBe(
+      expect(result.issues.some((i) => i.message.includes("SERIAL"))).toBe(
         true,
       );
     });
 
-    test("warns when gen_random_uuid is used without @db.Uuid", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   String @id @default(dbgenerated("gen_random_uuid()"))
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.issues.some((i) => i.message.includes("@db.Uuid"))).toBe(
-        true,
-      );
-    });
-  });
-
-  describe("unsupported features", () => {
-    test("fails when @db.Serial is used", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   Int    @id @db.Serial
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.valid).toBe(false);
-      expect(result.issues.some((i) => i.message.includes("@db.Serial"))).toBe(
-        true,
-      );
-    });
-
-    test("fails when @db.SmallSerial is used", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   Int    @id @db.SmallSerial
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("Serial types")),
-      ).toBe(true);
-    });
-
-    test("fails when @db.BigSerial is used", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   BigInt @id @db.BigSerial
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("Serial types")),
-      ).toBe(true);
-    });
-
-    test("fails when @@fulltext is used", async () => {
+    test("reports CREATE INDEX without ASYNC", async () => {
       const schema = `
 datasource db {
   provider     = "postgresql"
@@ -185,34 +88,16 @@ datasource db {
 
 model User {
   id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
+  name String @db.VarChar(100)
 
-  @@fulltext([name])
+  @@index([name])
 }
 `;
       const result = await validateSchema(createTempSchema(schema));
       expect(result.valid).toBe(false);
-      expect(result.issues.some((i) => i.message.includes("@@fulltext"))).toBe(
-        true,
-      );
-    });
-
-    test("warns when BigInt @id is used", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   BigInt @id
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.issues.some((i) => i.message.includes("BigInt @id"))).toBe(
-        true,
-      );
+      expect(
+        result.issues.some((i) => i.message.includes("CREATE INDEX")),
+      ).toBe(true);
     });
   });
 
@@ -228,16 +113,6 @@ model User {
   id    String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name  String  @db.VarChar(100)
   email String? @db.VarChar(255)
-  posts Post[]
-}
-
-model Post {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title    String @db.VarChar(200)
-  authorId String @db.Uuid
-  author   User   @relation(fields: [authorId], references: [id])
-
-  @@index([authorId])
 }
 `;
       const result = await validateSchema(createTempSchema(schema));

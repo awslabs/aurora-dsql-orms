@@ -78,7 +78,7 @@ model User {
         fail("Expected validator to fail");
       } catch (error: unknown) {
         const execError = error as { stdout?: string; status?: number };
-        expect(execError.stdout).toContain("autoincrement");
+        expect(execError.stdout).toContain("SERIAL");
         expect(execError.status).toBe(1);
       }
     });
@@ -156,7 +156,7 @@ model User {
           status?: number;
         };
         const output = (execError.stdout || "") + (execError.stderr || "");
-        expect(output).toContain("autoincrement");
+        expect(output).toContain("relationMode");
         expect(output).toContain("Fix the schema errors");
         expect(execError.status).toBe(1);
       }

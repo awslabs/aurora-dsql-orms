@@ -58,17 +58,7 @@ npx aurora-dsql-prisma validate prisma/schema.prisma
 
 #### What the Validator Checks
 
-| Check                                  | Type    | DSQL Limitation                 |
-| -------------------------------------- | ------- | ------------------------------- |
-| Missing `relationMode = "prisma"`      | Error   | Foreign keys not supported      |
-| `autoincrement()`                      | Error   | Sequences not supported         |
-| `@db.Serial`                           | Error   | Sequences not supported         |
-| `@db.SmallSerial`                      | Error   | Sequences not supported         |
-| `@db.BigSerial`                        | Error   | Sequences not supported         |
-| `@@fulltext`                           | Error   | Full-text indexes not supported |
-| `Int @id` without autoincrement        | Warning | Manual ID management needed     |
-| `BigInt @id`                           | Warning | Typically requires sequences    |
-| `gen_random_uuid()` without `@db.Uuid` | Warning | Should use proper UUID type     |
+The validator checks that `relationMode = "prisma"` is set in the datasource block (DSQL does not support foreign keys). All other SQL compatibility checks are delegated to [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) — the validator generates SQL from your schema and lints it. See the [dsql-lint README](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for the full list of rules.
 
 #### Example Output
 
