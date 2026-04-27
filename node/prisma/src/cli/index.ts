@@ -71,6 +71,7 @@ async function main(): Promise<void> {
       const result = await validateSchema(schemaPath);
       console.log(formatValidationResult(result, schemaPath));
       process.exit(result.valid ? 0 : 1);
+      break;
     }
 
     case "transform": {
@@ -167,9 +168,7 @@ Examples:
 
   // Step 1: Validate schema
   console.log(`Validating ${path.basename(schemaPath)}...`);
-  const validationResult = await validateSchema(schemaPath, {
-    skipSqlLint: true,
-  });
+  const validationResult = await validateSchema(schemaPath, true);
 
   if (!validationResult.valid) {
     console.log(formatValidationResult(validationResult, schemaPath));

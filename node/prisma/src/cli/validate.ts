@@ -13,7 +13,6 @@ import { execSync } from "child_process";
 import { lintMigration } from "./transform";
 
 export interface ValidationIssue {
-  type: "error";
   message: string;
   line?: number;
   suggestion?: string;
@@ -24,16 +23,9 @@ export interface ValidationResult {
   issues: ValidationIssue[];
 }
 
-/**
- * Validates a Prisma schema file for Aurora DSQL compatibility.
- */
-export interface ValidateOptions {
-  skipSqlLint?: boolean;
-}
-
 export async function validateSchema(
   schemaPath: string,
-  options?: ValidateOptions,
+  skipSqlLint?: boolean,
 ): Promise<ValidationResult> {
   const issues: ValidationIssue[] = [];
 
@@ -42,7 +34,6 @@ export async function validateSchema(
       valid: false,
       issues: [
         {
-          type: "error",
           message: `Schema file not found: ${schemaPath}`,
         },
       ],
@@ -54,7 +45,7 @@ export async function validateSchema(
 
   checkRelationMode(schemaContent, lines, issues);
 
-  if (!options?.skipSqlLint) {
+  if (!skipSqlLint) {
     await checkSqlCompatibility(schemaPath, issues);
   }
 
@@ -75,7 +66,6 @@ function checkRelationMode(
   if (hasDatasource && !hasRelationMode) {
     const datasourceLine = lines.findIndex((l) => l.includes("datasource"));
     issues.push({
-      type: "error",
       message: 'Missing relationMode = "prisma" in datasource block',
       line: datasourceLine + 1,
       suggestion:
@@ -103,7 +93,6 @@ async function checkSqlCompatibility(
         .find((l) => /^error:/.test(l.trim()))
         ?.trim() ?? "";
     issues.push({
-      type: "error",
       message: errorLine || "Failed to generate SQL from schema",
     });
     return;
@@ -122,7 +111,7 @@ async function checkSqlCompatibility(
       for (const line of result.stderr.split("\n")) {
         const errorMatch = line.match(/^\S+:\d+: ERROR — (.+)/);
         if (errorMatch?.[1]) {
-          issues.push({ type: "error", message: errorMatch[1] });
+          issues.push({ message: errorMatch[1] });
         }
       }
     }

@@ -67,7 +67,7 @@ The validator checks that `relationMode = "prisma"` is set in the datasource blo
   → Add relationMode = "prisma" to your datasource block. DSQL does not support foreign key constraints.
 ✗ Column `"id"` uses SERIAL, which is not supported in DSQL.
 
-✗ Validation failed: 2 error(s), 0 warning(s)
+✗ Validation failed: 2 error(s)
 ```
 
 ### Transform Migrations

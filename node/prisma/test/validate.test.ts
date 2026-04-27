@@ -212,7 +212,6 @@ model User {
         valid: false,
         issues: [
           {
-            type: "error" as const,
             message: "Test error",
             line: 10,
             suggestion: "Fix it",
@@ -231,6 +230,24 @@ model User {
       const result = await validateSchema("/nonexistent/schema.prisma");
       expect(result.valid).toBe(false);
       expect(result.issues[0]?.message).toContain("not found");
+    });
+
+    test("returns error when prisma cannot parse schema", async () => {
+      const schema = `
+datasource db {
+  provider     = "postgresql"
+  relationMode = "prisma"
+}
+
+model User {
+  this is not valid prisma syntax
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
+      expect(result.valid).toBe(false);
+      expect(result.issues.some((i) => i.message.includes("error"))).toBe(
+        true,
+      );
     });
   });
 });
