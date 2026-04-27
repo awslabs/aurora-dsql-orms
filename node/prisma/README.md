@@ -34,8 +34,6 @@ This package requires [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools
 cargo install dsql-lint
 ```
 
-Or download a prebuilt binary from [GitHub Releases](https://github.com/awslabs/aurora-dsql-tools/releases) and add it to your PATH.
-
 You can also set the `DSQL_LINT_PATH` environment variable to point to the binary location.
 
 ## Quick Start

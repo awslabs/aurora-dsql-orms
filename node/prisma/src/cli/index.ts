@@ -109,6 +109,13 @@ This command:
   1. Validates your schema for DSQL compatibility
   2. Generates migration SQL using Prisma
   3. Transforms the SQL for DSQL compatibility using dsql-lint
+
+Examples:
+  # Initial migration
+  npm run dsql-migrate prisma/schema.prisma -o prisma/migrations/001_init/migration.sql
+
+  # Incremental migration (after schema changes)
+  npm run dsql-migrate prisma/schema.prisma -o prisma/migrations/002_changes/migration.sql --from-config-datasource
 `);
     process.exit(0);
   }
@@ -217,7 +224,7 @@ This command:
 
   if (transformResult.exitCode !== 0) {
     console.error(
-      "\n✗ dsql-lint found unfixable issues. Review the errors above.",
+      `\n✗ dsql-lint failed (exit ${transformResult.exitCode}). Review the errors above.`,
     );
     process.exit(1);
   }
@@ -285,13 +292,15 @@ Options:
     console.error(result.stderr);
   }
 
+  if (result.exitCode !== 0) {
+    process.exit(result.exitCode);
+  }
+
   if (outputFile) {
     fs.writeFileSync(outputFile, result.sql);
   } else {
     process.stdout.write(result.sql);
   }
-
-  process.exit(result.exitCode);
 }
 
 function handleLint(args: string[]): void {

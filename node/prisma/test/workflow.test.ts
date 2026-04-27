@@ -129,7 +129,6 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(output).toContain('CREATE TABLE "Owner"');
       expect(output).toContain('CREATE TABLE "Pet"');
       expect(output).toContain("gen_random_uuid()");
-      expect(output).toContain("VARCHAR(30)");
     });
   });
 

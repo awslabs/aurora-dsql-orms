@@ -193,5 +193,62 @@ model User {
         encoding: "utf-8",
       });
     });
+
+    test("transform reports unfixable DROP CONSTRAINT with non-zero exit", () => {
+      const migration = `ALTER TABLE "t" DROP CONSTRAINT "t_pkey";`;
+      const inputPath = path.join(tempDir, "unfixable.sql");
+      const outputPath = path.join(tempDir, "unfixable-out.sql");
+      fs.writeFileSync(inputPath, migration);
+
+      try {
+        execSync(`npm run dsql-transform ${inputPath} -- -o ${outputPath}`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        fail("Expected transform to fail");
+      } catch (error: unknown) {
+        const execError = error as { stderr?: string; status?: number };
+        expect(execError.stderr).toContain("unfixable");
+        expect(execError.status).toBe(1);
+      }
+    });
+
+    test("transform fixes FK and index issues with exit code 0", () => {
+      const migration = `CREATE TABLE "post" (
+    "id" UUID NOT NULL,
+    "authorId" UUID NOT NULL,
+    PRIMARY KEY ("id")
+);
+ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "user"("id");
+CREATE INDEX "post_authorId_idx" ON "post"("authorId");`;
+      const inputPath = path.join(tempDir, "fixable.sql");
+      const outputPath = path.join(tempDir, "fixable-out.sql");
+      fs.writeFileSync(inputPath, migration);
+
+      execSync(`npm run dsql-transform ${inputPath} -- -o ${outputPath}`, {
+        cwd: path.join(__dirname, ".."),
+        encoding: "utf-8",
+      });
+
+      const output = fs.readFileSync(outputPath, "utf-8");
+      expect(output).toContain("CREATE INDEX ASYNC");
+      expect(output).not.toContain("FOREIGN KEY");
+      expect(output).not.toContain("REFERENCES");
+      expect(output).toContain('CREATE TABLE "post"');
+    });
+
+    test("prisma migrate diff piped to dsql-transform produces valid output", () => {
+      const output = execSync(
+        "npx prisma migrate diff --from-empty --to-schema prisma/veterinary-schema.prisma --script | npm run dsql-transform 2>/dev/null",
+        { cwd: path.join(__dirname, ".."), encoding: "utf-8" },
+      );
+
+      expect(output).toContain("CREATE INDEX ASYNC");
+      expect(output).not.toContain("FOREIGN KEY");
+      expect(output).not.toMatch(/REFERENCES.*ON DELETE/);
+      expect(output).toContain('CREATE TABLE "owner"');
+      expect(output).toContain('CREATE TABLE "pet"');
+    });
   });
 });
