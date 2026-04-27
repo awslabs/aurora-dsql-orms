@@ -97,10 +97,14 @@ async function checkSqlCompatibility(
   } catch (error: unknown) {
     const execError = error as { stderr?: string };
     const stderr = execError.stderr ?? "";
-    const detail = stderr.split("\n").find((l) => l.trim().length > 0) ?? "";
+    const errorLine =
+      stderr
+        .split("\n")
+        .find((l) => /^error:/.test(l.trim()))
+        ?.trim() ?? "";
     issues.push({
       type: "error",
-      message: `Failed to generate SQL from schema${detail ? `: ${detail.trim()}` : ""}`,
+      message: errorLine || "Failed to generate SQL from schema",
     });
     return;
   }

@@ -99,6 +99,84 @@ model User {
         result.issues.some((i) => i.message.includes("CREATE INDEX")),
       ).toBe(true);
     });
+
+    test("fails when @db.Serial is used", async () => {
+      const schema = `
+datasource db {
+  provider     = "postgresql"
+  relationMode = "prisma"
+}
+
+model User {
+  id   Int    @id @db.Serial
+  name String
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
+      expect(result.valid).toBe(false);
+      expect(result.issues.some((i) => i.message.includes("Serial"))).toBe(
+        true,
+      );
+    });
+
+    test("fails when @db.SmallSerial is used", async () => {
+      const schema = `
+datasource db {
+  provider     = "postgresql"
+  relationMode = "prisma"
+}
+
+model User {
+  id   Int    @id @db.SmallSerial
+  name String
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
+      expect(result.valid).toBe(false);
+      expect(result.issues.some((i) => i.message.includes("SmallSerial"))).toBe(
+        true,
+      );
+    });
+
+    test("fails when @db.BigSerial is used", async () => {
+      const schema = `
+datasource db {
+  provider     = "postgresql"
+  relationMode = "prisma"
+}
+
+model User {
+  id   BigInt @id @db.BigSerial
+  name String
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
+      expect(result.valid).toBe(false);
+      expect(result.issues.some((i) => i.message.includes("BigSerial"))).toBe(
+        true,
+      );
+    });
+
+    test("fails when @@fulltext is used", async () => {
+      const schema = `
+datasource db {
+  provider     = "postgresql"
+  relationMode = "prisma"
+}
+
+model User {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+
+  @@fulltext([name])
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
+      expect(result.valid).toBe(false);
+      expect(result.issues.some((i) => i.message.includes("fulltext"))).toBe(
+        true,
+      );
+    });
   });
 
   describe("valid schema", () => {
