@@ -245,9 +245,7 @@ model User {
 `;
       const result = await validateSchema(createTempSchema(schema));
       expect(result.valid).toBe(false);
-      expect(result.issues.some((i) => i.message.includes("error"))).toBe(
-        true,
-      );
+      expect(result.issues.some((i) => i.message.includes("error"))).toBe(true);
     });
   });
 });
