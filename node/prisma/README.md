@@ -63,11 +63,9 @@ The validator checks that `relationMode = "prisma"` is set in the datasource blo
 #### Example Output
 
 ```
-✗ autoincrement() is not supported in DSQL (line 12)
-  → Use @default(dbgenerated("gen_random_uuid()")) @db.Uuid instead
-
-✗ Missing relationMode = "prisma" in datasource block (line 3)
-  → Add relationMode = "prisma" to your datasource block.
+✗ Missing relationMode = "prisma" in datasource block (line 1)
+  → Add relationMode = "prisma" to your datasource block. DSQL does not support foreign key constraints.
+✗ Column `"id"` uses SERIAL, which is not supported in DSQL.
 
 ✗ Validation failed: 2 error(s), 0 warning(s)
 ```

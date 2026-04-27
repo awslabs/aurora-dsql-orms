@@ -13,7 +13,7 @@ import { execSync } from "child_process";
 import { lintMigration } from "./transform";
 
 export interface ValidationIssue {
-  type: "error" | "warning";
+  type: "error";
   message: string;
   line?: number;
   suggestion?: string;
@@ -59,7 +59,7 @@ export async function validateSchema(
   }
 
   return {
-    valid: issues.filter((i) => i.type === "error").length === 0,
+    valid: issues.length === 0,
     issues,
   };
 }
@@ -94,7 +94,14 @@ async function checkSqlCompatibility(
       `npx prisma migrate diff --from-empty --to-schema "${schemaPath}" --script`,
       { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
     );
-  } catch {
+  } catch (error: unknown) {
+    const execError = error as { stderr?: string };
+    const stderr = execError.stderr ?? "";
+    const detail = stderr.split("\n").find((l) => l.trim().length > 0) ?? "";
+    issues.push({
+      type: "error",
+      message: `Failed to generate SQL from schema${detail ? `: ${detail.trim()}` : ""}`,
+    });
     return;
   }
 
@@ -139,25 +146,15 @@ export function formatValidationResult(
   lines.push("");
 
   for (const issue of result.issues) {
-    const icon = issue.type === "error" ? "✗" : "⚠";
     const lineInfo = issue.line ? ` (line ${issue.line})` : "";
-    lines.push(`${icon} ${issue.message}${lineInfo}`);
+    lines.push(`✗ ${issue.message}${lineInfo}`);
     if (issue.suggestion) {
       lines.push(`  → ${issue.suggestion}`);
     }
   }
 
   lines.push("");
-  const errorCount = result.issues.filter((i) => i.type === "error").length;
-  const warningCount = result.issues.filter((i) => i.type === "warning").length;
-
-  if (errorCount > 0) {
-    lines.push(
-      `✗ Validation failed: ${errorCount} error(s), ${warningCount} warning(s)`,
-    );
-  } else {
-    lines.push(`⚠ Validation passed with ${warningCount} warning(s)`);
-  }
+  lines.push(`✗ Validation failed: ${result.issues.length} error(s)`);
 
   return lines.join("\n");
 }

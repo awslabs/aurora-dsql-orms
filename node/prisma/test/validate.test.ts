@@ -117,7 +117,7 @@ model User {
 `;
       const result = await validateSchema(createTempSchema(schema));
       expect(result.valid).toBe(true);
-      expect(result.issues.filter((i) => i.type === "error")).toHaveLength(0);
+      expect(result.issues).toHaveLength(0);
     });
   });
 
