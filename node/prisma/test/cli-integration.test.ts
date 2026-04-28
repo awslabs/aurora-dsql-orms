@@ -238,6 +238,66 @@ CREATE INDEX "post_authorId_idx" ON "post"("authorId");`;
       expect(output).toContain('CREATE TABLE "post"');
     });
 
+    test("validate rejects unknown flags", () => {
+      try {
+        execSync(`npm run validate -- --unknown-flag`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        fail("Expected CLI to fail on unknown flag");
+      } catch (error: unknown) {
+        const execError = error as { stderr?: string; status?: number };
+        expect(execError.stderr).toContain("Unknown flag: --unknown-flag");
+        expect(execError.status).toBe(1);
+      }
+    });
+
+    test("migrate rejects unknown flags", () => {
+      try {
+        execSync(`npm run dsql-migrate -- schema.prisma -o out.sql --bogus`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        fail("Expected CLI to fail on unknown flag");
+      } catch (error: unknown) {
+        const execError = error as { stderr?: string; status?: number };
+        expect(execError.stderr).toContain("Unknown flag: --bogus");
+        expect(execError.status).toBe(1);
+      }
+    });
+
+    test("transform rejects unknown flags", () => {
+      try {
+        execSync(`npm run dsql-transform -- --verbose`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        fail("Expected CLI to fail on unknown flag");
+      } catch (error: unknown) {
+        const execError = error as { stderr?: string; status?: number };
+        expect(execError.stderr).toContain("Unknown flag: --verbose");
+        expect(execError.status).toBe(1);
+      }
+    });
+
+    test("lint rejects unknown flags", () => {
+      try {
+        execSync(`npm run dsql-lint -- --fix`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        fail("Expected CLI to fail on unknown flag");
+      } catch (error: unknown) {
+        const execError = error as { stderr?: string; status?: number };
+        expect(execError.stderr).toContain("Unknown flag: --fix");
+        expect(execError.status).toBe(1);
+      }
+    });
+
     test("prisma migrate diff piped to dsql-transform produces valid output", () => {
       const output = execSync(
         "npx prisma migrate diff --from-empty --to-schema prisma/veterinary-schema.prisma --script | npm run dsql-transform 2>/dev/null",
