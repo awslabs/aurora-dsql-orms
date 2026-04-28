@@ -21,7 +21,7 @@ Commands:
 
   validate <schema>
     Validates a Prisma schema file for DSQL compatibility.
-    Reports errors for unsupported features like autoincrement, foreign keys, etc.
+    Generates SQL and checks it with dsql-lint.
 
   transform [input] [-o output]
     Transforms SQL migrations to be DSQL-compatible using dsql-lint --fix.
@@ -71,6 +71,7 @@ async function main(): Promise<void> {
       const result = await validateSchema(schemaPath);
       console.log(formatValidationResult(result, schemaPath));
       process.exit(result.valid ? 0 : 1);
+      break;
     }
 
     case "transform": {
@@ -167,7 +168,7 @@ Examples:
 
   // Step 1: Validate schema
   console.log(`Validating ${path.basename(schemaPath)}...`);
-  const validationResult = await validateSchema(schemaPath);
+  const validationResult = await validateSchema(schemaPath, true);
 
   if (!validationResult.valid) {
     console.log(formatValidationResult(validationResult, schemaPath));
@@ -175,12 +176,7 @@ Examples:
     process.exit(1);
   }
 
-  const warnings = validationResult.issues.filter((i) => i.type === "warning");
-  if (warnings.length > 0) {
-    console.log(formatValidationResult(validationResult, schemaPath));
-  } else {
-    console.log(`✓ Schema is DSQL-compatible`);
-  }
+  console.log(`✓ Schema is DSQL-compatible`);
 
   // Step 2: Generate migration using Prisma
   const fromSource = fromUrl || fromConfigDatasource ? "database" : "empty";

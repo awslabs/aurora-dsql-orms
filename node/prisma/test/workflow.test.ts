@@ -81,51 +81,44 @@ CREATE INDEX "Pet_ownerId_idx" ON "Pet"("ownerId");
 ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Owner"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 `;
 
-    test("step 1: schema passes validation", async () => {
+    test("step 1: validator reports issues that transform will fix", async () => {
       const schemaPath = createTempSchema(validSchema);
       const result = await validateSchema(schemaPath);
 
-      expect(result.valid).toBe(true);
-      expect(result.issues.filter((i) => i.type === "error")).toHaveLength(0);
+      expect(
+        result.issues.some((i) => i.message.includes("CREATE INDEX")),
+      ).toBe(true);
     });
 
-    test("step 2: migration transforms correctly via dsql-lint", () => {
+    test("step 2: transform fixes all issues", () => {
       const result = transformMigration(prismaMigrationOutput);
 
       expect(result.exitCode).toBe(0);
 
-      // Verify index converted to async
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
 
-      // Verify foreign key removed
       expect(result.sql).not.toContain("FOREIGN KEY");
       expect(result.sql).not.toContain("REFERENCES");
 
-      // Verify tables preserved
       expect(result.sql).toContain('CREATE TABLE "Owner"');
       expect(result.sql).toContain('CREATE TABLE "Pet"');
     });
 
-    test("full workflow produces valid DSQL migration", async () => {
+    test("full workflow: validate reports, transform fixes", async () => {
       const schemaPath = createTempSchema(validSchema);
       const validationResult = await validateSchema(schemaPath);
-      expect(validationResult.valid).toBe(true);
+      expect(validationResult.issues.length).toBeGreaterThan(0);
 
       const transformResult = transformMigration(prismaMigrationOutput);
 
       expect(transformResult.exitCode).toBe(0);
       const output = transformResult.sql;
 
-      // No foreign keys or references
       expect(output).not.toContain("FOREIGN KEY");
       expect(output).not.toContain("REFERENCES");
-
-      // Indexes are async
       expect(output).toContain("CREATE INDEX ASYNC");
       expect(output).not.toMatch(/CREATE\s+INDEX\s+"/);
-
-      // Tables preserved intact
       expect(output).toContain('CREATE TABLE "Owner"');
       expect(output).toContain('CREATE TABLE "Pet"');
       expect(output).toContain("gen_random_uuid()");
@@ -149,9 +142,9 @@ model User {
       const result = await validateSchema(schemaPath);
 
       expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("autoincrement")),
-      ).toBe(true);
+      expect(result.issues.some((i) => i.message.includes("SERIAL"))).toBe(
+        true,
+      );
     });
 
     test("schema missing relationMode fails validation", async () => {
