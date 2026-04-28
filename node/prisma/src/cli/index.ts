@@ -44,6 +44,15 @@ Examples:
   npm run dsql-transform raw.sql -o migration.sql
 `;
 
+function rejectUnknownFlags(args: string[], knownFlags: Set<string>): void {
+  for (const arg of args) {
+    if (arg.startsWith("-") && !knownFlags.has(arg)) {
+      console.error(`Error: Unknown flag: ${arg}`);
+      process.exit(1);
+    }
+  }
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
@@ -61,7 +70,10 @@ async function main(): Promise<void> {
     }
 
     case "validate": {
-      const schemaPath = args[1];
+      const subArgs = args.slice(1);
+      rejectUnknownFlags(subArgs, new Set(["-h", "--help"]));
+
+      const schemaPath = subArgs.find((a) => !a.startsWith("-"));
       if (!schemaPath) {
         console.error("Error: Schema path required");
         console.error("Usage: npm run validate <schema>");
@@ -120,6 +132,17 @@ Examples:
 `);
     process.exit(0);
   }
+
+  const knownFlags = new Set([
+    "-o",
+    "--output",
+    "--from-url",
+    "--from-config-datasource",
+    "--from-empty",
+    "-h",
+    "--help",
+  ]);
+  rejectUnknownFlags(args, knownFlags);
 
   let schemaPath: string | undefined;
   let outputFile: string | undefined;
@@ -252,6 +275,8 @@ Options:
     process.exit(0);
   }
 
+  rejectUnknownFlags(args, new Set(["-o", "--output", "-h", "--help"]));
+
   let inputFile: string | undefined;
   let outputFile: string | undefined;
 
@@ -314,6 +339,8 @@ Options:
 `);
     process.exit(0);
   }
+
+  rejectUnknownFlags(args, new Set(["-h", "--help"]));
 
   const inputFile = args.find((a) => !a.startsWith("-"));
   if (!inputFile) {
