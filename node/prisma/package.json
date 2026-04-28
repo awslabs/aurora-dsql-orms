@@ -1,6 +1,6 @@
 {
   "name": "@aws/aurora-dsql-prisma-tools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI tools for using Prisma with Amazon Aurora DSQL",
   "main": "dist/cli/index.js",
   "bin": {
