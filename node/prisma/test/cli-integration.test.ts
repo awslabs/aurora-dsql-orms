@@ -209,12 +209,13 @@ model User {
         fail("Expected transform to fail");
       } catch (error: unknown) {
         const execError = error as { stderr?: string; status?: number };
-        expect(execError.stderr).toContain("unfixable");
+        // Unfixable diagnostics render with the ERROR severity label.
+        expect(execError.stderr).toContain("ERROR —");
         expect(execError.status).toBe(1);
       }
     });
 
-    test("transform fixes FK and index issues with exit code 0", () => {
+    test("transform fixes FK and index issues, exits 3 on FK warnings", () => {
       const migration = `CREATE TABLE "post" (
     "id" UUID NOT NULL,
     "authorId" UUID NOT NULL,
@@ -226,10 +227,20 @@ CREATE INDEX "post_authorId_idx" ON "post"("authorId");`;
       const outputPath = path.join(tempDir, "fixable-out.sql");
       fs.writeFileSync(inputPath, migration);
 
-      execSync(`npm run dsql-transform ${inputPath} -- -o ${outputPath}`, {
-        cwd: path.join(__dirname, ".."),
-        encoding: "utf-8",
-      });
+      // FK removal produces a FixedWithWarning diagnostic → CLI exits 3
+      // (success-with-warnings). execSync throws on any non-zero, so
+      // assert the exit code on the thrown error and verify the output
+      // file was still written.
+      let thrown: { status?: number } | undefined;
+      try {
+        execSync(`npm run dsql-transform ${inputPath} -- -o ${outputPath}`, {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+        });
+      } catch (e) {
+        thrown = e as { status?: number };
+      }
+      expect(thrown?.status).toBe(3);
 
       const output = fs.readFileSync(outputPath, "utf-8");
       expect(output).toContain("CREATE INDEX ASYNC");

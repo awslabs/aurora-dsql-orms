@@ -4,6 +4,7 @@ import * as path from "path";
 import { execSync } from "child_process";
 import { validateSchema, formatValidationResult } from "./validate";
 import { transformMigration, lintMigration } from "./transform";
+import type { DsqlLintJsonOutput } from "./dsql-lint";
 
 const HELP = `
 Aurora DSQL Prisma Tools
@@ -50,6 +51,41 @@ function rejectUnknownFlags(args: string[], knownFlags: Set<string>): void {
       console.error(`Error: Unknown flag: ${arg}`);
       process.exit(1);
     }
+  }
+}
+
+/**
+ * Walk the dsql-lint JSON output and emit human-readable lines on stderr.
+ * Labels match dsql-lint's own text mode: ERROR / WARNING / INFO / FIXED.
+ */
+function reportDsqlLintDiagnostics(output: DsqlLintJsonOutput): void {
+  for (const file of output.files) {
+    if (file.error) {
+      console.error(`${file.file}: ${file.error}`);
+      continue;
+    }
+    for (const d of file.diagnostics) {
+      const severity = severityFor(d.fix_result.status);
+      console.error(`${file.file}:${d.line}: ${severity} — ${d.message}`);
+      if (d.fix_result.status !== "unfixable" && "detail" in d.fix_result) {
+        console.error(`  ${d.fix_result.detail}`);
+      } else if (d.suggestion) {
+        console.error(`  → ${d.suggestion}`);
+      }
+    }
+  }
+}
+
+function severityFor(status: string): string {
+  switch (status) {
+    case "unfixable":
+      return "ERROR";
+    case "fixed_with_warning":
+      return "WARNING";
+    case "fixed":
+      return "FIXED";
+    default:
+      return "INFO";
   }
 }
 
@@ -237,13 +273,13 @@ Examples:
   console.log("Transforming for DSQL compatibility (dsql-lint --fix)...");
   const transformResult = transformMigration(rawSql);
 
-  if (transformResult.stderr) {
-    console.error(transformResult.stderr);
-  }
+  reportDsqlLintDiagnostics(transformResult.output);
 
-  if (transformResult.exitCode !== 0) {
+  // Exit 1: unfixable errors or I/O errors. Exit 3: all fixed but some
+  // produced warnings (e.g. removed FK) — still a successful transform.
+  if (transformResult.exitCode === 1) {
     console.error(
-      `\n✗ dsql-lint failed (exit ${transformResult.exitCode}). Review the errors above.`,
+      "\n✗ dsql-lint failed with unfixable errors. Review the errors above.",
     );
     process.exit(1);
   }
@@ -256,6 +292,11 @@ Examples:
 
   fs.writeFileSync(outputFile, transformResult.sql);
   console.log(`\n✓ Migration written to: ${outputFile}`);
+  if (transformResult.exitCode === 3) {
+    console.log(
+      "  (dsql-lint produced warnings — review the advisories above.)",
+    );
+  }
 }
 
 async function handleTransform(args: string[]): Promise<void> {
@@ -309,18 +350,22 @@ Options:
 
   const result = transformMigration(sql);
 
-  if (result.stderr) {
-    console.error(result.stderr);
-  }
+  reportDsqlLintDiagnostics(result.output);
 
-  if (result.exitCode !== 0) {
-    process.exit(result.exitCode);
+  // Exit 1 = unfixable; exit 3 = fixed-with-warnings (still a usable
+  // migration). Propagate the code so callers / CI can distinguish.
+  if (result.exitCode === 1) {
+    process.exit(1);
   }
 
   if (outputFile) {
     fs.writeFileSync(outputFile, result.sql);
   } else {
     process.stdout.write(result.sql);
+  }
+
+  if (result.exitCode === 3) {
+    process.exit(3);
   }
 }
 
@@ -354,10 +399,9 @@ Options:
     process.exit(1);
   }
 
-  const result = lintMigration(inputFile);
-  if (result.stderr) {
-    console.error(result.stderr);
-  }
+  const sql = fs.readFileSync(inputFile, "utf-8");
+  const result = lintMigration(sql);
+  reportDsqlLintDiagnostics(result.output);
   process.exit(result.exitCode);
 }
 

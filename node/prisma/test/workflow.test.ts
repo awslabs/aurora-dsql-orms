@@ -93,7 +93,8 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
     test("step 2: transform fixes all issues", () => {
       const result = transformMigration(prismaMigrationOutput);
 
-      expect(result.exitCode).toBe(0);
+      // FK removal is FixedWithWarning → exit 3, still a successful fix.
+      expect(result.exitCode).toBe(3);
 
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
@@ -112,7 +113,8 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       const transformResult = transformMigration(prismaMigrationOutput);
 
-      expect(transformResult.exitCode).toBe(0);
+      // FK removal → exit 3 (successful fix with warnings).
+      expect(transformResult.exitCode).toBe(3);
       const output = transformResult.sql;
 
       expect(output).not.toContain("FOREIGN KEY");
@@ -188,7 +190,11 @@ DROP TABLE "Owner";
       // DROP CONSTRAINT is unfixable in dsql-lint (exit code 1, stays in output)
       expect(result.exitCode).toBe(1);
       expect(result.sql).toContain("DROP CONSTRAINT");
-      expect(result.stderr).toContain("unfixable");
+      expect(
+        result.output.files.some((f) =>
+          f.diagnostics.some((d) => d.fix_result.status === "unfixable"),
+        ),
+      ).toBe(true);
 
       // Other drops preserved
       expect(result.sql).toContain("DROP INDEX");

@@ -1,33 +1,27 @@
 import { transformMigration, lintMigration } from "../src/cli/transform";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
+
+/**
+ * Shared assertion: the JSON diagnostics contain at least one entry with
+ * the given fix_result.status. Replaces the old stderr-substring check.
+ */
+function hasDiagnosticWithStatus(
+  output: ReturnType<typeof transformMigration>["output"],
+  status: "fixed" | "fixed_with_warning" | "unfixable",
+): boolean {
+  return output.files.some((f) =>
+    f.diagnostics.some((d) => d.fix_result.status === status),
+  );
+}
 
 describe("dsql-lint binary resolution", () => {
-  test("throws helpful error when dsql-lint is not found", () => {
-    const originalPath = process.env["DSQL_LINT_PATH"];
-    const originalPATH = process.env["PATH"];
-    try {
-      process.env["DSQL_LINT_PATH"] = "";
-      delete process.env["DSQL_LINT_PATH"];
-      process.env["PATH"] = "/nonexistent";
-
-      expect(() => transformMigration("SELECT 1;")).toThrow(
-        /dsql-lint not found/,
-      );
-    } finally {
-      if (originalPath !== undefined) {
-        process.env["DSQL_LINT_PATH"] = originalPath;
-      }
-      process.env["PATH"] = originalPATH;
-    }
-  });
-
+  // With `@aws/dsql-lint` as a package dependency, the binary is always
+  // resolvable after `npm install`. We only assert the explicit override
+  // path here — the "not found" path is exercised in end-to-end CI where
+  // we can scrub PATH *and* the node_modules lookup, not here.
   test("throws when DSQL_LINT_PATH points to nonexistent file", () => {
     const originalPath = process.env["DSQL_LINT_PATH"];
     try {
       process.env["DSQL_LINT_PATH"] = "/nonexistent/dsql-lint";
-
       expect(() => transformMigration("SELECT 1;")).toThrow(/does not exist/);
     } finally {
       if (originalPath !== undefined) {
@@ -80,6 +74,7 @@ CREATE TABLE "post" (
 
       const result = transformMigration(input);
 
+      // Fixed (no warning), exit 0.
       expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
@@ -139,7 +134,8 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      // FK removal is FixedWithWarning → exit 3.
+      expect(result.exitCode).toBe(3);
       expect(result.sql).not.toContain("FOREIGN KEY");
       expect(result.sql).not.toContain("REFERENCES");
       expect(result.sql).toContain('CREATE TABLE "post"');
@@ -154,7 +150,7 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
       expect(result.sql).not.toContain("REFERENCES");
       expect(result.sql).toContain('CREATE TABLE "post"');
     });
@@ -164,7 +160,7 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
       expect(result.sql).not.toContain("REFERENCES");
       expect(result.sql).not.toContain("FOREIGN KEY");
       expect(result.sql.trim()).toBe("");
@@ -176,7 +172,7 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
       const result = transformMigration(input);
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("unfixable");
+      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
       expect(result.sql).toContain("DROP CONSTRAINT");
     });
   });
@@ -209,7 +205,8 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      // FK removal → exit 3, not 0.
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toContain("FOREIGN KEY");
       expect(result.sql).not.toContain("REFERENCES");
@@ -272,7 +269,7 @@ DROP TABLE IF EXISTS "post";`;
       const result = transformMigration(input);
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("unfixable");
+      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
     });
 
     test("compound ALTER TABLE with DROP CONSTRAINT is unfixable", () => {
@@ -283,7 +280,7 @@ ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
       const result = transformMigration(input);
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("unfixable");
+      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
       expect(result.sql).toContain("ADD COLUMN");
       expect(result.sql).toContain("phone");
     });
@@ -297,46 +294,24 @@ ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
       expect(result.sql).toContain('CREATE TABLE "references"');
       expect(result.sql).toContain("foreign_key");
     });
-
-    test("does not leak temp file paths in stderr", () => {
-      const input = `CREATE INDEX "idx" ON "t"("col");`;
-
-      const result = transformMigration(input);
-
-      expect(result.stderr).not.toMatch(/\/tmp\//);
-      expect(result.stderr).not.toMatch(/\/var\/folders\//);
-      expect(result.stderr).not.toContain("dsql-transform-");
-    });
   });
 
   describe("lintMigration", () => {
-    let tempDir: string;
-
-    beforeAll(() => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "lint-test-"));
-    });
-
-    afterAll(() => {
-      fs.rmSync(tempDir, { recursive: true });
-    });
-
     test("returns exit code 0 for clean SQL", () => {
-      const filePath = path.join(tempDir, "clean.sql");
-      fs.writeFileSync(filePath, `CREATE TABLE "t" ("id" UUID PRIMARY KEY);`);
-
-      const result = lintMigration(filePath);
+      const result = lintMigration(`CREATE TABLE "t" ("id" UUID PRIMARY KEY);`);
 
       expect(result.exitCode).toBe(0);
     });
 
     test("returns exit code 1 for SQL with issues", () => {
-      const filePath = path.join(tempDir, "issues.sql");
-      fs.writeFileSync(filePath, `CREATE INDEX "idx" ON "t"("col");`);
-
-      const result = lintMigration(filePath);
+      const result = lintMigration(`CREATE INDEX "idx" ON "t"("col");`);
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("ASYNC");
+      expect(
+        result.output.files.some((f) =>
+          f.diagnostics.some((d) => d.message.includes("ASYNC")),
+        ),
+      ).toBe(true);
     });
   });
 });

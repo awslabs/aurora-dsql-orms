@@ -43,6 +43,9 @@
   "engines": {
     "node": ">=20"
   },
+  "dependencies": {
+    "@aws/dsql-lint": "^0.1.3"
+  },
   "devDependencies": {
     "@aws-sdk/dsql-signer": "^3.980.0",
     "@types/jest": "^30.0.0",
