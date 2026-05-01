@@ -43,6 +43,12 @@ Examples:
   npm run validate prisma/schema.prisma
   npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > raw.sql
   npm run dsql-transform raw.sql -o migration.sql
+
+Exit codes (transform / lint):
+  0  Clean, or all fixes applied without warnings
+  1  Unfixable errors remain — review the diagnostics and fix manually
+  3  Fixes applied, but some produced advisories (e.g. foreign keys removed).
+     The migration is written; review the warnings before applying.
 `;
 
 function rejectUnknownFlags(args: string[], knownFlags: Set<string>): void {
@@ -56,7 +62,8 @@ function rejectUnknownFlags(args: string[], knownFlags: Set<string>): void {
 
 /**
  * Walk the dsql-lint JSON output and emit human-readable lines on stderr.
- * Labels match dsql-lint's own text mode: ERROR / WARNING / INFO / FIXED.
+ * Labels match dsql-lint's own text mode. See `severityFor` for the
+ * (small, open) label set.
  */
 function reportDsqlLintDiagnostics(output: DsqlLintJsonOutput): void {
   for (const file of output.files) {
@@ -76,6 +83,11 @@ function reportDsqlLintDiagnostics(output: DsqlLintJsonOutput): void {
   }
 }
 
+/**
+ * Maps a dsql-lint fix_result.status to a severity label. The three known
+ * statuses map to ERROR / WARNING / FIXED; an unknown status from a future
+ * dsql-lint falls back to INFO so output keeps rendering.
+ */
 function severityFor(status: string): string {
   switch (status) {
     case "unfixable":

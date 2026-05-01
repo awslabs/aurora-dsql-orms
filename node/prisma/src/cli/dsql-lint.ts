@@ -74,15 +74,16 @@ function findPlatformPackageBinary(): string | null {
 
 /**
  * JSON wire shape emitted by `dsql-lint --format json`. Matches the
- * stable schema documented in the dsql-lint README. `schema_version`
- * is checked at parse time and callers should treat any unknown
- * version as a breaking change.
+ * stable schema documented in the dsql-lint README.
  */
 export interface DsqlLintJsonOutput {
   schema_version: number;
   files: DsqlLintFileOutput[];
   summary: { errors: number; warnings: number; fixed: number };
 }
+
+/** The dsql-lint JSON schema version this integration was written against. */
+const SUPPORTED_SCHEMA_VERSION = 1;
 
 export interface DsqlLintFileOutput {
   file: string;
@@ -125,9 +126,48 @@ export function runDsqlLintWithStdin(
     throw new Error(`Failed to execute dsql-lint: ${result.error.message}`);
   }
 
-  const output: DsqlLintJsonOutput = JSON.parse(result.stdout);
+  const output = parseDsqlLintJson(
+    result.stdout,
+    result.stderr,
+    result.status ?? null,
+  );
   return {
     exitCode: result.status ?? 1,
     output,
   };
+}
+
+function parseDsqlLintJson(
+  stdout: string,
+  stderr: string,
+  status: number | null,
+): DsqlLintJsonOutput {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch (e) {
+    // Cryptic JSON errors ("Unexpected token X at position N") give no
+    // hint that the upstream process is dsql-lint. Wrap with enough
+    // context (exit status + a stdout/stderr prefix) that a maintainer
+    // can tell whether this is a version skew, a native crash, or
+    // genuinely malformed output.
+    const detail = e instanceof Error ? e.message : String(e);
+    const stdoutPrefix = stdout.slice(0, 200);
+    const stderrPrefix = stderr.slice(0, 200);
+    throw new Error(
+      `dsql-lint did not produce valid JSON (exit=${status ?? "null"}): ${detail}\n` +
+        `stdout[0..200]: ${stdoutPrefix}\n` +
+        `stderr[0..200]: ${stderrPrefix}`,
+    );
+  }
+
+  const output = parsed as DsqlLintJsonOutput;
+  if (output.schema_version !== SUPPORTED_SCHEMA_VERSION) {
+    throw new Error(
+      `dsql-lint JSON schema_version ${output.schema_version} is not supported ` +
+        `(this integration targets version ${SUPPORTED_SCHEMA_VERSION}). ` +
+        `Align versions: install a compatible dsql-lint, or update @aws/aurora-dsql-prisma-tools.`,
+    );
+  }
+  return output;
 }
