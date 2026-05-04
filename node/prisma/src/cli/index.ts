@@ -47,6 +47,7 @@ Examples:
 Exit codes (transform / lint):
   0  Clean, or all fixes applied without warnings
   1  Unfixable errors remain — review the diagnostics and fix manually
+  2  Usage error (invalid arguments, propagated from dsql-lint)
   3  Fixes applied, but some produced advisories (e.g. foreign keys removed).
      The migration is written; review the warnings before applying.
 `;
@@ -288,12 +289,14 @@ Examples:
   reportDsqlLintDiagnostics(transformResult.output);
 
   // Exit 1: unfixable errors or I/O errors. Exit 3: all fixed but some
-  // produced warnings (e.g. removed FK) — still a successful transform.
-  if (transformResult.exitCode === 1) {
+  // produced warnings. Any other non-zero (clap usage error = 2, native
+  // crash = 101, SIGKILL = 137, ...) is unexpected — propagate it rather
+  // than silently writing output and exiting 0.
+  if (transformResult.exitCode !== 0 && transformResult.exitCode !== 3) {
     console.error(
-      "\n✗ dsql-lint failed with unfixable errors. Review the errors above.",
+      `\n✗ dsql-lint exited with code ${transformResult.exitCode}. Review the errors above.`,
     );
-    process.exit(1);
+    process.exit(transformResult.exitCode);
   }
 
   // Ensure output directory exists
@@ -364,10 +367,12 @@ Options:
 
   reportDsqlLintDiagnostics(result.output);
 
-  // Exit 1 = unfixable; exit 3 = fixed-with-warnings (still a usable
-  // migration). Propagate the code so callers / CI can distinguish.
-  if (result.exitCode === 1) {
-    process.exit(1);
+  // Exit 1 = unfixable, exit 3 = fixed-with-warnings (still a usable
+  // migration). Any other non-zero is unexpected (clap usage = 2,
+  // native crash = 101, ...). Propagate before writing so we never
+  // write a partial output file on an unknown exit code.
+  if (result.exitCode !== 0 && result.exitCode !== 3) {
+    process.exit(result.exitCode);
   }
 
   if (outputFile) {

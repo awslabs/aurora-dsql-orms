@@ -2,6 +2,17 @@ import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
+const PLATFORM_PACKAGES: Record<string, string> = {
+  "darwin-arm64": "@aws/dsql-lint-darwin-arm64",
+  "darwin-x64": "@aws/dsql-lint-darwin-x64",
+  "linux-arm64": "@aws/dsql-lint-linux-arm64",
+  "linux-x64": "@aws/dsql-lint-linux-x64",
+  "win32-x64": "@aws/dsql-lint-win32-x64",
+};
+
+/** The dsql-lint JSON schema version this integration was written against. */
+const SUPPORTED_SCHEMA_VERSION = 1;
+
 /**
  * Resolution order for the dsql-lint binary:
  *   1. DSQL_LINT_PATH env var (explicit override, used by tests)
@@ -41,14 +52,6 @@ function findDsqlLint(): string {
   );
 }
 
-const PLATFORM_PACKAGES: Record<string, string> = {
-  "darwin-arm64": "@aws/dsql-lint-darwin-arm64",
-  "darwin-x64": "@aws/dsql-lint-darwin-x64",
-  "linux-arm64": "@aws/dsql-lint-linux-arm64",
-  "linux-x64": "@aws/dsql-lint-linux-x64",
-  "win32-x64": "@aws/dsql-lint-win32-x64",
-};
-
 function findPlatformPackageBinary(): string | null {
   const platformKey = `${process.platform}-${process.arch}`;
   const pkg = PLATFORM_PACKAGES[platformKey];
@@ -81,9 +84,6 @@ export interface DsqlLintJsonOutput {
   files: DsqlLintFileOutput[];
   summary: { errors: number; warnings: number; fixed: number };
 }
-
-/** The dsql-lint JSON schema version this integration was written against. */
-const SUPPORTED_SCHEMA_VERSION = 1;
 
 export interface DsqlLintFileOutput {
   file: string;

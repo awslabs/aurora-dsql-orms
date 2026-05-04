@@ -44,7 +44,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@aws/dsql-lint": "^0.1.3"
+    "@aws/dsql-lint": "^0.1"
   },
   "devDependencies": {
     "@aws-sdk/dsql-signer": "^3.980.0",
