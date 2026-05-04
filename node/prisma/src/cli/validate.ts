@@ -8,7 +8,6 @@
  */
 import * as fs from "fs";
 import * as path from "path";
-import * as os from "os";
 import { execSync } from "child_process";
 import { lintMigration } from "./transform";
 
@@ -102,21 +101,23 @@ async function checkSqlCompatibility(
     return;
   }
 
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dsql-validate-"));
-  const tempFile = path.join(tempDir, "migration.sql");
-  try {
-    fs.writeFileSync(tempFile, sql);
-    const result = lintMigration(tempFile);
-    if (result.exitCode !== 0 && result.stderr) {
-      for (const line of result.stderr.split("\n")) {
-        const errorMatch = line.match(/^\S+:\d+: ERROR — (.+)/);
-        if (errorMatch?.[1]) {
-          issues.push({ message: errorMatch[1] });
-        }
-      }
+  const result = lintMigration(sql);
+  if (result.exitCode === 0) {
+    return;
+  }
+
+  // Consume structured diagnostics directly — no regex scraping of stderr.
+  for (const file of result.output.files) {
+    for (const d of file.diagnostics) {
+      issues.push({
+        message: d.message,
+        line: d.line,
+        suggestion: d.suggestion,
+      });
     }
-  } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
+    if (file.error) {
+      issues.push({ message: file.error });
+    }
   }
 }
 

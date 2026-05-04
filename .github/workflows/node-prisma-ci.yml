@@ -78,17 +78,6 @@ jobs:
       - name: Build package
         run: npm run build
 
-      - name: Cache dsql-lint
-        id: cache-dsql-lint
-        uses: actions/cache@v5
-        with:
-          path: ~/.cargo/bin/dsql-lint
-          key: dsql-lint-0.1.2
-
-      - name: Install dsql-lint
-        if: steps.cache-dsql-lint.outputs.cache-hit != 'true'
-        run: cargo install dsql-lint@0.1.2
-
       - name: Download Amazon Root Cert for SSL
         run: wget -O "$SSL_CERT_FILE" https://www.amazontrust.com/repository/AmazonRootCA1.pem
 

@@ -26,15 +26,7 @@ npm install --save-dev @aws/aurora-dsql-prisma-tools
 
 **Supported Node.js versions:** 20+ (Active and LTS releases)
 
-### Prerequisites
-
-This package requires [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for SQL transformation and linting. Install it via:
-
-```bash
-cargo install dsql-lint
-```
-
-You can also set the `DSQL_LINT_PATH` environment variable to point to the binary location.
+`@aws/dsql-lint` is included and uses its bundled binary by default (no setup required). To use a custom or existing installation, set `DSQL_LINT_PATH`.
 
 ## Quick Start
 
