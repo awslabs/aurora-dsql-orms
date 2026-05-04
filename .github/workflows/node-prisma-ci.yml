@@ -80,7 +80,7 @@ jobs:
 
       - name: Cache dsql-lint
         id: cache-dsql-lint
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/dsql-lint
           key: dsql-lint-0.1.2
