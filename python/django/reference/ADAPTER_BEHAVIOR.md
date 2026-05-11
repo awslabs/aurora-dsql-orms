@@ -1,6 +1,6 @@
 # Behavior of Aurora DSQL Adapter for Django
 
-This document describes how the Aurora DSQL adapter for Django modifies standard Django behavior to work with the features provided by Aurora DSQL.
+This document describes how the Aurora DSQL adapter for Django modifies standard Django behavior for Aurora DSQL compatibility. For details on Aurora DSQL SQL compatibility, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
 
 ## AutoField and Primary Key Behavior
@@ -12,8 +12,6 @@ This document describes how the Aurora DSQL adapter for Django modifies standard
 - Sort order may not match insertion order
 - URLs, session data, etc. may contain UUID strings
 - The `SequenceAutoField` can be used in custom models for explicit sequence-based IDs with per-model cache size configuration
-
-**Why this is necessary:** UUID primary keys are recommended for use with Aurora DSQL. However, many applications and legacy systems require sequential integer primary keys for business logic, compatibility with existing code, and integration with third-party Django packages that expect integer IDs.
 
 **Limitations:** Not all Django `contrib` apps are compatible with UUID primary keys. For new applications, customers are encouraged to use `UUIDField` directly instead of `AutoField` where possible.
 
@@ -51,7 +49,7 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 
 **Impact:** Large querysets will load entirely into memory instead of streaming, which may affect memory usage for large datasets.
 
-**Why this is necessary:** Aurora DSQL does not support server-side cursors (`DECLARE CURSOR` statements).
+**DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
 ## Foreign key constraints are skipped during migrations
 
@@ -62,7 +60,7 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 - Applications must maintain referential integrity through Django model validation and application logic
 - Existing migrations from other databases will continue to work without modification
 
-**Why this is necessary:** Aurora DSQL does not support foreign key constraints. This approach maintains compatibility with existing Django migrations while preventing constraint-related errors.
+**DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
 ## Check constraint changes after table creation are skipped during migrations
 
@@ -73,7 +71,7 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 - Applications must rely on Django model validation and application logic for data integrity when check constraints are not defined at table creation
 - Existing migrations from other databases will continue to work without modification
 
-**Why this is necessary:** Aurora DSQL supports table check constraints only if defined when the table is created. Django migrations can attempt to modify check constraints after table creation, which is not supported by Aurora DSQL. This approach maintains compatibility with existing Django migrations while preventing constraint-related errors.
+**DSQL feature:** [ALTER TABLE syntax](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-supported-sql-subsets.html#alter-table-syntax-support)
 
 ## Expression indexes are skipped during migrations
 
@@ -84,5 +82,4 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 - Query performance may be affected for queries that would benefit from expression indexes
 - Existing migrations containing expression indexes will execute without errors
 
-**Why this is necessary:** Aurora DSQL does not support PostgreSQL expression indexes or operator classes. This approach maintains compatibility with existing Django migrations while preventing constraint-related errors.
-
+**DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)

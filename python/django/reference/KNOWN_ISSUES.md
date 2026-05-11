@@ -1,18 +1,16 @@
 # Known Issues
 
-This document tracks known issues and workarounds when using the Aurora DSQL adapter for Django.
+This document tracks known issues when using the Aurora DSQL adapter for Django. For Aurora DSQL SQL compatibility details, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
 ## Framework Issues
 
-### Server-side cursors not supported
+### Server-side cursors
 
 **Issue:** Django admin and large querysets fail with:
 
 ```
 NotSupportedError: unsupported statement: DeclareCursor
 ```
-
-**Root Cause:** Aurora DSQL does not support server-side cursors (`DECLARE CURSOR` statements).
 
 **Workaround:**
 
@@ -32,7 +30,7 @@ This configuration is the default when using the Aurora DSQL adapter for Django,
 `DISABLE_SERVER_SIDE_CURSORS`
 configuration should configure the correct behavior.
 
-### Django Sites Framework not supported
+### Django Sites Framework
 
 **Issue:** Django's sites framework fails with:
 
@@ -41,14 +39,14 @@ django.db.utils.ProgrammingError: operator does not exist: uuid = integer
 LINE 1: ...le.com', "name" = 'example.com' WHERE "django_site"."id" = 1
 ```
 
-**Root Cause:** The Aurora DSQL adapter for Django uses UUID for `AutoField`, but Django's sites framework hardcodes
+**Why:** The Aurora DSQL adapter for Django uses UUID for `AutoField`, but Django's sites framework hardcodes
 `SITE_ID = 1` (integer) and expects integer primary keys.
 
 **Workaround:** Remove `django.contrib.sites` from `INSTALLED_APPS` and avoid its use.
 
 ## Migration Issues
 
-### ALTER COLUMN operations not supported
+### ALTER COLUMN operations
 
 **Issue:** Default Django migrations that use `ALTER TABLE ALTER COLUMN` statements fail with:
 
@@ -57,9 +55,8 @@ psycopg.errors.FeatureNotSupported:
     unsupported ALTER TABLE ALTER COLUMN ... statement
 ```
 
-**Root Cause:** Aurora DSQL does not support `ALTER COLUMN` operations.
 See [Aurora DSQL ALTER TABLE syntax support](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-supported-sql-subsets.html#alter-table-syntax-support)
-for details.
+for details on supported ALTER TABLE operations.
 
 **Affected Migrations:**
 

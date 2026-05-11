@@ -103,23 +103,25 @@ there is a conflict, rendering the version check unnecessary.
 optimistic locking, in Hibernate `PESSIMISTIC_WRITE` will add the `SELECT ... FOR UPDATE` modifier, which adds additional
 read checks on selected rows, preventing commits if rows read are modified by another transaction. There are multiple
 examples of how DSQL's concurrency control works [available here in an AWS blog](https://aws.amazon.com/blogs/database/concurrency-control-in-amazon-aurora-dsql/),
-including with `SELECT ... FOR UPDATE`. DSQL does not support any other locking modes, and so only these two Hibernate
+including with `SELECT ... FOR UPDATE`. Only these two Hibernate
 locking modes should be used.
 
-## Dialect Features and Limitations
+## Dialect Features
 
 Dialects provide syntax and supported features to allow the Hibernate ORM to correctly handle differences between databases.
 As Aurora DSQL is PostgreSQL-compatible and supports most PostgreSQL features, much of the dialect is similar to that of PostgreSQL.
 There are some key differences however that will help ensure a seamless developer experience with Hibernate
-and Aurora DSQL. The list below contains some of the key differences from the PostgreSQL dialect:
+and Aurora DSQL. The list below describes what the dialect handles automatically:
 
 - **Data types**: The dialect provides correct `float`, `double` and `numeric` precision as well as `varchar` size limits.
-- **Foreign Keys**: Aurora DSQL does not support foreign key constraints. The dialect disables these constraints, but be aware that referential integrity must be maintained at the application level.
-- **Index creation**: Aurora DSQL does not support `CREATE INDEX` or `CREATE UNIQUE INDEX` commands. The dialect instead uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
+- **Foreign Keys**: The dialect disables foreign key constraint generation. Referential integrity should be maintained at the application level.
+- **Index creation**: The dialect uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
 - **Locking**: Aurora DSQL uses optimistic concurrency control (OCC) with support for `SELECT ... FOR UPDATE`. The dialect supports these two locking methods. See the [Concurrency control in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html) page for more information.
 - **Sequences**: The dialect implements correct syntax for Aurora DSQL sequence and identity support, including the mandatory `CACHE` parameter. See the [Sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns.html) page for more information.
-- **Temporary tables**: Aurora DSQL does not support temporary tables. The dialect will use standard tables instead. These tables will appear with `HT_` or `HTE_` prefixes, and will be managed automatically by Hibernate.
-- **Truncate command**: Aurora DSQL does not support `TRUNCATE` command. The dialect uses a `DELETE` command instead.
+- **Temporary tables**: The dialect uses standard tables in place of temporary tables. These tables will appear with `HT_` or `HTE_` prefixes, and will be managed automatically by Hibernate.
+- **Truncate command**: The dialect uses `DELETE` in place of `TRUNCATE`.
+
+For the full list of Aurora DSQL SQL compatibility details, see the [PostgreSQL compatibility reference](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
 
 ## Developer instructions

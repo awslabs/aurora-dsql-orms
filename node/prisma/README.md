@@ -125,7 +125,7 @@ Sometimes Prisma generates `DROP CONSTRAINT` statements when comparing against a
 
 When using Prisma with Aurora DSQL:
 
-1. **Set relation mode** - DSQL doesn't support foreign keys:
+1. **Set relation mode** - use application-layer relationship management:
 
    ```prisma
    datasource db {
@@ -134,7 +134,7 @@ When using Prisma with Aurora DSQL:
    }
    ```
 
-2. **Use UUID for IDs** - DSQL doesn't support sequences:
+2. **Use UUID for IDs**:
 
    ```prisma
    model User {
@@ -146,6 +146,8 @@ When using Prisma with Aurora DSQL:
    ```bash
    PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
    ```
+
+For the full list of Aurora DSQL SQL compatibility details, see the [PostgreSQL compatibility reference](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
 ## Example
 
