@@ -45,9 +45,10 @@ jobs:
 
       # Node 22's bundled npm (10.x) does not perform the OIDC token
       # exchange required for Trusted Publishing — only npm >= 11.5.1
-      # does. Upgrade before publishing.
+      # does. Upgrade before publishing. The pinned version + --force
+      # avoids npm 10's MODULE_NOT_FOUND while replacing itself.
       - name: Upgrade npm to support Trusted Publishing
-        run: npm install -g npm@latest
+        run: sudo npm install -g npm@11.5.1 --force
 
       - name: Install dependencies
         run: npm ci
