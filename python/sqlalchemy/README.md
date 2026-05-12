@@ -143,11 +143,11 @@ Identity(always=True, cache=<cache_size>)
 
 See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page for more information.
 
-## Dialect Features and Limitations
+## Dialect Features
 
 - **Column Metadata**: The dialect fixes an issue related to `"datatype json not supported"` when calling SQLAlchemy's metadata() API.
-- **Foreign Keys**: Aurora DSQL does not support foreign key constraints. The dialect disables these constraints, but be aware that referential integrity must be maintained at the application level.
-- **Index Creation**: Aurora DSQL does not support `CREATE INDEX` or `CREATE UNIQUE INDEX` commands. The dialect instead uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
+- **Foreign Keys**: The dialect disables foreign key constraint generation. Referential integrity should be maintained at the application level.
+- **Index Creation**: The dialect uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
 
   The following parameters are used for customizing index creation
 
@@ -185,7 +185,9 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
     ```
 
 - **Index Interface Limitation**: `NULLS FIRST | LAST` - SQLalchemy's Index() interface does not have a way to pass in the sort order of null and non-null columns. (Default: `NULLS LAST`). If `NULLS FIRST` is required, please refer to the syntax as specified in [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) and execute the corresponding SQL query directly in SQLAlchemy.
-- **Psycopg (psycopg3) support**: When connecting to DSQL using the default postgresql dialect with psycopg, an unsupported `SAVEPOINT` error occurs. The DSQL dialect addresses this issue by disabling the `SAVEPOINT` during connection.
+- **Psycopg (psycopg3) support**: When connecting to DSQL using the default postgresql dialect with psycopg, a `SAVEPOINT` error occurs during initialization. The DSQL dialect addresses this by disabling `SAVEPOINT` during connection.
+
+For the full list of Aurora DSQL SQL compatibility details, see the [PostgreSQL compatibility reference](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
 ## Developer instructions
 

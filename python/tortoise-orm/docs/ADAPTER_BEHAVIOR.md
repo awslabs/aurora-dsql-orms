@@ -1,6 +1,6 @@
 # Adapter Behavior
 
-This document describes how the Aurora DSQL adapter for Tortoise ORM modifies standard Tortoise behavior for Aurora DSQL compatibility. For details on Aurora DSQL SQL feature compatibility, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
+This document describes how the Aurora DSQL adapter for Tortoise ORM modifies standard Tortoise behavior for Aurora DSQL compatibility. For details on Aurora DSQL SQL compatibility, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
 ## Foreign key relationships are ORM-only
 
@@ -11,7 +11,7 @@ This document describes how the Aurora DSQL adapter for Tortoise ORM modifies st
 - Constraints are not enforced at the database level
 - Applications should maintain referential integrity through application logic
 
-**Why this is necessary:** Aurora DSQL does not support foreign key constraints.
+**DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
 ## Indexes are created asynchronously
 
@@ -22,7 +22,7 @@ This document describes how the Aurora DSQL adapter for Tortoise ORM modifies st
 - Indexes will not be available for queries until background creation finishes
 - No change required in application code
 
-**Why this is necessary:** Aurora DSQL requires the `ASYNC` keyword for index creation.
+**DSQL feature:** [Asynchronous indexes](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html)
 
 ## DDL statements are executed individually
 
@@ -32,7 +32,7 @@ This document describes how the Aurora DSQL adapter for Tortoise ORM modifies st
 - Each DDL statement runs in its own implicit transaction
 - No change required in application code
 
-**Why this is necessary:** Aurora DSQL transactions can contain only one DDL statement. Attempting to run multiple DDL statements in a single transaction will fail.
+**DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
 ## Integer primary keys use IDENTITY columns
 
@@ -40,7 +40,7 @@ This document describes how the Aurora DSQL adapter for Tortoise ORM modifies st
 
 **Impact:**
 - Standard Tortoise `BigIntField` primary keys work automatically
-- `IntField` and `SmallIntField` primary keys are not supported (DSQL requires BIGINT for identity columns)
+- `IntField` and `SmallIntField` primary keys require BIGINT for identity columns
 
 **Custom cache size:** The cache size can be customized using the adapter's custom field:
 
@@ -53,7 +53,7 @@ class Invoice(Model):
 
 For best practices on choosing the appropriate cache size for your workload, see the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page.
 
-**Why this is necessary:** Aurora DSQL does not support `SERIAL`/`BIGSERIAL` syntax and requires an explicit `CACHE` clause for identity columns.
+**DSQL feature:** [Sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns.html)
 
 ## Aerich compatibility patches
 
@@ -63,6 +63,6 @@ When `aurora_dsql_tortoise.aerich_compat` is included in your models, the follow
 
 **TEXT instead of JSON:** The Aerich model's `content` field uses `TEXT` instead of `JSON`/`JSONB` column types.
 
-**Individual DDL execution:** Migration files may contain multiple DDL statements. The compatibility module splits these and executes each statement separately, since DSQL transactions can only contain one DDL statement.
+**Individual DDL execution:** Migration files may contain multiple DDL statements. The compatibility module splits these and executes each statement separately.
 
-**Disabled transaction wrapping:** Generated migration files set `RUN_IN_TRANSACTION = False` since DSQL transactions cannot contain multiple DDL statements.
+**Disabled transaction wrapping:** Generated migration files set `RUN_IN_TRANSACTION = False` for DDL compatibility.
