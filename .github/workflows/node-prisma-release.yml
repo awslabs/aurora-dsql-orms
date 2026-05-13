@@ -56,6 +56,26 @@ jobs:
       - name: Build package
         run: npm run build
 
+      - name: Diagnose npm environment
+        # Temporary diagnostic to confirm trusted-publishing prerequisites
+        # (npm version, PATH, .npmrc, env). Remove once we have a green
+        # publish.
+        run: |
+          echo "which npm: $(which npm)"
+          echo "npm --version: $(npm --version)"
+          echo "node --version: $(node --version)"
+          echo
+          echo "PATH: $PATH"
+          echo
+          echo "~/.npmrc:"
+          cat ~/.npmrc 2>/dev/null || echo "(none)"
+          echo
+          echo ".npmrc (cwd):"
+          cat .npmrc 2>/dev/null || echo "(none)"
+          echo
+          echo "npm-related env vars (values redacted):"
+          env | grep -iE '^(npm|node_auth|registry)' | sed 's/=.*/=<redacted>/' || true
+
       - name: Publish to npm
         # Unset NODE_AUTH_TOKEN: actions/setup-node sets a placeholder token
         # whenever `registry-url` is configured, and npm prefers that token
