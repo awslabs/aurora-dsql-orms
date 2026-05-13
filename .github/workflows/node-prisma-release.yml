@@ -57,7 +57,12 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
+        # Unset NODE_AUTH_TOKEN: actions/setup-node sets a placeholder token
+        # whenever `registry-url` is configured, and npm prefers that token
+        # over OIDC trusted publishing. Clearing it forces the OIDC path.
         run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ""
 
   update-changelog:
     needs: publish-to-npm
