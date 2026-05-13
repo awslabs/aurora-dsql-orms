@@ -67,8 +67,8 @@ jobs:
           echo
           echo "PATH: $PATH"
           echo
-          echo "~/.npmrc:"
-          cat ~/.npmrc 2>/dev/null || echo "(none)"
+          echo "$HOME/.npmrc:"
+          cat "$HOME/.npmrc" 2>/dev/null || echo "(none)"
           echo
           echo ".npmrc (cwd):"
           cat .npmrc 2>/dev/null || echo "(none)"
