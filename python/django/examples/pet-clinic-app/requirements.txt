@@ -1,5 +1,5 @@
 django
 psycopg[binary]
-boto3>=1.43.9
-botocore>=1.43.9
+boto3>=1.43.14
+botocore>=1.43.14
 aurora_dsql_django
