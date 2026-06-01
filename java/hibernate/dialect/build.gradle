@@ -14,18 +14,18 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.hibernate:hibernate-core:6.6.51.Final")
-    testImplementation("org.hibernate:hibernate-core:6.6.51.Final")
+    compileOnly("org.hibernate:hibernate-core:6.6.52.Final")
+    testImplementation("org.hibernate:hibernate-core:6.6.52.Final")
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.23.0")
-    testImplementation("software.amazon.awssdk:dsql:2.44.12")
-    testImplementation("software.amazon.awssdk:regions:2.44.12")
-    testImplementation("software.amazon.awssdk:aws-core:2.44.12")
+    testImplementation("software.amazon.awssdk:dsql:2.45.1")
+    testImplementation("software.amazon.awssdk:regions:2.45.1")
+    testImplementation("software.amazon.awssdk:aws-core:2.45.1")
     testImplementation("org.postgresql:postgresql:42.7.11")
     testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
-    testImplementation("org.hibernate.orm:hibernate-ant:6.6.51.Final")
+    testImplementation("org.hibernate.orm:hibernate-ant:6.6.52.Final")
 
 }
 
