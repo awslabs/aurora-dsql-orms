@@ -61,8 +61,6 @@ When `aurora_dsql_tortoise.aerich_compat` is included in your models, the follow
 
 **UUID primary keys for Aerich model:** The internal Aerich model uses `UUID` instead of auto-increment integer for its primary key.
 
-**TEXT instead of JSON:** The Aerich model's `content` field uses `TEXT` instead of `JSON`/`JSONB` column types.
-
 **Individual DDL execution:** Migration files may contain multiple DDL statements. The compatibility module splits these and executes each statement separately.
 
 **Disabled transaction wrapping:** Generated migration files set `RUN_IN_TRANSACTION = False` for DDL compatibility.

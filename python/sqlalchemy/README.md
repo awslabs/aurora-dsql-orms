@@ -145,7 +145,6 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 
 ## Dialect Features
 
-- **Column Metadata**: The dialect fixes an issue related to `"datatype json not supported"` when calling SQLAlchemy's metadata() API.
 - **Foreign Keys**: The dialect disables foreign key constraint generation. Referential integrity should be maintained at the application level.
 - **Index Creation**: The dialect uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
 

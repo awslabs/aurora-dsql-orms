@@ -6,8 +6,10 @@ from functools import lru_cache
 from sqlalchemy import BIGINT, Integer, bindparam, select, sql
 from sqlalchemy.dialects.postgresql import pg_catalog
 from sqlalchemy.dialects.postgresql.base import PGDDLCompiler, PGDialect, PGTypeCompiler
+from sqlalchemy.dialects.postgresql.types import OID, REGCLASS
 from sqlalchemy.schema import ForeignKeyConstraint, PrimaryKeyConstraint
-from sqlalchemy.sql import expression
+from sqlalchemy.sql import expression, sqltypes
+from sqlalchemy.types import TEXT
 
 
 class AuroraDSQLDDLCompiler(PGDDLCompiler):
@@ -259,13 +261,54 @@ class AuroraDSQLDialect(PGDialect):
             else sql.null().label("generated")
         )
 
-        # the original code uses sql.func.json_build_object when server_version is
-        # greater than version 10
-        # json_build_object is not supported by Aurora DSQL
-        # TODO: if json_build_object is supported in the future,
-        # restore _columns_query function from original
-
-        identity = sql.null().label("identity_options")
+        # join lateral performs worse (~2x slower) than a scalar_subquery
+        identity = (
+            select(
+                sql.func.json_build_object(
+                    "always",
+                    pg_catalog.pg_attribute.c.attidentity == "a",
+                    "start",
+                    pg_catalog.pg_sequence.c.seqstart,
+                    "increment",
+                    pg_catalog.pg_sequence.c.seqincrement,
+                    "minvalue",
+                    pg_catalog.pg_sequence.c.seqmin,
+                    "maxvalue",
+                    pg_catalog.pg_sequence.c.seqmax,
+                    "cache",
+                    pg_catalog.pg_sequence.c.seqcache,
+                    "cycle",
+                    pg_catalog.pg_sequence.c.seqcycle,
+                    type_=sqltypes.JSON(),
+                )
+            )
+            .select_from(pg_catalog.pg_sequence)
+            .where(
+                # attidentity != '' is required or it will reflect also
+                # serial columns as identity.
+                pg_catalog.pg_attribute.c.attidentity != "",
+                pg_catalog.pg_sequence.c.seqrelid
+                == sql.cast(
+                    sql.cast(
+                        pg_catalog.pg_get_serial_sequence(
+                            sql.cast(
+                                sql.cast(
+                                    pg_catalog.pg_attribute.c.attrelid,
+                                    REGCLASS,
+                                ),
+                                TEXT,
+                            ),
+                            pg_catalog.pg_attribute.c.attname,
+                        ),
+                        REGCLASS,
+                    ),
+                    OID,
+                ),
+            )
+            .correlate(pg_catalog.pg_attribute)
+            .scalar_subquery()
+            .label("identity_options")
+        )
 
         # join lateral performs the same as scalar_subquery here
         default = (

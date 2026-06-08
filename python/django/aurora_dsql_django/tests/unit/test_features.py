@@ -36,9 +36,6 @@ class TestDatabaseFeatures(unittest.TestCase):
     def test_supports_deferrable_unique_constraints(self):
         self.assertFalse(self.features.supports_deferrable_unique_constraints)
 
-    def test_has_native_json_field(self):
-        self.assertFalse(self.features.has_native_json_field)
-
     def test_can_introspect_materialized_views(self):
         self.assertFalse(self.features.can_introspect_materialized_views)
 
@@ -68,7 +65,6 @@ class TestDatabaseFeatures(unittest.TestCase):
         self.assertNotEqual(self.features.can_rollback_ddl, postgresql_features.can_rollback_ddl)
         self.assertNotEqual(self.features.supports_foreign_keys, postgresql_features.supports_foreign_keys)
         self.assertNotEqual(self.features.can_clone_databases, postgresql_features.can_clone_databases)
-        self.assertNotEqual(self.features.has_native_json_field, postgresql_features.has_native_json_field)
 
 
 if __name__ == "__main__":

@@ -37,9 +37,6 @@ class DatabaseFeatures(features.DatabaseFeatures):
     # Does the database support deferrable unique constraints?
     supports_deferrable_unique_constraints = False
 
-    # Does the database have native JSON field support?
-    has_native_json_field = False
-
     # Can the database introspect materialized views?
     can_introspect_materialized_views = False
 
