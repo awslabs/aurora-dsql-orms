@@ -67,10 +67,8 @@ async def test():
     import aerich.migrate
 
     pk = aerich.models.Aerich._meta.pk
-    content = aerich.models.Aerich._meta.fields_map['content']
 
     assert type(pk).__name__ == 'UUIDField', f'Expected UUIDField, got {type(pk).__name__}'
-    assert content.SQL_TYPE == 'TEXT', f'Expected TEXT, got {content.SQL_TYPE}'
     assert 'RUN_IN_TRANSACTION = False' in aerich.migrate.MIGRATE_TEMPLATE
 
     await Tortoise.close_connections()

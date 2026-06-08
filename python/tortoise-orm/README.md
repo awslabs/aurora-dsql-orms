@@ -112,7 +112,6 @@ TORTOISE_ORM = {
 The compatibility module patches Aerich to:
 - Use UUID primary keys for migration tracking
 - Execute DDL statements individually (DSQL transactions support only one DDL statement)
-- Use TEXT instead of JSON column types
 
 ## Features and Limitations
 

@@ -2,12 +2,6 @@
 
 This document tracks known issues when using the Aurora DSQL adapter for Tortoise ORM. For Aurora DSQL SQL compatibility details, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
-## JSONField
-
-**Issue:** Using `fields.JSONField` fails.
-
-**Workaround:** Use `fields.TextField` and handle JSON serialization in your application code.
-
 ## Nested transactions
 
 **Issue:** Nested `in_transaction()` or `atomic()` blocks fail.

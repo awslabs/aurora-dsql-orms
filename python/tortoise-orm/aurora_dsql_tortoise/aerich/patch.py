@@ -7,7 +7,6 @@ from pathlib import Path
 import aerich.migrate
 import aerich.models
 from aerich import Command
-from aerich.coder import decoder, encoder
 from aerich.ddl.postgres import PostgresDDL
 from aerich.exceptions import DowngradeError
 from aerich.migrate import Migrate
@@ -35,15 +34,6 @@ _uuid_field.model = aerich.models.Aerich
 _uuid_field.model_field_name = "id"
 aerich.models.Aerich._meta.fields_map["id"] = _uuid_field
 aerich.models.Aerich._meta.pk = _uuid_field
-
-
-# Patch Aerich internal model JSON field to use TEXT.
-_json_field = fields.JSONField(encoder=encoder, decoder=decoder)
-_json_field.model = aerich.models.Aerich
-_json_field.model_field_name = "content"
-_json_field.SQL_TYPE = "TEXT"
-_json_field._db_postgres = type("_", (), {"SQL_TYPE": "TEXT"})  # type: ignore[method-assign]
-aerich.models.Aerich._meta.fields_map["content"] = _json_field
 
 # Patch ordering to use version instead of id (UUIDs don't sort chronologically).
 aerich.models.Aerich._meta._default_ordering = (("version", Order.desc),)
