@@ -1,64 +1,63 @@
 # Aurora DSQL Dialect for Hibernate
 
-[![GitHub](https://img.shields.io/badge/github-awslabs/aurora--dsql--orms-blue?logo=github)](https://github.com/awslabs/aurora-dsql-orms)
-[![License](https://img.shields.io/badge/license-Apache--2.0-brightgreen)](https://github.com/awslabs/aurora-dsql-orms/blob/main/java/hibernate/LICENSE.Apache-2.0)
-[![License](https://img.shields.io/badge/license-LGPL--2.1-brightgreen)](https://github.com/awslabs/aurora-dsql-orms/blob/main/java/hibernate/LICENSE.LGPL-2.1)
+[![GitHub](https://img.shields.io/github/license/awslabs/aurora-dsql-orms)](LICENSE.Apache-2.0)
 [![Maven Central Version](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-hibernate-dialect)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-hibernate-dialect)
-[![Discord chat](https://img.shields.io/discord/1435027294837276802.svg?logo=discord)](https://discord.com/invite/nEF6ksFWru)
 
 ## Introduction
 
-The Aurora DSQL dialect for Hibernate provides integration between Hibernate ORM and Aurora DSQL. This dialect enables
-Java applications to leverage Hibernate's powerful object-relational mapping capabilities while taking advantage of
+The Aurora DSQL dialect for Hibernate provides integration between Hibernate ORM
+and Aurora DSQL. This dialect enables Java applications to leverage Hibernate's
+powerful object-relational mapping capabilities while taking advantage of
 Aurora DSQL's distributed architecture and high availability.
 
-## Sample Application
+## Version Compatibility
 
-There is an included sample application in [examples/pet-clinic-app](examples/pet-clinic-app) that shows how to use Aurora DSQL
-with Hibernate. To run the included example please refer to the [sample README](examples/pet-clinic-app/README.md).
+| Dialect Version | Hibernate ORM | Spring Boot | Java |
+|----------------|---------------|-------------|------|
+| 1.0.x          | 6.6.x         | 3.x         | 17+  |
+| **2.0.0**      | **7.2+**      | **4.x**     | 17+  |
+
+> **Note:** Version 2.0.0 targets Hibernate ORM 7.2+ and is incompatible with
+> Hibernate 6.x. If you are on Spring Boot 3.x, continue using version 1.0.x.
 
 ## Prerequisites
 
 - Java 17 or higher
-- Hibernate version 6.6
+- Hibernate ORM 7.2+
 - A connection to an Amazon Aurora DSQL database
 - PostgreSQL JDBC driver version 42.x or higher
 
 ## Setup
 
-A dialect for Aurora DSQL is used in largely the same way as other dialects for other databases. It is added
-as a dependency to your Maven or Gradle application:
+Add the dependency to your Maven or Gradle application:
 
-```
-// Maven
+```xml
+<!-- Maven -->
 <dependency>
     <groupId>software.amazon.dsql</groupId>
     <artifactId>aurora-dsql-hibernate-dialect</artifactId>
-    <version>1.0.0</version>
-    <type>pom</type>
+    <version>2.0.0</version>
 </dependency>
-
-// Gradle
-implementation("software.amazon.dsql:aurora-dsql-hibernate-dialect:1.0.0")
 ```
 
-With the `aurora-dsql-hibernate-dialect` JAR included in your Java application, the dialect can then be configured in a few ways:
-- In a Hibernate.properties file: `hibernate.dialect=software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect`
-- In persistence.xml: `<property name="hibernate.dialect" value="software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect"/>`
-- In Spring application properties: `spring.jpa.properties.hibernate.dialect=software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect`
-- Programmatically using `StandardServiceRegistryBuilder`, the configuration API, or in a `SessionFactory`
+```groovy
+// Gradle
+implementation("software.amazon.dsql:aurora-dsql-hibernate-dialect:2.0.0")
+```
 
-Hibernate will not automatically detect the DSQL dialect based on metadata, it must be explicitly specified or else
-the PostgreSQLDialect will be used instead. With the dependency in place and the property set in Hibernate,
-the AuroraDSQLDialect will then automatically be used in DB interactions. Depending on your logging configuration, this
-may be verified in logs as connections are created.
+Configure the dialect in your application:
 
-See [Hibernate documentation](https://docs.jboss.org/hibernate/orm/6.6/introduction/html_single/Hibernate_Introduction.html#configuration)
-for more information on configuring your Hibernate application, including setting the dialect.
+- In Spring application properties:
+  `spring.jpa.properties.hibernate.dialect=software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect`
+- In persistence.xml:
+  `<property name="hibernate.dialect" value="software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect"/>`
+- In Hibernate.properties:
+  `hibernate.dialect=software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect`
+
+Hibernate will not automatically detect the DSQL dialect based on metadata — it
+must be explicitly specified or else the PostgreSQLDialect will be used instead.
 
 ### Database Connection
-
-Configure your database connection for DSQL as follows:
 
 ```properties
 hibernate.connection.url=jdbc:postgresql://<cluster_endpoint>/postgres?sslMode=verify-full&sslNegotiation=direct
@@ -70,7 +69,7 @@ hibernate.connection.driver_class=org.postgresql.Driver
 
 ### Primary key generation
 
-Server-generated UUIDs are the recommended choice for primary key columns. They can be added to your entity definitions as follows:
+Server-generated UUIDs are the recommended choice for primary key columns:
 
 ```java
 @Id
@@ -79,54 +78,51 @@ Server-generated UUIDs are the recommended choice for primary key columns. They 
 private UUID id;
 ```
 
-Sequence and identity based keys are also supported in DSQL, and can be used for integer primary keys. The Hibernate
-dialect uses a default `CACHE` parameter of 65536 in sequence and identity definitions, but this can be overridden
-using the configuration property `hibernate.dialect.aurora_dsql.sequence_cache_size`, configurable in the same ways
-as the dialect choice above. See the [Working with sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns-working-with.html) page
-for guidance on choosing the appropriate cache size for your workload.
+Sequence and identity based keys are also supported. The dialect uses a default
+`CACHE` parameter of 65536, configurable via
+`hibernate.dialect.aurora_dsql.sequence_cache_size`.
 
 ### Auto-DDL
 
-Usage of an automatically generated schema with Hibernate is not recommended with DSQL. While it may be useful
-for experimental development or testing environments, it should not be used in production. An automatically generated
-schema can perform poorly, and can be destructive in unexpected ways.
+Usage of automatically generated schema with Hibernate is not recommended with
+DSQL in production. It may be useful for experimental development or testing.
 
 ### Concurrency control and locking
 
-[Aurora DSQL uses optimistic concurrency control (OCC)](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html), where conflicts are presumed to be rare. Conflicts are only handled
-when they occur, by allowing the first transaction to commit successfully, while any later transaction commit will result
-in an error. This has largely the same effect as Hibernate's built in version-based `OPTIMISTIC` lock mode. Users should
-therefore not use Hibernate's `OPTIMISTIC` lock mode, as DSQL will always trigger an OCC error prior to committing if
-there is a conflict, rendering the version check unnecessary.
+Aurora DSQL uses optimistic concurrency control (OCC) exclusively. Conflicts are
+handled at commit time by allowing the first transaction to succeed while later
+conflicting transactions receive an error.
 
-**There are only two lock modes that should be used: `NONE` (which will still use standard DSQL OCC), and `PESSIMISTIC_WRITE`.** Although DSQL will always use
-optimistic locking, in Hibernate `PESSIMISTIC_WRITE` will add the `SELECT ... FOR UPDATE` modifier, which adds additional
-read checks on selected rows, preventing commits if rows read are modified by another transaction. There are multiple
-examples of how DSQL's concurrency control works [available here in an AWS blog](https://aws.amazon.com/blogs/database/concurrency-control-in-amazon-aurora-dsql/),
-including with `SELECT ... FOR UPDATE`. Only these two Hibernate
-locking modes should be used.
+Users should not use Hibernate's `OPTIMISTIC` lock mode, as DSQL handles OCC
+natively. The only two lock modes that should be used are:
+
+- `NONE` — standard DSQL OCC
+- `PESSIMISTIC_WRITE` — adds `SELECT ... FOR UPDATE`, which provides additional
+  read checks on selected rows
 
 ## Dialect Features
 
-Dialects provide syntax and supported features to allow the Hibernate ORM to correctly handle differences between databases.
-As Aurora DSQL is PostgreSQL-compatible and supports most PostgreSQL features, much of the dialect is similar to that of PostgreSQL.
-There are some key differences however that will help ensure a seamless developer experience with Hibernate
-and Aurora DSQL. The list below describes what the dialect handles automatically:
+- **Data types:** Correct `float`, `double`, `numeric` precision and `varchar` size limits.
+- **Foreign Keys:** Disabled — referential integrity is maintained at the application level.
+- **Index creation:** Uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC`.
+- **Locking:** OCC with `SELECT ... FOR UPDATE` support.
+- **Sequences:** Correct syntax with mandatory `CACHE` parameter.
+- **Temporary tables:** Standard tables with `HT_`/`HTE_` prefixes are used instead.
+- **Truncate:** Uses `DELETE` in place of `TRUNCATE`.
 
-- **Data types**: The dialect provides correct `float`, `double` and `numeric` precision as well as `varchar` size limits.
-- **Foreign Keys**: The dialect disables foreign key constraint generation. Referential integrity should be maintained at the application level.
-- **Index creation**: The dialect uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
-- **Locking**: Aurora DSQL uses optimistic concurrency control (OCC) with support for `SELECT ... FOR UPDATE`. The dialect supports these two locking methods. See the [Concurrency control in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html) page for more information.
-- **Sequences**: The dialect implements correct syntax for Aurora DSQL sequence and identity support, including the mandatory `CACHE` parameter. See the [Sequences and identity columns](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/sequences-identity-columns.html) page for more information.
-- **Temporary tables**: The dialect uses standard tables in place of temporary tables. These tables will appear with `HT_` or `HTE_` prefixes, and will be managed automatically by Hibernate.
-- **Truncate command**: The dialect uses `DELETE` in place of `TRUNCATE`.
+## Migration from 1.0.x
 
-For the full list of Aurora DSQL SQL compatibility details, see the [PostgreSQL compatibility reference](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
+If upgrading from dialect version 1.0.x (Hibernate 6.6) to 2.0.0 (Hibernate 7.2+):
 
+1. Upgrade to Spring Boot 4.x / Hibernate 7.2+
+2. Replace the dependency version from `1.0.x` to `2.0.0`
+3. No application code changes are needed — the dialect class name and
+   configuration properties are unchanged.
 
 ## Developer instructions
 
-Instructions on how to build and test the dialect are available in the [Developer Instructions](dialect/README.md).
+Instructions on how to build and test the dialect are available in the
+[Developer Instructions](dialect/README.md).
 
 ## Security
 

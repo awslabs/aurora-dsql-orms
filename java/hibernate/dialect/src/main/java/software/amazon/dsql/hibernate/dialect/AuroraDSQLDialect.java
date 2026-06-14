@@ -3,8 +3,8 @@
 package software.amazon.dsql.hibernate.dialect;
 
 import static java.sql.Types.FLOAT;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -38,7 +38,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import jakarta.persistence.TemporalType;
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -47,10 +46,8 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.UUID;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -59,12 +56,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PgJdbcHelper;
-import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
-import org.hibernate.dialect.PostgreSQLSqlAstTranslator;
-import org.hibernate.dialect.PostgreSQLStructCastingJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
@@ -75,27 +66,29 @@ import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.LockingStrategyException;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLStructCastingJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -111,16 +104,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
@@ -129,10 +116,35 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+/**
+ * A Hibernate dialect for Amazon Aurora DSQL.
+ *
+ * <p>Aurora DSQL is a PostgreSQL-compatible distributed SQL database that uses optimistic
+ * concurrency control (OCC). This dialect adapts Hibernate ORM 7.x to work with Aurora DSQL's
+ * specific capabilities and constraints:
+ *
+ * <ul>
+ *   <li>Foreign key constraints are unsupported — referential integrity is maintained at the
+ *       application layer.
+ *   <li>Index creation uses {@code CREATE INDEX ASYNC} / {@code CREATE UNIQUE INDEX ASYNC}.
+ *   <li>Temporary tables are not supported; standard tables with {@code HT_}/{@code HTE_} prefixes
+ *       are used instead.
+ *   <li>{@code TRUNCATE} is replaced with {@code DELETE}.
+ *   <li>Locking is OCC-only; {@code SELECT ... FOR UPDATE} is supported for additional read checks.
+ *   <li>Sequences and identity columns require a mandatory {@code CACHE} parameter.
+ * </ul>
+ *
+ * <p>This dialect targets Hibernate ORM 7.2+ and is compatible with Spring Boot 4.x.
+ *
+ * @see <a href="https://docs.aws.amazon.com/aurora-dsql/latest/userguide/">Aurora DSQL
+ *     Documentation</a>
+ */
 public class AuroraDSQLDialect extends Dialect {
 
+  /** Configuration property for the sequence/identity cache size. */
   public static final String SEQUENCE_CACHE_SIZE =
       "hibernate.dialect.aurora_dsql.sequence_cache_size";
+
   private static final int DEFAULT_CACHE_SIZE = 65536;
 
   private int sequenceCacheSize = DEFAULT_CACHE_SIZE;
@@ -162,53 +174,14 @@ public class AuroraDSQLDialect extends Dialect {
         @Override
         public String[] getSqlCreateStrings(
             ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
-          // Foreign key constraints are unsupported
+          // Foreign key constraints are unsupported in Aurora DSQL
           return NO_COMMANDS;
         }
       };
 
-  private static final LockingStrategy NO_LOCKING_STRATEGY =
-      new LockingStrategy() {
-        @Override
-        public void lock(Object o, Object o1, Object o2, int i, EventSource eventSource)
-            throws StaleObjectStateException, LockingStrategyException {
-          // No-op
-        }
-      };
-
-  // Taken from PostgreSQLUUIDJdbcType.java in Hibernate 7.0 and added here as the class didn't
-  // exist yet in 6.2
-  private static final JdbcType PG_UUID_JDBC_TYPE =
-      new UUIDJdbcType() {
-        public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-          return new BasicBinder<>(javaType, this) {
-            @Override
-            protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)
-                throws SQLException {
-              st.setNull(index, getJdbcType().getJdbcTypeCode(), "uuid");
-            }
-
-            @Override
-            protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
-                throws SQLException {
-              st.setNull(name, getJdbcType().getJdbcTypeCode(), "uuid");
-            }
-
-            @Override
-            protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-                throws SQLException {
-              st.setObject(index, getJavaType().unwrap(value, UUID.class, options));
-            }
-
-            @Override
-            protected void doBind(
-                CallableStatement st, X value, String name, WrapperOptions options)
-                throws SQLException {
-              st.setObject(name, getJavaType().unwrap(value, UUID.class, options));
-            }
-          };
-        }
-      };
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Sequence & Identity support
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public SequenceSupport getSequenceSupport() {
@@ -220,6 +193,10 @@ public class AuroraDSQLDialect extends Dialect {
     return identityColumnSupport;
   }
 
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Temporary table support — DSQL does not support temp tables
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   @Override
   public boolean supportsTemporaryTables() {
     return false;
@@ -229,6 +206,10 @@ public class AuroraDSQLDialect extends Dialect {
   public boolean supportsTemporaryTablePrimaryKey() {
     return false;
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // DDL constraints & schema
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public boolean dropConstraints() {
@@ -242,6 +223,7 @@ public class AuroraDSQLDialect extends Dialect {
 
   @Override
   public String getTruncateTableStatement(String table) {
+    // Aurora DSQL does not support TRUNCATE; use DELETE instead
     return "delete from " + table;
   }
 
@@ -260,26 +242,17 @@ public class AuroraDSQLDialect extends Dialect {
     return unique ? "create unique index async" : "create index async";
   }
 
-  @Override
-  public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
-    switch (lockMode) {
-      case PESSIMISTIC_FORCE_INCREMENT:
-      case UPGRADE_NOWAIT:
-      case UPGRADE_SKIPLOCKED:
-      case OPTIMISTIC_FORCE_INCREMENT:
-      case PESSIMISTIC_READ:
-        throw new UnsupportedOperationException("Unsupported lock mode.");
-      case PESSIMISTIC_WRITE:
-        return new PessimisticWriteSelectLockingStrategy(lockable, lockMode);
-      case OPTIMISTIC:
-      case READ:
-      default:
-        return NO_LOCKING_STRATEGY;
-    }
-  }
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Locking — Aurora DSQL uses OCC exclusively
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public String getForUpdateString(String aliases, LockOptions lockOptions) {
+    return " for update";
+  }
+
+  @Override
+  public String getForUpdateString() {
     return " for update";
   }
 
@@ -297,6 +270,20 @@ public class AuroraDSQLDialect extends Dialect {
   public boolean supportsLockTimeouts() {
     return false;
   }
+
+  @Override
+  public boolean supportsOuterJoinForUpdate() {
+    return false;
+  }
+
+  @Override
+  public boolean supportsWait() {
+    return false;
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Numeric precision
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public int getDefaultDecimalPrecision() {
@@ -328,12 +315,15 @@ public class AuroraDSQLDialect extends Dialect {
     return false;
   }
 
-  // Below taken from 7.x PostgreSQLDialect, with some removed 7.x features
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // SQL literal formatting (PostgreSQL-compatible)
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
     appender.appendSql("bytea '\\x");
-    PrimitiveByteArrayJavaType.INSTANCE.appendString(appender, bytes);
+    org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType.INSTANCE.appendString(
+        appender, bytes);
     appender.appendSql('\'');
   }
 
@@ -460,6 +450,10 @@ public class AuroraDSQLDialect extends Dialect {
     }
   }
 
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Cast patterns
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   @Override
   public String castPattern(CastType from, CastType to) {
     if (from == CastType.STRING && to == CastType.BOOLEAN) {
@@ -468,6 +462,10 @@ public class AuroraDSQLDialect extends Dialect {
       return super.castPattern(from, to);
     }
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Current time functions
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public String currentTime() {
@@ -484,11 +482,10 @@ public class AuroraDSQLDialect extends Dialect {
     return "current_timestamp";
   }
 
-  /**
-   * The {@code extract()} function returns {@link TemporalUnit#DAY_OF_WEEK} numbered from 0 to 6.
-   * This isn't consistent with what most other databases do, so here we adjust the result by
-   * generating {@code (extract(dow,arg)+1))}.
-   */
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Extract pattern — adjust day_of_week from 0-6 to 1-7
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   @Override
   public String extractPattern(TemporalUnit unit) {
     return switch (unit) {
@@ -497,10 +494,18 @@ public class AuroraDSQLDialect extends Dialect {
     };
   }
 
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Aggregate support
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   @Override
   public AggregateSupport getAggregateSupport() {
     return PostgreSQLAggregateSupport.valueOf(this);
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Miscellaneous PostgreSQL-compatible overrides
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public String getCascadeConstraintsString() {
@@ -527,12 +532,6 @@ public class AuroraDSQLDialect extends Dialect {
     return 15;
   }
 
-  /**
-   * {@code microsecond} is the smallest unit for an {@code interval}, and the highest precision for
-   * a {@code timestamp}, so we could use it as the "native" precision, but it's more convenient to
-   * use whole seconds (with the fractional part), since we want to use {@code extract(epoch from
-   * ...)} in our emulation of {@code timestampdiff()}.
-   */
   @Override
   public long getFractionalSecondPrecisionInNanos() {
     return 1_000_000_000; // seconds
@@ -616,7 +615,6 @@ public class AuroraDSQLDialect extends Dialect {
   @Override
   public int registerResultSetOutParameter(CallableStatement statement, int col)
       throws SQLException {
-    // Register the type of the out param - PostgreSQL uses Types.OTHER
     statement.registerOutParameter(col++, Types.OTHER);
     return col;
   }
@@ -658,15 +656,11 @@ public class AuroraDSQLDialect extends Dialect {
         }
         break;
       case TIME:
-        // The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping
-        // OffsetTime to UTC
         if ("timetz".equals(columnTypeName)) {
           jdbcTypeCode = TIME_UTC;
         }
         break;
       case TIMESTAMP:
-        // The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for
-        // mapping Instant
         if ("timestamptz".equals(columnTypeName)) {
           jdbcTypeCode = TIMESTAMP_UTC;
         }
@@ -741,20 +735,12 @@ public class AuroraDSQLDialect extends Dialect {
 
   @Override
   public boolean supportsMaterializedLobAccess() {
-    // Prefer using text and bytea over oid (LOB), because oid is very restricted.
-    // If someone really wants a type bigger than 1GB, they should ask for it by using @Lob
-    // explicitly
     return false;
   }
 
   @Override
   public boolean supportsOffsetInSubquery() {
     return true;
-  }
-
-  @Override
-  public boolean supportsOuterJoinForUpdate() {
-    return false;
   }
 
   @Override
@@ -778,14 +764,13 @@ public class AuroraDSQLDialect extends Dialect {
   }
 
   @Override
-  public boolean supportsWait() {
-    return false;
-  }
-
-  @Override
   public boolean supportsWindowFunctions() {
     return true;
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Timestamp arithmetic
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public String timestampaddPattern(
@@ -799,8 +784,8 @@ public class AuroraDSQLDialect extends Dialect {
     return switch (unit) {
       case NANOSECOND -> "(?2)/1e3*interval '1 microsecond'";
       case NATIVE -> "(?2)*interval '1 second'";
-      case QUARTER -> "(?2)*interval '3 month'"; // quarter is not supported in interval literals
-      case WEEK -> "(?2)*interval '7 day'"; // week is not supported in interval literals
+      case QUARTER -> "(?2)*interval '3 month'";
+      case WEEK -> "(?2)*interval '7 day'";
       default -> "(?2)*interval '1 " + unit + "'";
     };
   }
@@ -812,9 +797,6 @@ public class AuroraDSQLDialect extends Dialect {
       return "(?3-?2)";
     }
     if (toTemporalType == TemporalType.DATE && fromTemporalType == TemporalType.DATE) {
-      // special case: subtraction of two dates
-      // results in an integer number of days
-      // instead of an INTERVAL
       return switch (unit) {
         case YEAR, MONTH, QUARTER ->
             "extract(" + translateDurationField(unit) + " from age(?3,?2))";
@@ -825,13 +807,8 @@ public class AuroraDSQLDialect extends Dialect {
         case YEAR -> "extract(year from ?3-?2)";
         case QUARTER -> "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
         case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-        case WEEK ->
-            "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument
-          // is a duration
+        case WEEK -> "(extract(day from ?3-?2)/7)";
         case DAY -> "extract(day from ?3-?2)";
-          // in order to avoid multiple calls to extract(),
-          // we use extract(epoch from x - y) * factor for
-          // all the following units:
         case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
             "extract(epoch from ?3-?2)" + EPOCH.conversionFactor(unit, this);
         default -> throw new SemanticException("Unrecognized field: " + unit);
@@ -842,7 +819,6 @@ public class AuroraDSQLDialect extends Dialect {
   @Override
   public String translateExtractField(TemporalUnit unit) {
     return switch (unit) {
-        // WEEK means the ISO week number on Postgres
       case DAY_OF_MONTH -> "day";
       case DAY_OF_YEAR -> "doy";
       case DAY_OF_WEEK -> "dow";
@@ -850,10 +826,18 @@ public class AuroraDSQLDialect extends Dialect {
     };
   }
 
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // LOB handling
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   @Override
   public boolean useInputStreamToInsertBlob() {
     return false;
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Type contributions — updated for Hibernate 7.x package relocations
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public void contributeTypes(
@@ -862,26 +846,21 @@ public class AuroraDSQLDialect extends Dialect {
     contributePostgreSQLTypes(typeContributions, serviceRegistry);
   }
 
-  /** Allow for extension points to override this only */
+  /** Allow for extension points to override this only. */
   protected void contributePostgreSQLTypes(
       TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
     final JdbcTypeRegistry jdbcTypeRegistry =
         typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-    // For discussion of BLOB support in Postgres, as of 8.4, see:
-    //     http://jdbc.postgresql.org/documentation/84/binary-data.html
-    // For how this affects Hibernate, see:
-    //     http://in.relation.to/15492.lace
 
-    // Force BLOB binding.  Otherwise, byte[] fields annotated
-    // with @Lob will attempt to use
-    // BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
-    // dialect uses oid for Blobs, byte arrays cannot be used.
-    jdbcTypeRegistry.addDescriptor(BLOB, BlobJdbcType.BLOB_BINDING);
-    jdbcTypeRegistry.addDescriptor(CLOB, ClobJdbcType.CLOB_BINDING);
-    // Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
-    // jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
+    // Force BLOB binding. Otherwise, byte[] fields annotated with @Lob will attempt to use
+    // BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING. Since the dialect uses oid for Blobs,
+    // byte arrays cannot be used.
+    jdbcTypeRegistry.addDescriptor(Types.BLOB, BlobJdbcType.BLOB_BINDING);
+    jdbcTypeRegistry.addDescriptor(Types.CLOB, ClobJdbcType.CLOB_BINDING);
     jdbcTypeRegistry.addDescriptor(XmlJdbcType.INSTANCE);
 
+    // Use PgJdbcHelper (relocated to org.hibernate.dialect.type in Hibernate 7.x) when the
+    // PG JDBC driver is available; fall back to casting-based implementations otherwise.
     if (PgJdbcHelper.isUsable(serviceRegistry)) {
       jdbcTypeRegistry.addDescriptorIfAbsent(PgJdbcHelper.getInetJdbcType(serviceRegistry));
       jdbcTypeRegistry.addDescriptorIfAbsent(PgJdbcHelper.getIntervalJdbcType(serviceRegistry));
@@ -904,44 +883,26 @@ public class AuroraDSQLDialect extends Dialect {
             typeContributions
                 .getTypeConfiguration()
                 .getJavaTypeRegistry()
-                .getDescriptor(Object.class)));
-    // Modified from original to remove not yet added types from later Hibernate versions, and adds
-    // UUID
-    jdbcTypeRegistry.addDescriptor(PG_UUID_JDBC_TYPE);
+                .resolveDescriptor(Object.class)));
+
+    // Register PostgreSQL UUID JDBC type
+    jdbcTypeRegistry.addDescriptor(PostgreSQLUUIDJdbcType.INSTANCE);
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Column type mappings
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   protected String columnType(int sqlTypeCode) {
     return switch (sqlTypeCode) {
-        // no tinyint, not even in Postgres 11
       case TINYINT -> "smallint";
-
-        // there are no nchar/nvarchar types in Postgres
       case NCHAR -> columnType(CHAR);
       case NVARCHAR -> columnType(VARCHAR);
-
-        // since there's no real difference between TEXT and VARCHAR,
-        // except for the length limit, we can just use 'text' for the
-        // "long" string types
       case LONG32VARCHAR, LONG32NVARCHAR -> "text";
-
-        // use oid as the blob/clob type on Postgres because
-        // the JDBC driver doesn't allow using bytea/text via
-        // LOB APIs
       case BLOB, CLOB, NCLOB -> "oid";
-
-        // use bytea as the "long" binary type (that there is no
-        // real VARBINARY type in Postgres, so we always use this)
       case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
-
-        // We do not use the 'time with timezone' type because PG
-        // deprecated it, and it lacks certain operations like
-        // subtraction
-        //			case TIME_UTC:
-        //				return columnType( TIME_WITH_TIMEZONE );
-
       case TIMESTAMP_UTC -> columnType(TIMESTAMP_WITH_TIMEZONE);
-
       default -> super.columnType(sqlTypeCode);
     };
   }
@@ -963,10 +924,6 @@ public class AuroraDSQLDialect extends Dialect {
     final DdlTypeRegistry ddlTypeRegistry =
         typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-    // Register this type to be able to support Float[]
-    // The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
-    // It requires the use of "real" or "float4"
-    // Alternatively we could introduce a new API in Dialect for creating such base names
     ddlTypeRegistry.addDescriptor(
         CapacityDependentDdlType.builder(FLOAT, columnType(FLOAT), castType(FLOAT), this)
             .withTypeCapacity(6, "float4")
@@ -988,8 +945,7 @@ public class AuroraDSQLDialect extends Dialect {
   protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
     return switch (columnTypeName) {
       case "bool" -> Types.BOOLEAN;
-      case "float4" ->
-          Types.REAL; // Use REAL instead of FLOAT to get Float as recommended Java type
+      case "float4" -> Types.REAL;
       case "float8" -> Types.DOUBLE;
       case "int2" -> Types.SMALLINT;
       case "int4" -> Types.INTEGER;
@@ -998,9 +954,9 @@ public class AuroraDSQLDialect extends Dialect {
     };
   }
 
-  protected boolean supportsMinMaxOnUuid() {
-    return false;
-  }
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // SQL AST translation
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
@@ -1008,17 +964,19 @@ public class AuroraDSQLDialect extends Dialect {
       @Override
       protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
           SessionFactoryImplementor sessionFactory, Statement statement) {
-        return new PostgreSQLSqlAstTranslator<T>(sessionFactory, statement) {
-          @Override
-          protected String getForUpdate() {
-            return " for update";
-          }
-        };
+        return new PostgreSQLSqlAstTranslator<>(sessionFactory, statement);
       }
     };
   }
 
-  // Modified from 7.x version to remove unsupported functions in 6.2
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Function registry
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  protected boolean supportsMinMaxOnUuid() {
+    return false;
+  }
+
   @Override
   public void initializeFunctionRegistry(FunctionContributions functionContributions) {
     super.initializeFunctionRegistry(functionContributions);
@@ -1042,7 +1000,6 @@ public class AuroraDSQLDialect extends Dialect {
     functionFactory.initcap();
     functionFactory.substr();
     functionFactory.substring_substr();
-    // also natively supports ANSI-style substring()
     functionFactory.translate();
     functionFactory.toCharNumberDateTimestamp();
     functionFactory.concat_pipeOperator("convert_from(lo_get(?1),pg_client_encoding())");
@@ -1066,14 +1023,13 @@ public class AuroraDSQLDialect extends Dialect {
     functionFactory.regrLinearRegressionAggregates();
     functionFactory.insert_overlay();
     functionFactory.overlay();
-    functionFactory.soundex(); // was introduced in Postgres 9 apparently
+    functionFactory.soundex();
 
     functionFactory.locate_positionSubstring();
     functionFactory.windowFunctions();
     functionFactory.listagg_stringAgg("varchar");
 
     functionFactory.makeDateTimeTimestamp();
-    // Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
     functionFactory.inverseDistributionOrderedSetAggregates();
     functionFactory.hypotheticalOrderedSetAggregates();
 
@@ -1106,6 +1062,10 @@ public class AuroraDSQLDialect extends Dialect {
     functionContributions.getFunctionRegistry().registerAlternateKey("truncate", "trunc");
     functionFactory.dateTrunc();
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Multi-table mutation strategies
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   @Override
   public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(

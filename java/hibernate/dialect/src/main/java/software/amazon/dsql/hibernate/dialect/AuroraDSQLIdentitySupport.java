@@ -4,6 +4,12 @@ package software.amazon.dsql.hibernate.dialect;
 
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 
+/**
+ * Identity column support for Aurora DSQL.
+ *
+ * <p>Aurora DSQL supports identity columns with a mandatory {@code CACHE} parameter on the
+ * underlying sequence. This class generates the appropriate DDL for identity columns.
+ */
 public class AuroraDSQLIdentitySupport extends IdentityColumnSupportImpl {
 
   private final int sequenceCacheSize;
