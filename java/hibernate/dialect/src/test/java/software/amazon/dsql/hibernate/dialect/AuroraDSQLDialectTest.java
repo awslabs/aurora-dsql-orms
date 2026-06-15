@@ -41,8 +41,7 @@ public class AuroraDSQLDialectTest {
     assertEquals(
         "create sequence my_seq cache 65536", sequenceSupport.getCreateSequenceString("my_seq"));
     assertEquals("nextval('my_seq')", sequenceSupport.getSelectSequenceNextValString("my_seq"));
-    assertEquals(
-        "drop sequence if exists my_seq", sequenceSupport.getDropSequenceString("my_seq"));
+    assertEquals("drop sequence if exists my_seq", sequenceSupport.getDropSequenceString("my_seq"));
     assertTrue(sequenceSupport.sometimesNeedsStartingValue());
   }
 
@@ -82,7 +81,8 @@ public class AuroraDSQLDialectTest {
   @Test
   public void testTruncateTableStatement() {
     assertEquals("delete from test_table", dialect.getTruncateTableStatement("test_table"));
-    assertEquals("delete from schema.my_table", dialect.getTruncateTableStatement("schema.my_table"));
+    assertEquals(
+        "delete from schema.my_table", dialect.getTruncateTableStatement("schema.my_table"));
   }
 
   @Test
@@ -191,8 +191,10 @@ public class AuroraDSQLDialectTest {
   @Test
   public void testFetchClauseSupport() {
     assertTrue(dialect.supportsFetchClause(org.hibernate.query.common.FetchClauseType.ROWS_ONLY));
-    assertTrue(dialect.supportsFetchClause(org.hibernate.query.common.FetchClauseType.ROWS_WITH_TIES));
-    assertFalse(dialect.supportsFetchClause(org.hibernate.query.common.FetchClauseType.PERCENT_ONLY));
+    assertTrue(
+        dialect.supportsFetchClause(org.hibernate.query.common.FetchClauseType.ROWS_WITH_TIES));
+    assertFalse(
+        dialect.supportsFetchClause(org.hibernate.query.common.FetchClauseType.PERCENT_ONLY));
     assertFalse(
         dialect.supportsFetchClause(org.hibernate.query.common.FetchClauseType.PERCENT_WITH_TIES));
   }
