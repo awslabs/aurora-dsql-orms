@@ -10,7 +10,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.14</version>
+    <version>3.5.15</version>
     <relativePath/>
   </parent>
   <name>petclinic</name>
@@ -33,7 +33,7 @@
     <lifecycle-mapping>1.0.0</lifecycle-mapping>
     <maven-checkstyle.version>3.6.0</maven-checkstyle.version>
     <nohttp-checkstyle.version>0.0.11</nohttp-checkstyle.version>
-    <hibernate.version>6.6.52.Final</hibernate.version>
+    <hibernate.version>6.6.53.Final</hibernate.version>
   </properties>
 
   <dependencies>
