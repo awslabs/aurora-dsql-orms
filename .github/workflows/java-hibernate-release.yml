@@ -19,7 +19,10 @@ jobs:
       - uses: lewagon/wait-on-check-action@v1.8.0
         with:
           ref: ${{ github.sha }}
-          running-workflow-name: "Wait for CI to pass"
+          # Gate only on this module's CI checks. The repo is a monorepo, so the
+          # release commit also carries unrelated checks (other ORMs, Dependabot)
+          # that must not block — or fail — the Hibernate publish.
+          check-regexp: "^(Build Dialect|Build Sample|Test Dialect|Test Sample|(create|delete)-cluster).*"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
