@@ -107,7 +107,7 @@ natively. The only two lock modes that should be used are:
 - **Index creation:** Uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC`.
 - **Locking:** OCC with `SELECT ... FOR UPDATE` support.
 - **Sequences:** Correct syntax with mandatory `CACHE` parameter.
-- **Temporary tables:** Not supported; multi-table mutations use CTE-based strategies instead.
+- **Multi-table mutations:** Use CTE-based strategies, working within DSQL without temporary tables.
 - **Truncate:** Uses `DELETE` in place of `TRUNCATE`.
 
 ## Migration from 1.0.x

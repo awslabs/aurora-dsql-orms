@@ -126,7 +126,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *   <li>Foreign key constraints are unsupported — referential integrity is maintained at the
  *       application layer.
  *   <li>Index creation uses {@code CREATE INDEX ASYNC} / {@code CREATE UNIQUE INDEX ASYNC}.
- *   <li>Temporary tables are not supported; multi-table mutations use CTE-based strategies instead.
+ *   <li>Multi-table mutations use CTE-based strategies, working within DSQL without temporary
+ *       tables.
  *   <li>{@code TRUNCATE} is replaced with {@code DELETE}.
  *   <li>Locking is OCC-only; {@code SELECT ... FOR UPDATE} is supported for additional read checks.
  *   <li>Sequences and identity columns require a mandatory {@code CACHE} parameter.
