@@ -253,7 +253,11 @@ public class ForeignKeyTest extends DSQLHibernateBaseTest {
           };
 
       schemaCreator.doCreation(
-          metadata, executionOptions, null, sourceDescriptor, targetDescriptor);
+          metadata,
+          executionOptions,
+          org.hibernate.tool.schema.spi.ContributableMatcher.ALL,
+          sourceDescriptor,
+          targetDescriptor);
 
       String script = Files.readString(scriptLocationTemp);
       boolean containsForeignKeys = script.toLowerCase().contains("foreign key");
