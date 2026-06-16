@@ -4,6 +4,12 @@ package software.amazon.dsql.hibernate.dialect;
 
 import org.hibernate.dialect.sequence.SequenceSupport;
 
+/**
+ * Sequence support for Aurora DSQL.
+ *
+ * <p>Aurora DSQL requires a mandatory {@code CACHE} parameter on sequence creation. This class
+ * generates the appropriate DDL for sequences with the configured cache size.
+ */
 public class AuroraDSQLSequenceSupport implements SequenceSupport {
 
   private final int sequenceCacheSize;

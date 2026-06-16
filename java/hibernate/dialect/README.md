@@ -1,35 +1,68 @@
-# Aurora DSQL Dialect for Hibernate - Developer instructions
+# Developer Instructions
 
-## Building from source
+## Building
 
-Building the Aurora DSQL dialect requires Java 17 or greater. The dialect uses [Gradle](https://gradle.org/) to build and
-test the dialect.
+```bash
+cd java/hibernate/dialect
+./gradlew build
+```
 
-From a terminal in the [dialect](../dialect) directory, you can run the full build with:
+## Running Tests
 
-`./gradlew build`
+Unit tests:
+```bash
+./gradlew test
+```
 
-To assemble the Jar without running any tests use:
+Integration tests (requires a live DSQL cluster):
+```bash
+RUN_INTEGRATION=TRUE ./gradlew test
+```
 
-`./gradlew assemble`
+Configuration tests (run in isolation):
+```bash
+./gradlew configurationTests
+```
 
-A Jar containing the dialect will be produced at `build/libs/aurora-dsql-hibernate-dialect-1.0.1.jar`. This Jar can
-then be used in the Pet-Clinic sample or in your Hibernate application.
+## Publishing
 
-## Running integration tests
+To publish to Maven Central staging:
+```bash
+./gradlew publish
+```
 
-There is a suite of integration tests that can be run to test the dialect. To execute them you will need access
-to an Aurora DSQL cluster. You must have an AWS account, and have your default credentials and AWS Region
-configured as described in the [Globally configuring AWS SDKs and tools](https://docs.aws.amazon.com/credref/latest/refdocs/creds-config-files.html)
-guide.
+To upload to Maven Central:
+```bash
+JRELEASER_MAVENCENTRAL_STAGE=UPLOAD ./gradlew jreleaserDeploy
+```
 
-1. Set environment variables:
-    1. `export CLUSTER_ENDPOINT=<your dsql cluster>`
-    2. `export REGION=<your dsql cluster's region>`
-    3. `export RUN_INTEGRATION=TRUE`
-2. Run the tests (`-i` optionally provides more logging):
-   1. `./gradlew test -i` to run all tests including unit tests
-   2. `./gradlew test --tests "software.amazon.dsql.integration.* -i`  for all integration tests
-   3. `./gradlew test --tests <Class Name> -i`  for a specific test class
-3. An HTML test report will be automatically generated at `build/reports/tests/index.html`.
+## Project Structure
 
+```
+dialect/
+├── build.gradle                    # Build configuration (Hibernate 7.2+ dependency)
+├── settings.gradle                 # Project settings
+├── src/
+│   ├── main/java/software/amazon/dsql/hibernate/dialect/
+│   │   ├── AuroraDSQLDialect.java          # Main dialect class
+│   │   ├── AuroraDSQLIdentitySupport.java  # Identity column support
+│   │   └── AuroraDSQLSequenceSupport.java  # Sequence support
+│   └── test/java/software/amazon/dsql/hibernate/dialect/
+│       ├── AuroraDSQLDialectTest.java           # Core dialect unit tests
+│       ├── AuroraDSQLDialectFunctionsTest.java  # Function/formatting tests
+│       └── integration/                         # Integration tests (require DSQL cluster)
+```
+
+## Hibernate Version Compatibility
+
+This version (2.0.0) targets Hibernate ORM 7.2+ and is forward-compatible
+through 7.4+. Key differences from the 1.0.x branch (Hibernate 6.6):
+
+- `PgJdbcHelper` imported from `org.hibernate.dialect.type` (relocated in Hibernate 7.0)
+- PostgreSQL JDBC types imported from `org.hibernate.dialect.type` package
+- `PostgreSQLSqlAstTranslator` imported from `org.hibernate.dialect.sql.ast`
+- `JavaTypeRegistry.resolveDescriptor()` used instead of `getDescriptor()`
+- `PostgreSQLUUIDJdbcType` from `org.hibernate.dialect.type` replaces inline implementation
+- Removed custom `LockingStrategy` implementation (Hibernate 7.x uses new locking SPI)
+- Uses `int` overloads of `getWriteLockString` (deprecated but still functional; avoids
+  importing `Timeout`/`Timeouts` which are new in 7.0 and may shift)

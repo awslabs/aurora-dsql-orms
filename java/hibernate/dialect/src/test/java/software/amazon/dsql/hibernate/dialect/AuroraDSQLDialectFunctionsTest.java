@@ -13,7 +13,7 @@ import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,6 +81,16 @@ public class AuroraDSQLDialectFunctionsTest {
             jakarta.persistence.TemporalType.TIMESTAMP,
             jakarta.persistence.TemporalType.TIMESTAMP);
     assertEquals("(extract(year from ?3-?2)*12+extract(month from ?3-?2))", pattern);
+  }
+
+  @Test
+  public void testTimestampdiffPatternNullUnit() {
+    String pattern =
+        dialect.timestampdiffPattern(
+            null,
+            jakarta.persistence.TemporalType.TIMESTAMP,
+            jakarta.persistence.TemporalType.TIMESTAMP);
+    assertEquals("(?3-?2)", pattern);
   }
 
   @Test
@@ -163,5 +173,12 @@ public class AuroraDSQLDialectFunctionsTest {
     assertEquals("HH24:MI:SS", dialect.datetimeFormat("HH:mm:ss").result());
     assertEquals(
         "YYYY-MM-DD HH24:MI:SS.MS", dialect.datetimeFormat("yyyy-MM-dd HH:mm:ss.SSS").result());
+  }
+
+  @Test
+  public void testTranslateExtractField() {
+    assertEquals("day", dialect.translateExtractField(TemporalUnit.DAY_OF_MONTH));
+    assertEquals("doy", dialect.translateExtractField(TemporalUnit.DAY_OF_YEAR));
+    assertEquals("dow", dialect.translateExtractField(TemporalUnit.DAY_OF_WEEK));
   }
 }

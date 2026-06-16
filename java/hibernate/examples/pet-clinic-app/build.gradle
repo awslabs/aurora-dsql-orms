@@ -1,6 +1,6 @@
 plugins {
   id 'java'
-  id 'org.springframework.boot' version '3.5.15'
+  id 'org.springframework.boot' version '4.0.7'
   id 'io.spring.dependency-management' version '1.1.7'
   id 'org.graalvm.buildtools.native' version '1.1.2'
 }
@@ -20,16 +20,12 @@ repositories {
 
 ext.webjarsFontawesomeVersion = "4.7.0"
 ext.webjarsBootstrapVersion = "5.3.8"
-ext.hibernateVersion = "6.6.53.Final"
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-cache'
-  implementation "org.hibernate:hibernate-core:${hibernateVersion}"
-  implementation('org.springframework.boot:spring-boot-starter-data-jpa') {
-        exclude group: 'org.hibernate', module: 'hibernate-core'
-  }
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-webmvc'
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'javax.cache:cache-api'
   implementation 'jakarta.xml.bind:jakarta.xml.bind-api'
@@ -43,16 +39,18 @@ dependencies {
 
   developmentOnly 'org.springframework.boot:spring-boot-devtools'
   testImplementation 'org.springframework.boot:spring-boot-starter-test'
-  testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-  testImplementation 'org.springframework.boot:spring-boot-docker-compose'
-  testImplementation 'org.testcontainers:junit-jupiter'
-  testImplementation 'org.testcontainers:mysql'
-  
+  // Spring Boot 4 split the web test slices into dedicated starters:
+  // webmvc-test provides @WebMvcTest/MockMvc; restclient-test provides TestRestTemplate/RestTemplateBuilder.
+  testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+  testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
+
   // AWS SDK deps
   implementation 'software.amazon.awssdk:dsql:2.46.10'
-  implementation 'software.amazon.dsql:aurora-dsql-hibernate-dialect:1.0.1'
   implementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.5.0'
 
+  // Aurora DSQL Hibernate dialect 2.0.0 (Hibernate 7.x) is provided as a locally-built JAR
+  // in lib/ by CI; it is not yet published to Maven Central. The DSQL profile loads it at
+  // runtime via spring.jpa.database-platform.
   implementation fileTree(dir: 'lib', includes: ['*.jar'])
 }
 
