@@ -51,8 +51,6 @@ test {
 
     // Exclude configuration tests from main test task, as they require isolation
     exclude '**/DialectConfiguration*Test.class'
-    // Exclude integration tests that require a live DSQL cluster
-    exclude '**/integration/**'
 
     dependsOn configurationTests
 }
