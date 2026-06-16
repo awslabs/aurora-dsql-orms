@@ -10,7 +10,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.15</version>
+    <version>4.0.7</version>
     <relativePath/>
   </parent>
   <name>petclinic</name>
@@ -33,7 +33,6 @@
     <lifecycle-mapping>1.0.0</lifecycle-mapping>
     <maven-checkstyle.version>3.6.0</maven-checkstyle.version>
     <nohttp-checkstyle.version>0.0.11</nohttp-checkstyle.version>
-    <hibernate.version>6.6.53.Final</hibernate.version>
   </properties>
 
   <dependencies>
@@ -50,21 +49,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.hibernate</groupId>
-          <artifactId>hibernate-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <version>${hibernate.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -77,6 +65,18 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Spring Boot 4 split the web test slices into dedicated starters:
+         webmvc-test provides @WebMvcTest/MockMvc; restclient-test provides TestRestTemplate. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient-test</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -95,11 +95,6 @@
       <groupId>software.amazon.dsql</groupId>
       <artifactId>aurora-dsql-jdbc-connector</artifactId>
       <version>1.5.0</version>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.dsql</groupId>
-      <artifactId>aurora-dsql-hibernate-dialect</artifactId>
-      <version>1.0.1</version>
     </dependency>
 
     <!-- Caching -->
@@ -132,22 +127,6 @@
       <artifactId>spring-boot-devtools</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-testcontainers</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-docker-compose</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <!-- Dependencies for ValidatorTests -->
@@ -338,6 +317,25 @@
   </pluginRepositories>
 
   <profiles>
+    <!-- The Aurora DSQL Hibernate dialect 2.0.0 (Hibernate 7.x) is not yet published to Maven
+         Central. CI installs the locally-built JAR into the local repo before running the dsql
+         profile, so the dependency is only declared here, activated by -Dspring.profiles.active=dsql. -->
+    <profile>
+      <id>dsql</id>
+      <activation>
+        <property>
+          <name>spring.profiles.active</name>
+          <value>dsql</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>software.amazon.dsql</groupId>
+          <artifactId>aurora-dsql-hibernate-dialect</artifactId>
+          <version>2.0.0</version>
+        </dependency>
+      </dependencies>
+    </profile>
     <profile>
       <id>css</id>
       <build>

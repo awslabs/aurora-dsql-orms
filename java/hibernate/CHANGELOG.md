@@ -16,6 +16,7 @@
 ### Changed
 - Compile dependency updated from `org.hibernate:hibernate-core:6.6.x` to `org.hibernate.orm:hibernate-core:7.2.12.Final`.
 - Maven artifact coordinates unchanged: `software.amazon.dsql:aurora-dsql-hibernate-dialect:2.0.0`.
+- Migrated the pet-clinic sample app to Spring Boot 4.0.x / Hibernate 7.2.x so it exercises the 2.0.0 dialect.
 
 ## [1.0.1] - 2025-02-xx
 
