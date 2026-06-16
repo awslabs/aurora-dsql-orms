@@ -107,7 +107,7 @@ natively. The only two lock modes that should be used are:
 - **Index creation:** Uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC`.
 - **Locking:** OCC with `SELECT ... FOR UPDATE` support.
 - **Sequences:** Correct syntax with mandatory `CACHE` parameter.
-- **Temporary tables:** Standard tables with `HT_`/`HTE_` prefixes are used instead.
+- **Temporary tables:** Not supported; multi-table mutations use CTE-based strategies instead.
 - **Truncate:** Uses `DELETE` in place of `TRUNCATE`.
 
 ## Migration from 1.0.x
