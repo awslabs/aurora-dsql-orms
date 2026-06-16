@@ -54,4 +54,7 @@ jobs:
     uses: ./.github/workflows/update-changelog.yml
     with:
       tag: ${{ github.ref_name }}
+    permissions:
+      contents: write
+      pull-requests: write
     secrets: inherit
