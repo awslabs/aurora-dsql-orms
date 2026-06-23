@@ -1,10 +1,13 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 namespace Amazon.AuroraDsql.EntityFrameworkCore.IntegrationTests;
 
 /// <summary>
 /// CRUD tests using DI pattern (AddDsqlDataSource + UseDsql).
 /// Mirrors CrudTests but verifies the recommended DI pattern works.
 /// </summary>
-[Collection(nameof(DsqlDiTestCollection))]
+[Collection("DsqlTests")]
 public class DiCrudTests : IClassFixture<DsqlDiTestFixture>
 {
     private readonly DsqlDiTestFixture _fixture;

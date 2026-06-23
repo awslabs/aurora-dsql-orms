@@ -1,4 +1,5 @@
-using Npgsql;
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 namespace Amazon.AuroraDsql.EntityFrameworkCore.Infrastructure;
 

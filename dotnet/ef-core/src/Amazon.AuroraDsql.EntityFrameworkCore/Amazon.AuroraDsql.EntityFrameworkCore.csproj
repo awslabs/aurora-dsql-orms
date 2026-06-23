@@ -15,7 +15,12 @@
     <PackageTags>ef-core;entity-framework;aurora-dsql;aws;postgresql</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/awslabs/aurora-dsql-orms</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- EF Core 9.x Dependencies -->
@@ -25,6 +30,9 @@
 
     <!-- DSQL Npgsql Adapter (1.1.0+ required) -->
     <PackageReference Include="Amazon.AuroraDsql.Npgsql" Version="1.1.0" />
+
+    <!-- Bundles per-RID dsql-lint native binary for migration transforms -->
+    <PackageReference Include="Amazon.AuroraDsql.Lint.Runtime" Version="0.2.*" />
 
     <!-- Floor set by Amazon.AuroraDsql.Npgsql 1.1.0 transitive dep; cannot downgrade further -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />

@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Amazon.AuroraDsql.EntityFrameworkCore.Extensions;
@@ -32,7 +35,8 @@ public static class DsqlDbContextOptionsExtensions
 
     /// <summary>
     /// Configures the context to connect to Aurora DSQL using a host string.
-    /// Uses sync-over-async. For proper pooling and deadlock-safe initialization, use AddDsqlDataSource().
+    /// Uses sync-over-async. For deadlock-safe initialization, register a pre-created
+    /// DsqlDataSource via AddDsqlDataSource(DsqlDataSource) and use UseDsql(IServiceProvider).
     /// </summary>
     public static DbContextOptionsBuilder UseDsql(
         this DbContextOptionsBuilder optionsBuilder,

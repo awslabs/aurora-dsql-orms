@@ -1,9 +1,13 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -89,6 +93,18 @@ internal sealed class DsqlOptionsExtension : IDbContextOptionsExtension
         services.TryAddEnumerable(
             ServiceDescriptor.Scoped<IConventionSetPlugin, DsqlConventionSetPlugin>(
                 _ => new DsqlConventionSetPlugin(UseIdentityColumns, IdentityCacheSize)));
+
+        services.TryAddScoped<IDsqlSqlTransform, DsqlSqlTransform>();
+
+        // Must use Replace, NOT TryAdd. Npgsql already registers NpgsqlMigrator
+        // via TryAdd; a second TryAdd would be a silent no-op.
+        services.Replace(ServiceDescriptor.Scoped<IMigrator, DsqlMigrator>());
+
+        // DSQL is serverless — the database always exists. Npgsql's Exists() tries
+        // to clone the connection (casts to NpgsqlConnection), which fails on our
+        // DsqlConnectionWrapper. Replace with a creator that always returns true.
+        services.Replace(
+            ServiceDescriptor.Scoped<IRelationalDatabaseCreator, DsqlDatabaseCreator>());
     }
 
     public void Validate(IDbContextOptions options) { }
@@ -97,7 +113,7 @@ internal sealed class DsqlOptionsExtension : IDbContextOptionsExtension
     {
         public ExtInfo(IDbContextOptionsExtension extension) : base(extension) { }
         public override bool IsDatabaseProvider => false;
-        public override string LogFragment => "using DsqlPK ";
+        public override string LogFragment => "using AuroraDsql ";
         public override int GetServiceProviderHashCode()
         {
             var ext = (DsqlOptionsExtension)Extension;

@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Amazon.AuroraDsql.EntityFrameworkCore.Infrastructure;
@@ -49,9 +52,9 @@ public class DsqlExecutionStrategy : ExecutionStrategy
     /// <inheritdoc />
     protected override void OnFirstExecution()
     {
-        // Allow SaveChangesAsync inside user-initiated transactions without throwing.
-        // The strategy won't retry (ShouldRetryOn returns false when inside a transaction),
-        // but it won't block either. Customers use ExecuteInTransactionAsync for retry.
+        // Skip the base transaction guard so SaveChangesAsync runs inside a user
+        // transaction (without retry), but still reset state for reused instances.
+        ExceptionsEncountered.Clear();
     }
 
     /// <inheritdoc />
@@ -67,7 +70,7 @@ public class DsqlExecutionStrategy : ExecutionStrategy
             {
                 _logger?.LogDebug(
                     DsqlEventId.OccRetry,
-                    "Retrying operation due to OCC conflict (SqlState 40001). Attempt {Attempt}.",
+                    "Retrying operation due to OCC conflict (SqlState 40001/OC000/OC001). Attempt {Attempt}.",
                     ExceptionsEncountered.Count);
                 return true;
             }

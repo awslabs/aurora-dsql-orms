@@ -1,8 +1,8 @@
 # Inventory API — Aurora DSQL EF Core Example
 
-Minimal API demonstrating EF Core CRUD, OCC retry, batch operations, and
-navigation properties against Aurora DSQL. The adapter handles IAM
-authentication, command suppression, and transaction management transparently.
+Minimal API demonstrating EF Core CRUD, OCC retry, batch operations,
+navigation properties, and migrations against Aurora DSQL. The adapter
+handles IAM authentication and transaction management transparently.
 
 ## Prerequisites
 
@@ -14,15 +14,35 @@ authentication, command suppression, and transaction management transparently.
 
 ```bash
 export CLUSTER_ENDPOINT="your-cluster.dsql.us-east-1.on.aws"
-dotnet run --project ef-core/examples/InventoryApi/
+dotnet run --project dotnet/ef-core/examples/InventoryApi/
 ```
+
+The app applies pending migrations at startup via `MigrateAsync()`.
 
 ## Run Integration Tests
 
 ```bash
 export CLUSTER_ENDPOINT="your-cluster.dsql.us-east-1.on.aws"
-dotnet test ef-core/examples/InventoryApi.IntegrationTests/
+dotnet test dotnet/ef-core/examples/InventoryApi.IntegrationTests/
 ```
+
+## Migrations Workflow
+
+```bash
+# Add a new migration after modifying models
+dotnet ef migrations add <MigrationName> --output-dir Migrations
+
+# Apply migrations to DSQL
+dotnet ef database update
+
+# View migration status
+dotnet ef migrations list
+```
+
+The adapter's `DsqlMigrator` automatically:
+- Transforms DSQL-incompatible SQL (e.g. `CREATE INDEX` → `CREATE INDEX ASYNC`)
+- Adds `IF NOT EXISTS` to CREATE TABLE/INDEX statements for idempotency
+- Suppresses per-migration transactions (DSQL allows only one DDL per transaction)
 
 ## Endpoints
 
@@ -47,17 +67,3 @@ curl -X POST http://localhost:5000/orders \
 # Get order with items (Include/ThenInclude navigation)
 curl http://localhost:5000/orders/<id>
 ```
-
-## What This Shows
-
-| Feature | Where |
-|---------|-------|
-| DI setup (`AddDsqlDataSource` + `UseDsql`) | Program.cs |
-| Standard EF Core CRUD | POST/GET /products |
-| LINQ queries (filter, sort, paginate) | GET /products |
-| Transactions | POST /orders |
-| OCC retry (`ExecuteInTransactionAsync`) | POST /orders |
-| Navigation properties (`Include`) | GET /orders/{id} |
-| Batch operations | POST /products (array) |
-| UUID primary keys | All entities |
-| Schema setup without migrations | Program.cs startup |

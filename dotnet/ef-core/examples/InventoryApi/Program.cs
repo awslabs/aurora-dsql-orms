@@ -1,4 +1,6 @@
-using System.Data.Common;
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using Amazon.AuroraDsql.EntityFrameworkCore.Extensions;
 using Microsoft.EntityFrameworkCore;
 using InventoryApi;
@@ -26,53 +28,11 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
-// --- Schema setup (raw SQL — DSQL does not support EF migrations) ---
+// --- Apply pending migrations at startup ---
 using (var scope = app.Services.CreateScope())
 {
-    var dataSource = scope.ServiceProvider.GetRequiredService<DbDataSource>();
-    await using var connection = dataSource.CreateConnection();
-    await connection.OpenAsync();
-    await using var cmd = connection.CreateCommand();
-
-    cmd.CommandText = """DROP TABLE IF EXISTS "OrderItems" """;
-    await cmd.ExecuteNonQueryAsync();
-
-    cmd.CommandText = """DROP TABLE IF EXISTS "Orders" """;
-    await cmd.ExecuteNonQueryAsync();
-
-    cmd.CommandText = """DROP TABLE IF EXISTS "Products" """;
-    await cmd.ExecuteNonQueryAsync();
-
-    cmd.CommandText = """
-        CREATE TABLE "Products" (
-            "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            "Name" character varying(200) NOT NULL,
-            "Price" numeric NOT NULL,
-            "Stock" integer NOT NULL,
-            "CreatedAt" timestamp without time zone NOT NULL
-        )
-        """;
-    await cmd.ExecuteNonQueryAsync();
-
-    cmd.CommandText = """
-        CREATE TABLE "Orders" (
-            "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            "CreatedAt" timestamp without time zone NOT NULL,
-            "TotalAmount" numeric NOT NULL
-        )
-        """;
-    await cmd.ExecuteNonQueryAsync();
-
-    cmd.CommandText = """
-        CREATE TABLE "OrderItems" (
-            "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            "OrderId" uuid NOT NULL,
-            "ProductId" uuid NOT NULL,
-            "Quantity" integer NOT NULL,
-            "UnitPrice" numeric NOT NULL
-        )
-        """;
-    await cmd.ExecuteNonQueryAsync();
+    var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    await db.Database.MigrateAsync();
 }
 
 // --- Endpoints ---

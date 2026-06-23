@@ -1,0 +1,122 @@
+name: .NET EF Core CI
+
+permissions: {}
+
+on:
+  workflow_call: {}
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  ADAPTER: dotnet/ef-core/src/Amazon.AuroraDsql.EntityFrameworkCore
+  UNIT_TESTS: dotnet/ef-core/tests/Amazon.AuroraDsql.EntityFrameworkCore.UnitTests
+  INTEGRATION_TESTS: dotnet/ef-core/tests/Amazon.AuroraDsql.EntityFrameworkCore.IntegrationTests
+  EXAMPLE: dotnet/ef-core/examples/InventoryApi
+  EXAMPLE_TESTS: dotnet/ef-core/examples/InventoryApi.IntegrationTests
+
+jobs:
+  build-and-unit-test:
+    name: Build & Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build adapter
+        run: dotnet build "$ADAPTER" --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test "$UNIT_TESTS" --configuration Release
+
+  build-examples:
+    name: Build Examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build sample app
+        run: dotnet build "$EXAMPLE" --configuration Release
+
+  create-cluster:
+    needs: build-and-unit-test
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: dotnet-efcore
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
+  integration-test:
+    name: Adapter Integration Tests
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Run adapter integration tests
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          REGION: ${{ needs.create-cluster.outputs.region }}
+        run: dotnet test "$INTEGRATION_TESTS" --configuration Release
+
+  test-example-dsql:
+    name: Example Integration Tests (DSQL)
+    needs: [build-examples, create-cluster, integration-test]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Run sample app integration tests
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+          REGION: ${{ needs.create-cluster.outputs.region }}
+        run: dotnet test "$EXAMPLE_TESTS" --configuration Release
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, integration-test, test-example-dsql]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials

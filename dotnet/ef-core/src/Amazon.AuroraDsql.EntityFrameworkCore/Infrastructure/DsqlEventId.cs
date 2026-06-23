@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 namespace Amazon.AuroraDsql.EntityFrameworkCore.Infrastructure;
 
 /// <summary>
@@ -25,4 +28,9 @@ internal static class DsqlEventId
     /// Event ID for logging OCC retry attempts.
     /// </summary>
     public static readonly EventId OccRetry = new(100004, nameof(OccRetry));
+
+    /// <summary>
+    /// Event ID for behavior-changing dsql-lint rewrites during migration (e.g. FK removal).
+    /// </summary>
+    public static readonly EventId MigrationTransformWarning = new(100005, nameof(MigrationTransformWarning));
 }

@@ -13,6 +13,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
+      dotnet-ef-core: ${{ steps.detect.outputs.dotnet-ef-core }}
       java-hibernate: ${{ steps.detect.outputs.java-hibernate }}
       node-prisma: ${{ steps.detect.outputs.node-prisma }}
       python-django: ${{ steps.detect.outputs.python-django }}
@@ -24,6 +25,7 @@ jobs:
         with:
           script: |
             const config = {
+              'dotnet-ef-core': ['dotnet/ef-core/', '.github/workflows/dotnet-ef-core-ci.yml'],
               'java-hibernate': ['java/hibernate/', '.github/workflows/java-hibernate-ci.yml'],
               'node-prisma': ['node/prisma/', '.github/workflows/node-prisma-ci.yml'],
               'python-django': ['python/django/', '.github/workflows/python-django-ci.yml'],
@@ -74,6 +76,14 @@ jobs:
     needs: changes
     uses: ./.github/workflows/pre-commit.yml
 
+  dotnet-ef-core:
+    needs: changes
+    if: needs.changes.outputs.dotnet-ef-core == 'true'
+    uses: ./.github/workflows/dotnet-ef-core-ci.yml
+    secrets: inherit
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
   java-hibernate:
     needs: changes
     if: needs.changes.outputs.java-hibernate == 'true'
@@ -119,6 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - pre-commit
+      - dotnet-ef-core
       - java-hibernate
       - python-django
       - python-sqlalchemy
