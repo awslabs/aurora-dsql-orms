@@ -1,0 +1,158 @@
+name: Compatibility Canary
+
+# Early-warning system: weekly, each adapter is built/tested against the LATEST
+# released version of its ORM/framework (including pre-releases) instead of the
+# pinned-and-supported version. A failure means an upcoming framework version
+# introduces a breaking change — we find out here instead of from a customer.
+#
+# This NEVER gates anything: it does not run on PRs and is not part of ci-gate.
+# A red run + an auto-filed `compat-canary` issue are the signal. Stable
+# releases keep using the pinned versions and are unaffected.
+#
+# Scope is intentionally cheap (tier 1): recompile + unit/import probes, no live
+# DSQL cluster. The historic break this guards against (Hibernate 7 class
+# relocations → NoClassDefFoundError) is a linkage/compile failure, caught here
+# without a cluster. SQLAlchemy's test suite requires a cluster, so it gets an
+# import-only smoke probe (noted in its job).
+
+permissions: {}
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Monday 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Run probes but skip filing tracking issues on failure (smoke test)"
+        type: boolean
+        default: false
+
+jobs:
+  hibernate:
+    name: Hibernate (latest)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # report step files/updates a tracking issue
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: "corretto"
+      - name: Build + unit tests vs latest Hibernate
+        working-directory: java/hibernate/dialect
+        run: ./gradlew build -PhibernateVersion=+
+      - name: Report break
+        if: failure() && inputs.dry-run != true
+        uses: ./.github/actions/report-canary-failure
+        with:
+          orm: Hibernate
+          framework: Hibernate ORM
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  django:
+    name: Django (latest)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: python/django
+    env:
+      # Unit tests don't connect, but test_settings.py requires the var to be set.
+      CLUSTER_ENDPOINT: example.dsql.us-east-1.on.aws
+      DJANGO_SETTINGS_MODULE: aurora_dsql_django.tests.test_settings
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+      - name: Upgrade to latest Django
+        run: uv pip install --upgrade --prerelease allow django
+      # `uv run --no-sync` preserves the upgraded package; without --no-sync,
+      # `uv run` would re-sync the venv from uv.lock and revert the upgrade.
+      - name: Unit tests vs latest Django
+        run: uv run --no-sync pytest aurora_dsql_django/tests/unit/
+      - name: Report break
+        if: failure() && inputs.dry-run != true
+        uses: ./.github/actions/report-canary-failure
+        with:
+          orm: Django
+          framework: Django
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  sqlalchemy:
+    name: SQLAlchemy (latest)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: python/sqlalchemy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+      - name: Upgrade to latest SQLAlchemy
+        run: uv pip install --upgrade --prerelease allow sqlalchemy
+      # Full test suite requires a live cluster (conftest), so this is an
+      # import-only smoke probe — it still exercises the relocation-prone
+      # PG dialect imports in base.py (PGDialect, pg_catalog, OID/REGCLASS).
+      - name: Import probe vs latest SQLAlchemy
+        run: uv run --no-sync python -c "import aurora_dsql_sqlalchemy.psycopg, aurora_dsql_sqlalchemy.psycopg2; print('import OK')"
+      - name: Report break
+        if: failure() && inputs.dry-run != true
+        uses: ./.github/actions/report-canary-failure
+        with:
+          orm: SQLAlchemy
+          framework: SQLAlchemy
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  tortoise:
+    name: Tortoise ORM (latest)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: python/tortoise-orm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+      - name: Upgrade to latest Tortoise ORM
+        run: uv pip install --upgrade --prerelease allow tortoise-orm
+      - name: Unit tests vs latest Tortoise ORM
+        run: uv run --no-sync unit
+      - name: Report break
+        if: failure() && inputs.dry-run != true
+        uses: ./.github/actions/report-canary-failure
+        with:
+          orm: Tortoise ORM
+          framework: Tortoise ORM
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  prisma:
+    name: Prisma (latest)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: node/prisma
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Upgrade to latest Prisma
+        run: npm install prisma@latest
+      - name: Build + test vs latest Prisma
+        run: npm run build && npm test
+      - name: Report break
+        if: failure() && inputs.dry-run != true
+        uses: ./.github/actions/report-canary-failure
+        with:
+          orm: Prisma
+          framework: Prisma
+          github-token: ${{ secrets.GITHUB_TOKEN }}
