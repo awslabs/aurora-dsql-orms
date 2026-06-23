@@ -50,11 +50,10 @@ updates:
       java-hibernate-dialect:
         patterns: ["*"]
     ignore:
-      # Hibernate 7 has breaking API changes incompatible with this dialect
-      - dependency-name: "org.hibernate:hibernate-core"
-        versions: [">=7"]
-      - dependency-name: "org.hibernate.orm:hibernate-ant"
-        versions: [">=7"]
+      # Next-major Hibernate likely has breaking API changes; the compat-canary
+      # workflow probes it weekly so we get advance warning without a red PR here.
+      - dependency-name: "org.hibernate.orm:hibernate-core"
+        versions: [">=8"]
   - package-ecosystem: "gradle"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
@@ -63,11 +62,12 @@ updates:
       java-hibernate-example-gradle:
         patterns: ["*"]
     ignore:
-      # Spring Boot 4.x requires Hibernate 7, which has breaking API changes incompatible with this dialect
+      # Next-major Spring Boot pulls next-major Hibernate; the compat-canary
+      # workflow probes it weekly so we get advance warning without a red PR here.
       - dependency-name: "org.springframework.boot"
-        versions: [">=4"]
-      - dependency-name: "org.hibernate:hibernate-core"
-        versions: [">=7"]
+        versions: [">=5"]
+      - dependency-name: "org.hibernate.orm:hibernate-core"
+        versions: [">=8"]
   - package-ecosystem: "maven"
     directory: "/java/hibernate/examples/pet-clinic-app"
     schedule:
@@ -76,11 +76,12 @@ updates:
       java-hibernate-example-maven:
         patterns: ["*"]
     ignore:
-      # Spring Boot 4.x requires Hibernate 7, which has breaking API changes incompatible with this dialect
+      # Next-major Spring Boot pulls next-major Hibernate; the compat-canary
+      # workflow probes it weekly so we get advance warning without a red PR here.
       - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
-        versions: [">=4"]
-      - dependency-name: "org.hibernate:hibernate-core"
-        versions: [">=7"]
+        versions: [">=5"]
+      - dependency-name: "org.hibernate.orm:hibernate-core"
+        versions: [">=8"]
       # Checkstyle 13+ requires Java 21, but this project targets Java 17
       - dependency-name: "com.puppycrawl.tools:checkstyle"
         versions: [">=13"]
