@@ -68,6 +68,8 @@ jobs:
       - run: uv sync
       - name: Upgrade to latest Django
         run: uv pip install --upgrade --prerelease allow django
+      # `uv run --no-sync` preserves the upgraded package; without --no-sync,
+      # `uv run` would re-sync the venv from uv.lock and revert the upgrade.
       - name: Unit tests vs latest Django
         run: uv run --no-sync pytest aurora_dsql_django/tests/unit/
       - name: Report break

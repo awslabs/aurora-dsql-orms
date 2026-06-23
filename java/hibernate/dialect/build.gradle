@@ -21,7 +21,7 @@ java {
 }
 
 // Override with -PhibernateVersion=... (e.g. the compat-canary workflow probes
-// the next major). Default tracks the supported release.
+// the latest available version). Default tracks the supported release.
 def hibernateVersion = findProperty('hibernateVersion') ?: '7.4.2.Final'
 
 dependencies {

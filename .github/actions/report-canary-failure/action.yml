@@ -35,9 +35,11 @@ runs:
 
         Stable releases are unaffected — the supported pinned version still builds. Resolve by updating the adapter for the new ${FRAMEWORK} version, then this issue can be closed (the canary will reopen it if the break recurs)."
 
-        # Dedup on exact title among open issues so we comment instead of spamming.
-        EXISTING=$(gh issue list --state open --search "in:title \"${TITLE}\"" --json number,title \
-          --jq ".[] | select(.title == \"${TITLE}\") | .number" | head -n1)
+        # Dedup by exact title among open compat-canary issues. Scoping by label
+        # (rather than by --search) avoids GitHub's title tokenization stripping
+        # the `[compat-canary]` brackets and silently missing the existing issue.
+        EXISTING=$(gh issue list --state open --label compat-canary --json number,title \
+          --jq '.[] | select(.title == env.TITLE) | .number' | head -n1)
 
         if [ -n "${EXISTING}" ]; then
           gh issue comment "${EXISTING}" --body "Canary failed again: ${RUN_URL}"
