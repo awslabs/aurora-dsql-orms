@@ -21,6 +21,11 @@ on:
   schedule:
     - cron: "0 6 * * 1" # weekly, Monday 06:00 UTC
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Run probes but skip filing tracking issues on failure (smoke test)"
+        type: boolean
+        default: false
 
 jobs:
   hibernate:
@@ -38,7 +43,7 @@ jobs:
         working-directory: java/hibernate/dialect
         run: ./gradlew build -PhibernateVersion=+
       - name: Report break
-        if: failure()
+        if: failure() && inputs.dry-run != true
         uses: ./.github/actions/report-canary-failure
         with:
           orm: Hibernate
@@ -66,7 +71,7 @@ jobs:
       - name: Unit tests vs latest Django
         run: uv run --no-sync pytest aurora_dsql_django/tests/unit/
       - name: Report break
-        if: failure()
+        if: failure() && inputs.dry-run != true
         uses: ./.github/actions/report-canary-failure
         with:
           orm: Django
@@ -93,7 +98,7 @@ jobs:
       - name: Import probe vs latest SQLAlchemy
         run: uv run --no-sync python -c "import aurora_dsql_sqlalchemy.psycopg, aurora_dsql_sqlalchemy.psycopg2; print('import OK')"
       - name: Report break
-        if: failure()
+        if: failure() && inputs.dry-run != true
         uses: ./.github/actions/report-canary-failure
         with:
           orm: SQLAlchemy
@@ -117,7 +122,7 @@ jobs:
       - name: Unit tests vs latest Tortoise ORM
         run: uv run --no-sync unit
       - name: Report break
-        if: failure()
+        if: failure() && inputs.dry-run != true
         uses: ./.github/actions/report-canary-failure
         with:
           orm: Tortoise ORM
@@ -143,7 +148,7 @@ jobs:
       - name: Build + test vs latest Prisma
         run: npm run build && npm test
       - name: Report break
-        if: failure()
+        if: failure() && inputs.dry-run != true
         uses: ./.github/actions/report-canary-failure
         with:
           orm: Prisma
