@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Package Metadata -->
+    <PackageId>Amazon.AuroraDsql.EntityFrameworkCore</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>AWS Aurora DSQL Team</Authors>
+    <Description>Entity Framework Core adapter for Amazon Aurora DSQL</Description>
+    <PackageTags>ef-core;entity-framework;aurora-dsql;aws;postgresql</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/awslabs/aurora-dsql-orms</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- EF Core 9.x Dependencies -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.7" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.1" />
+
+    <!-- DSQL Npgsql Adapter (1.1.0+ required) -->
+    <PackageReference Include="Amazon.AuroraDsql.Npgsql" Version="1.1.0" />
+
+    <!-- Floor set by Amazon.AuroraDsql.Npgsql 1.1.0 transitive dep; cannot downgrade further -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
+  </ItemGroup>
+
+</Project>
