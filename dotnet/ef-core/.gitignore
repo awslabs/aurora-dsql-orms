@@ -1,0 +1,22 @@
+# .NET build outputs
+bin/
+obj/
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.iml
+
+# NuGet packages
+*.nupkg
+*.snupkg
+
+# Test results
+*.trx
+*.coverage
+
+# OS files
+.DS_Store
+Thumbs.db

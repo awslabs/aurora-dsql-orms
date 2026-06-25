@@ -1,0 +1,79 @@
+name: Release .NET EF Core
+
+permissions: {}
+
+on:
+  push:
+    tags:
+      - "dotnet/ef-core/v*"
+
+defaults:
+  run:
+    working-directory: dotnet/ef-core
+
+jobs:
+  wait-for-ci:
+    name: Wait for CI to pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lewagon/wait-on-check-action@v1.8.0
+        with:
+          ref: ${{ github.sha }}
+          running-workflow-name: "Wait for CI to pass"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  publish-nuget:
+    name: Publish to NuGet
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.NUGET_PUBLISH_IAM_ROLE }}
+          role-session-name: dotnet-ef-core-nuget-publish
+          aws-region: us-west-2
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#dotnet/ef-core/v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Publishing NuGet package version $VERSION"
+
+      - name: Pack NuGet package
+        run: dotnet pack src/Amazon.AuroraDsql.EntityFrameworkCore --configuration Release -p:Version="$VERSION"
+
+      - name: Push to NuGet.org
+        run: |
+          SECRET_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id "production/build/AuroraDsql-nuget-api-key" \
+            --query 'SecretString' \
+            --output text)
+          NUGET_API_KEY=$(echo "$SECRET_JSON" | jq -r '.Key')
+          echo "::add-mask::$NUGET_API_KEY"
+          dotnet nuget push src/Amazon.AuroraDsql.EntityFrameworkCore/bin/Release/*.nupkg \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json
+
+  update-changelog:
+    needs: publish-nuget
+    uses: ./.github/workflows/update-changelog.yml
+    with:
+      tag: ${{ github.ref_name }}
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit

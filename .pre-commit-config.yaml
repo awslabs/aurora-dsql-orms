@@ -61,6 +61,14 @@ repos:
         files: ^python/.*\.py$
         args: [--license-filepath=LICENSE_HEADER.txt]
 
+  # .NET license headers
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: insert-license
+        files: ^dotnet/.*\.cs$
+        args: [--license-filepath=LICENSE_HEADER.txt, --comment-style, "//"]
+
   # Java formatting
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
     rev: v2.14.0
