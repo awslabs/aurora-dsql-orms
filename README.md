@@ -26,6 +26,12 @@ This monorepo contains ORM adapters for [Amazon Aurora DSQL](https://aws.amazon.
 |---------|-------------|---------------|------------|
 | [aurora-dsql-hibernate-dialect](./java/hibernate/) | Hibernate dialect for Aurora DSQL | [![Maven Central](https://img.shields.io/maven-central/v/software.amazon.dsql/aurora-dsql-hibernate-dialect)](https://central.sonatype.com/artifact/software.amazon.dsql/aurora-dsql-hibernate-dialect) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![License](https://img.shields.io/badge/License-LGPL_2.1-blue.svg) |
 
+### .NET
+
+| Package | Description | NuGet | License(s) |
+|---------|-------------|-------|------------|
+| [Amazon.AuroraDsql.EntityFrameworkCore](./dotnet/ef-core/) | Entity Framework Core adapter for Aurora DSQL | [![NuGet](https://img.shields.io/nuget/v/Amazon.AuroraDsql.EntityFrameworkCore)](https://www.nuget.org/packages/Amazon.AuroraDsql.EntityFrameworkCore) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
+
 ## Installation
 
 Each adapter is published as an independent package. Install the one you need:
@@ -39,6 +45,9 @@ pip install aurora-dsql-sqlalchemy
 
 # Tortoise ORM
 pip install aurora-dsql-tortoise-orm
+
+# EF Core (.NET)
+dotnet add package Amazon.AuroraDsql.EntityFrameworkCore
 ```
 
 For Java adapters, see the individual adapter documentation for Maven/Gradle installation instructions.
@@ -51,6 +60,7 @@ See the README in each adapter's directory for detailed usage instructions:
 - [Hibernate dialect documentation](./java/hibernate/README.md)
 - [SQLAlchemy adapter documentation](./python/sqlalchemy/README.md)
 - [Tortoise ORM adapter documentation](./python/tortoise-orm/README.md)
+- [Entity Framework Core adapter documentation](./dotnet/ef-core/README.md)
 
 ## Versioning
 
