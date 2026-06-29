@@ -20,18 +20,18 @@ java {
     withSourcesJar()
 }
 
-def hibernateVersion = '7.4.2.Final'
+def hibernateVersion = '7.4.3.Final'
 
 dependencies {
     compileOnly("org.hibernate.orm:hibernate-core:${hibernateVersion}")
     testImplementation("org.hibernate.orm:hibernate-core:${hibernateVersion}")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.23.0")
-    testImplementation("software.amazon.awssdk:dsql:2.46.15")
-    testImplementation("software.amazon.awssdk:regions:2.46.15")
-    testImplementation("software.amazon.awssdk:aws-core:2.46.15")
+    testImplementation("software.amazon.awssdk:dsql:2.46.17")
+    testImplementation("software.amazon.awssdk:regions:2.46.17")
+    testImplementation("software.amazon.awssdk:aws-core:2.46.17")
     testImplementation("org.postgresql:postgresql:42.7.11")
     testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
 }
