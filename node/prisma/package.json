@@ -44,17 +44,17 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@aws/dsql-lint": "^0.1"
+    "@aws/dsql-lint": "^0.2"
   },
   "devDependencies": {
     "@aws-sdk/dsql-signer": "^3.980.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.2.0",
+    "@types/node": "^26.0.1",
     "prettier": "4.0.0-alpha.13",
     "prisma": "^7.3.0",
     "ts-jest": "^29.4.1",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "lodash": "^4.17.23",
