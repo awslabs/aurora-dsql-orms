@@ -1,3 +1,18 @@
+<a id="python/django/v0.5.0"></a>
+# [Aurora DSQL adapter for Django v0.5.0 (python/django/v0.5.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.5.0) - 2026-07-10
+
+This release adds sequence and identity primary key support and enables native JSONB.
+
+## What's Changed
+* Add sequence and identity support for Django by [@vic-tsang](https://github.com/vic-tsang) in [#153](https://github.com/awslabs/aurora-dsql-orms/pull/153)
+* Enable native JSONB support in adapters by [@amaksimo](https://github.com/amaksimo) in [#476](https://github.com/awslabs/aurora-dsql-orms/pull/476)
+* Replace inline DSQL limitation language with links to official docs by [@amaksimo](https://github.com/amaksimo) in [#439](https://github.com/awslabs/aurora-dsql-orms/pull/439)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.4.1...python/django/v0.5.0
+
+[Changes][python/django/v0.5.0]
+
+
 <a id="python/django/v0.4.1"></a>
 # [Aurora DSQL adapter for Django v0.4.1 (python/django/v0.4.1)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.4.1) - 2026-01-30
 
@@ -169,6 +184,7 @@ Initial version of the [Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/) Dj
 [Changes][python/django/v0.1.0]
 
 
+[python/django/v0.5.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.4.1...python/django/v0.5.0
 [python/django/v0.4.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.4.0...python/django/v0.4.1
 [python/django/v0.4.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.3.0...python/django/v0.4.0
 [python/django/v0.3.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.2.1...python/django/v0.3.0
