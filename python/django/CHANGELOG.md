@@ -63,6 +63,10 @@ Full Changelog: https://github.com/awslabs/aurora-dsql-orms/compare/python/djang
 <a id="python/django/v0.3.0"></a>
 # [Aurora DSQL adapter for Django v0.3.0 (python/django/v0.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.3.0) - 2026-01-29
 
+> **Note:** This release was originally published on Oct 01, 2025 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.3.0).
+
+---
+
 This release removes support for Python 3.8, which is end of life according to [python.org](https://devguide.python.org/versions/).
 
 ## What's Changed
@@ -81,6 +85,10 @@ This release removes support for Python 3.8, which is end of life according to [
 <a id="python/django/v0.2.1"></a>
 # [Aurora DSQL adapter for Django v0.2.1 (python/django/v0.2.1)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.2.1) - 2026-01-29
 
+> **Note:** This release was originally published on Oct 01, 2025 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.1).
+
+---
+
 This release fixes the relative links shown on the PyPI project page. There should be no library behavior change.
 
 ## What's Changed
@@ -97,6 +105,10 @@ This release fixes the relative links shown on the PyPI project page. There shou
 
 <a id="python/django/v0.2.0"></a>
 # [Aurora DSQL adapter for Django v0.2.0 (python/django/v0.2.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.2.0) - 2026-01-29
+
+> **Note:** This release was originally published on Sep 29, 2025 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.0).
+
+---
 
 This release includes the following changes:
 - Added documentation for known issues and workarounds
@@ -158,6 +170,10 @@ The release also adds verified support for Python 3.13.
 
 <a id="python/django/v0.1.0"></a>
 # [Aurora DSQL adapter for Django v0.1.0 (python/django/v0.1.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.1.0) - 2026-01-29
+
+> **Note:** This release was originally published on Dec 04, 2024 by [@srudeepk](https://github.com/srudeepk) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.1.0).
+
+---
 
 ## What's Changed
 
