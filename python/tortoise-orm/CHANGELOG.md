@@ -1,3 +1,22 @@
+<a id="python/tortoise-orm/v0.2.0"></a>
+# [Aurora DSQL Adapter for Tortoise ORM v0.2.0 (python/tortoise-orm/v0.2.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.2.0) - 2026-07-13
+
+This release adds integer IDENTITY primary key support, native JSONB, and Tortoise ORM 1.0 compatibility.
+
+## What's Changed
+* Add Tortoise ORM adapter support for IDENTITY columns by [@danielfrankcom](https://github.com/danielfrankcom) in [#154](https://github.com/awslabs/aurora-dsql-orms/pull/154)
+* Tortoise 1.0 fixes and don't require both asyncpg + psycopg to be installed by [@hfern](https://github.com/hfern) in [#311](https://github.com/awslabs/aurora-dsql-orms/pull/311)
+* Enable native JSONB support in adapters by [@amaksimo](https://github.com/amaksimo) in [#476](https://github.com/awslabs/aurora-dsql-orms/pull/476)
+* Replace inline DSQL limitation language with links to official docs by [@amaksimo](https://github.com/amaksimo) in [#439](https://github.com/awslabs/aurora-dsql-orms/pull/439)
+
+## New Contributors
+* [@hfern](https://github.com/hfern) made their first contribution in [#311](https://github.com/awslabs/aurora-dsql-orms/pull/311)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.4...python/tortoise-orm/v0.2.0
+
+[Changes][python/tortoise-orm/v0.2.0]
+
+
 <a id="python/tortoise-orm/v0.1.4"></a>
 # [Aurora DSQL Adapter for Tortoise ORM v0.1.4 (python/tortoise-orm/v0.1.4)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.1.4) - 2026-01-30
 
@@ -105,6 +124,7 @@ Initial release of Aurora DSQL Adapter for Tortoise ORM.
 [Changes][python/tortoise-orm/v0.1.0]
 
 
+[python/tortoise-orm/v0.2.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.4...python/tortoise-orm/v0.2.0
 [python/tortoise-orm/v0.1.4]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.3...python/tortoise-orm/v0.1.4
 [python/tortoise-orm/v0.1.3]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.2...python/tortoise-orm/v0.1.3
 [python/tortoise-orm/v0.1.2]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.1...python/tortoise-orm/v0.1.2
