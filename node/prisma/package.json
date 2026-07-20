@@ -59,13 +59,15 @@
   "overrides": {
     "lodash": "^4.17.23",
     "hono": "^4.11.10",
-    "fast-xml-parser": "^5.4.1"
+    "fast-xml-parser": "^5.4.1",
+    "js-yaml": "^3.15.0"
   },
   "comments": {
     "overrides": {
       "lodash": "CVE-2025-13465 - Remove when prisma updates to lodash >=4.17.23",
       "hono": "CVE-2026-24472 - Remove when prisma updates to hono >=4.11.10",
-      "fast-xml-parser": "Stack overflow in XMLBuilder - Remove when @aws-sdk/xml-builder updates to fast-xml-parser >=5.3.8"
+      "fast-xml-parser": "Stack overflow in XMLBuilder - Remove when @aws-sdk/xml-builder updates to fast-xml-parser >=5.3.8",
+      "js-yaml": "Quadratic-complexity DoS in merge key handling - Remove when ts-jest's @istanbuljs/load-nyc-config updates js-yaml >=3.15.0"
     }
   }
 }

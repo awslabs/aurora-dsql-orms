@@ -3,7 +3,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'org.jreleaser' version '1.24.0'
+    id 'org.jreleaser' version '1.25.0'
 }
 
 group = 'software.amazon.dsql'
@@ -22,20 +22,20 @@ java {
 
 // Override with -PhibernateVersion=... (e.g. the compat-canary workflow probes
 // the latest available version). Default tracks the supported release.
-def hibernateVersion = findProperty('hibernateVersion') ?: '7.4.2.Final'
+def hibernateVersion = findProperty('hibernateVersion') ?: '7.4.5.Final'
 
 dependencies {
     compileOnly("org.hibernate.orm:hibernate-core:${hibernateVersion}")
     testImplementation("org.hibernate.orm:hibernate-core:${hibernateVersion}")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.23.0")
-    testImplementation("software.amazon.awssdk:dsql:2.46.15")
-    testImplementation("software.amazon.awssdk:regions:2.46.15")
-    testImplementation("software.amazon.awssdk:aws-core:2.46.15")
-    testImplementation("org.postgresql:postgresql:42.7.11")
-    testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
+    testImplementation("software.amazon.awssdk:dsql:2.47.5")
+    testImplementation("software.amazon.awssdk:regions:2.47.5")
+    testImplementation("software.amazon.awssdk:aws-core:2.47.5")
+    testImplementation("org.postgresql:postgresql:42.7.13")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.26.1")
 }
 
 // This is separated to ensure isolation in the Dialect configuration tests
