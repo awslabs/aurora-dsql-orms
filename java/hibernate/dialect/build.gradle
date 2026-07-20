@@ -20,7 +20,9 @@ java {
     withSourcesJar()
 }
 
-def hibernateVersion = '7.4.5.Final'
+// Override with -PhibernateVersion=... (e.g. the compat-canary workflow probes
+// the latest available version). Default tracks the supported release.
+def hibernateVersion = findProperty('hibernateVersion') ?: '7.4.5.Final'
 
 dependencies {
     compileOnly("org.hibernate.orm:hibernate-core:${hibernateVersion}")
