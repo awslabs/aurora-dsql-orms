@@ -91,86 +91,48 @@ class TestDatabaseSchemaEditor(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor._check_sql")
-    def test_check_sql_feature_disabled(self, mock_super_check_sql):
-        self.connection.features.supports_table_check_constraints = False
-
-        result = self.schema_editor._check_sql("test_check", "age >= 0")
-
-        self.assertIsNone(result)
-        mock_super_check_sql.assert_not_called()
-
-    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor._check_sql")
-    def test_check_sql_feature_enabled(self, mock_super_check_sql):
-        self.connection.features.supports_table_check_constraints = True
-        mock_super_check_sql.return_value = "CHECK (age >= 0)"
-
-        result = self.schema_editor._check_sql("test_check", "age >= 0")
-
-        mock_super_check_sql.assert_called_once_with("test_check", "age >= 0")
-        self.assertEqual(result, "CHECK (age >= 0)")
+    def test_sql_create_check_uses_not_valid(self):
+        # DSQL requires CHECK constraints on existing tables to be added
+        # NOT VALID, then validated asynchronously.
+        self.assertEqual(
+            self.schema_editor.sql_create_check,
+            "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s CHECK (%(check)s) NOT VALID",
+        )
+        self.assertEqual(
+            self.schema_editor.sql_validate_check,
+            "ALTER TABLE ASYNC %(table)s VALIDATE CONSTRAINT %(name)s",
+        )
 
     @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.add_constraint")
-    def test_add_constraint_check_disabled(self, mock_super_add_constraint):
+    def test_add_check_constraint_validates_async(self, mock_super_add_constraint):
+        # Adding a CHECK constraint must delegate to super() (which emits the
+        # NOT VALID ADD via sql_create_check) and then issue VALIDATE CONSTRAINT
+        # ASYNC as a follow-up.
         model = MagicMock()
+        model._meta.db_table = "my_table"
+        self.schema_editor.quote_name = lambda n: f'"{n}"'
+        self.schema_editor.execute = MagicMock()
         constraint = create_check_constraint(Q(age__gte=0), "age_check")
-        self.connection.features.supports_table_check_constraints = False
-
-        result = self.schema_editor.add_constraint(model, constraint)
-
-        self.assertIsNone(result)
-        mock_super_add_constraint.assert_not_called()
-
-    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.add_constraint")
-    def test_add_constraint_check_enabled(self, mock_super_add_constraint):
-        model = MagicMock()
-        constraint = create_check_constraint(Q(age__gte=0), "age_check")
-        self.connection.features.supports_table_check_constraints = True
 
         self.schema_editor.add_constraint(model, constraint)
 
         mock_super_add_constraint.assert_called_once_with(model, constraint)
+        self.schema_editor.execute.assert_called_once_with(
+            'ALTER TABLE ASYNC "my_table" VALIDATE CONSTRAINT "age_check"'
+        )
 
     @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.add_constraint")
-    def test_add_constraint_non_check(self, mock_super_add_constraint):
+    def test_add_non_check_constraint_no_validate(self, mock_super_add_constraint):
+        # Non-CHECK constraints (e.g. UNIQUE) must not trigger a follow-up
+        # VALIDATE CONSTRAINT statement.
         model = MagicMock()
+        self.schema_editor.execute = MagicMock()
         constraint = UniqueConstraint(fields=["name"], name="unique_name")
-        self.connection.features.supports_table_check_constraints = False
 
         self.schema_editor.add_constraint(model, constraint)
 
         mock_super_add_constraint.assert_called_once_with(model, constraint)
-
-    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.remove_constraint")
-    def test_remove_constraint_check_disabled(self, mock_super_remove_constraint):
-        model = MagicMock()
-        constraint = create_check_constraint(Q(age__gte=0), "age_check")
-        self.connection.features.supports_table_check_constraints = False
-
-        result = self.schema_editor.remove_constraint(model, constraint)
-
-        self.assertIsNone(result)
-        mock_super_remove_constraint.assert_not_called()
-
-    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.remove_constraint")
-    def test_remove_constraint_check_enabled(self, mock_super_remove_constraint):
-        model = MagicMock()
-        constraint = create_check_constraint(Q(age__gte=0), "age_check")
-        self.connection.features.supports_table_check_constraints = True
-
-        self.schema_editor.remove_constraint(model, constraint)
-
-        mock_super_remove_constraint.assert_called_once_with(model, constraint)
-
-    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.remove_constraint")
-    def test_remove_constraint_non_check(self, mock_super_remove_constraint):
-        model = MagicMock()
-        constraint = UniqueConstraint(fields=["name"], name="unique_name")
-        self.connection.features.supports_table_check_constraints = False
-
-        self.schema_editor.remove_constraint(model, constraint)
-
-        mock_super_remove_constraint.assert_called_once_with(model, constraint)
+        self.schema_editor.execute.assert_not_called()
 
 
 if __name__ == "__main__":

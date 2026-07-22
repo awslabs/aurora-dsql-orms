@@ -22,7 +22,10 @@ class DatabaseFeatures(features.DatabaseFeatures):
 
     supports_foreign_keys = False
 
-    supports_table_check_constraints = False
+    # Aurora DSQL supports CHECK constraints inline at CREATE TABLE, and can
+    # add them to existing tables via ADD CONSTRAINT ... NOT VALID followed by
+    # ALTER TABLE ASYNC ... VALIDATE CONSTRAINT (handled in the schema editor).
+    supports_table_check_constraints = True
 
     # Can it create foreign key constraints inline when adding columns?
     can_create_inline_fk = False

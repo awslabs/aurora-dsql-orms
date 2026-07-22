@@ -32,6 +32,15 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     # Remove constraint management from default updates.
     sql_update_with_default = "UPDATE %(table)s SET %(column)s = %(default)s WHERE %(column)s IS NULL"
 
+    # DSQL requires CHECK constraints added to an existing table to use
+    # NOT VALID; the rows are validated afterwards by a separate
+    # ALTER TABLE ASYNC ... VALIDATE CONSTRAINT statement (see add_constraint).
+    sql_create_check = "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s CHECK (%(check)s) NOT VALID"
+
+    # Validate a NOT VALID constraint asynchronously. DSQL runs this as an
+    # async DDL job and returns immediately; progress can be tracked via sys.jobs.
+    sql_validate_check = "ALTER TABLE ASYNC %(table)s VALIDATE CONSTRAINT %(name)s"
+
     def __enter__(self):
         super().__enter__()
         # As long as DatabaseFeatures.can_rollback_ddl = False, compose() may
@@ -52,24 +61,20 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
             return
         super().remove_index(model, index, concurrently)
 
-    def _check_sql(self, name, check):
-        # There is no feature check in the upstream implementation when creating
-        # a model, so we add our own check.
-        if not self.connection.features.supports_table_check_constraints:
-            return None
-        return super()._check_sql(name, check)
-
     def add_constraint(self, model, constraint):
-        # Older versions of Django don't reference supports_table_check_constraints, so we add this as a backup.
-        if isinstance(constraint, CheckConstraint) and not self.connection.features.supports_table_check_constraints:
-            return
+        # DSQL adds a CHECK constraint to an existing table with NOT VALID
+        # (see sql_create_check), then validates existing rows asynchronously.
+        # Emit the VALIDATE CONSTRAINT ASYNC statement as a follow-up so the
+        # constraint is enforced against the data already in the table.
         super().add_constraint(model, constraint)
-
-    def remove_constraint(self, model, constraint):
-        # Older versions of Django don't reference supports_table_check_constraints, so we add this as a backup.
-        if isinstance(constraint, CheckConstraint) and not self.connection.features.supports_table_check_constraints:
-            return
-        super().remove_constraint(model, constraint)
+        if isinstance(constraint, CheckConstraint):
+            self.execute(
+                self.sql_validate_check
+                % {
+                    "table": self.quote_name(model._meta.db_table),
+                    "name": self.quote_name(constraint.name),
+                }
+            )
 
     def _index_columns(self, table, columns, col_suffixes, opclasses):
         # Aurora DSQL doesn't support PostgreSQL opclasses.

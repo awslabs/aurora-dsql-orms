@@ -146,6 +146,7 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 ## Dialect Features
 
 - **Foreign Keys**: The dialect disables foreign key constraint generation. Referential integrity should be maintained at the application level.
+- **Check Constraints**: `CHECK` constraints are supported both inline at `CREATE TABLE` and when added to an existing table. Because DSQL requires a `CHECK` constraint added via `ALTER TABLE` to be marked `NOT VALID`, the dialect automatically appends `NOT VALID` to `ADD CONSTRAINT ... CHECK` statements. To validate the constraint against rows that already exist in the table, run `ALTER TABLE ASYNC <table> VALIDATE CONSTRAINT <name>` as a separate statement (for example, `op.execute(...)` in an Alembic migration). The constraint is enforced on all new writes immediately; validation of existing rows runs as an asynchronous DSQL DDL job. See [ALTER TABLE](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-supported-sql-subsets.html#alter-table-syntax-support) for details.
 - **Index Creation**: The dialect uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC` commands. See the [Asynchronous indexes in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-create-index-async.html) page for more information.
 
   The following parameters are used for customizing index creation
