@@ -7,7 +7,7 @@ from sqlalchemy import BIGINT, Integer, bindparam, select, sql
 from sqlalchemy.dialects.postgresql import pg_catalog
 from sqlalchemy.dialects.postgresql.base import PGDDLCompiler, PGDialect, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.types import OID, REGCLASS
-from sqlalchemy.schema import ForeignKeyConstraint, PrimaryKeyConstraint
+from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint
 from sqlalchemy.sql import expression, sqltypes
 from sqlalchemy.types import TEXT
 
@@ -205,6 +205,20 @@ class AuroraDSQLDDLCompiler(PGDDLCompiler):
         elif nulls_not_distinct is False:
             text += " NULLS DISTINCT"
 
+        return text
+
+    def visit_add_constraint(self, create, **kw):
+        """
+        DSQL requires CHECK constraints added to an existing table via
+        ALTER TABLE to be marked NOT VALID; a plain ADD CONSTRAINT ... CHECK
+        is rejected. Existing rows are validated separately and asynchronously
+        with `ALTER TABLE ASYNC <table> VALIDATE CONSTRAINT <name>` (run it as a
+        follow-up statement, e.g. op.execute(...) in an Alembic migration).
+        Non-CHECK constraints fall back to the standard behavior.
+        """
+        text = super().visit_add_constraint(create, **kw)
+        if isinstance(create.element, CheckConstraint):
+            text += " NOT VALID"
         return text
 
 

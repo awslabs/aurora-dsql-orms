@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from sqlalchemy import (
+    CheckConstraint,
     Column,
     Index,
     Integer,
     MetaData,
     String,
     Table,
+    UniqueConstraint,
     schema,
 )
 from sqlalchemy.testing import fixtures
@@ -115,3 +117,27 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             "CREATE INDEX ASYNC foo ON test (x) INCLUDE (y)",
             dialect=self.__dialect__,
         )
+
+    def test_add_check_constraint_is_not_valid(self):
+        # DSQL rejects a plain ALTER TABLE ADD CONSTRAINT ... CHECK; it must be
+        # added NOT VALID, then validated asynchronously as a separate step.
+        metadata = MetaData()
+        tbl = Table("test_tbl", metadata, Column("qty", Integer))
+        ck = CheckConstraint("qty >= 0", name="ck_qty", table=tbl)
+        self.assert_compile(
+            schema.AddConstraint(ck),
+            "ALTER TABLE test_tbl ADD CONSTRAINT ck_qty CHECK (qty >= 0) NOT VALID",
+            dialect=self.__dialect__,
+        )
+
+    def test_add_non_check_constraint_gets_no_not_valid(self):
+        # Guard: the NOT VALID suffix is CHECK-specific. DSQL does not support
+        # adding UNIQUE constraints via ALTER TABLE at all (they are created as
+        # CREATE UNIQUE INDEX ASYNC), so this only asserts our visit_add_constraint
+        # override leaves non-CHECK constraints untouched — it must not append
+        # NOT VALID to them.
+        metadata = MetaData()
+        tbl = Table("test_tbl", metadata, Column("data", String))
+        uq = UniqueConstraint(tbl.c.data, name="uq_data")
+        compiled = str(schema.AddConstraint(uq).compile(dialect=self.__dialect__))
+        assert "NOT VALID" not in compiled
