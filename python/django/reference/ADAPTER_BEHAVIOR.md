@@ -62,14 +62,14 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 
 **DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
-## Check constraint changes after table creation are skipped during migrations
+## Check constraints on existing tables are validated asynchronously
 
-**Behavior:** The Aurora DSQL adapter for Django automatically skips check constraints that are added to or removed from existing tables during migrations.
+**Behavior:** The Aurora DSQL adapter for Django supports `CHECK` constraints both inline at `CREATE TABLE` and added to existing tables during migrations. Because DSQL requires `CHECK` constraints on an existing table to be added with `NOT VALID`, the adapter emits two statements when adding a constraint: `ALTER TABLE ... ADD CONSTRAINT ... CHECK (...) NOT VALID`, followed by `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT ...`.
 
 **Impact:**
-- Check constraint modifications on existing tables are not applied at the database level, meaning constraints may remain unenforced or continue being enforced based on their previous state
-- Applications must rely on Django model validation and application logic for data integrity when check constraints are not defined at table creation
-- Existing migrations from other databases will continue to work without modification
+- The constraint is enforced on all new inserts and updates as soon as the migration completes.
+- Validation of rows that already exist in the table runs as an asynchronous DSQL DDL job (returns a `job_id`); the migration does not block until it finishes.
+- If existing rows violate the constraint, the validation job fails and the constraint remains in the `NOT VALID` state (still enforced for new writes, but not marked valid for existing data). Track the outcome via the `sys.jobs` system view and fix offending rows before re-running validation. Migrations that add a constraint to a table with known-clean data are unaffected.
 
 **DSQL feature:** [ALTER TABLE syntax](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-supported-sql-subsets.html#alter-table-syntax-support)
 
