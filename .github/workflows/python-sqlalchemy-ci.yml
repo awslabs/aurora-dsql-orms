@@ -44,8 +44,6 @@ jobs:
         driver: ["psycopg2", "psycopg"]
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
-    env:
-      SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
 
     steps:
       - uses: actions/checkout@v7
@@ -60,14 +58,20 @@ jobs:
         with:
           python-version: ${{ matrix.version }}
 
+      # NOTE: SSL_CERT_FILE is scoped to the steps that need the Amazon cert.
+      # Setting it at the job level breaks `uv sync` (it points at a file that
+      # doesn't exist yet, so uv trusts no certs and can't fetch from github).
       - name: Install dependencies
         run: uv sync
 
       - name: Download Amazon Root Cert for SSL
+        env:
+          SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
         run: wget -O "$SSL_CERT_FILE" https://www.amazontrust.com/repository/AmazonRootCA1.pem
 
       - name: Run integration tests
         env:
+          SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
           CLUSTER_USER: admin
           DRIVER: ${{ matrix.driver }}
@@ -75,6 +79,7 @@ jobs:
 
       - name: Run Pet Clinic example tests
         env:
+          SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
           CLUSTER_USER: admin
           DRIVER: ${{ matrix.driver }}
