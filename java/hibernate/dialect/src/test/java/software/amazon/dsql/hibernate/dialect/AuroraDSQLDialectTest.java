@@ -87,7 +87,7 @@ public class AuroraDSQLDialectTest {
 
   @Test
   public void testColumnCheck() {
-    assertFalse(dialect.supportsColumnCheck());
+    assertTrue(dialect.supportsColumnCheck());
   }
 
   @Test

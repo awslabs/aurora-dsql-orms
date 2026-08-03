@@ -311,7 +311,7 @@ public class AuroraDSQLDialect extends Dialect {
 
   @Override
   public boolean supportsColumnCheck() {
-    return false;
+    return true;
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
