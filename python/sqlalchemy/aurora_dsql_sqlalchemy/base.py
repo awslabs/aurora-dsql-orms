@@ -7,7 +7,11 @@ from sqlalchemy import BIGINT, Integer, bindparam, select, sql
 from sqlalchemy.dialects.postgresql import pg_catalog
 from sqlalchemy.dialects.postgresql.base import PGDDLCompiler, PGDialect, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.types import OID, REGCLASS
-from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint
+from sqlalchemy.schema import (
+    CheckConstraint,
+    ForeignKeyConstraint,
+    PrimaryKeyConstraint,
+)
 from sqlalchemy.sql import expression, sqltypes
 from sqlalchemy.types import TEXT
 

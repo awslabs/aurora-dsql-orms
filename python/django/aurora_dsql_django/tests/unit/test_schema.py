@@ -117,9 +117,7 @@ class TestDatabaseSchemaEditor(unittest.TestCase):
         self.schema_editor.add_constraint(model, constraint)
 
         mock_super_add_constraint.assert_called_once_with(model, constraint)
-        self.schema_editor.execute.assert_called_once_with(
-            'ALTER TABLE ASYNC "my_table" VALIDATE CONSTRAINT "age_check"'
-        )
+        self.schema_editor.execute.assert_called_once_with('ALTER TABLE ASYNC "my_table" VALIDATE CONSTRAINT "age_check"')
 
     @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.add_constraint")
     def test_add_non_check_constraint_no_validate(self, mock_super_add_constraint):
