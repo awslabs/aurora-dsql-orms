@@ -311,7 +311,6 @@ public class AuroraDSQLDialect extends Dialect {
 
   @Override
   public boolean supportsColumnCheck() {
-    // DSQL supports inline column CHECK constraints at CREATE TABLE.
     return true;
   }
 
