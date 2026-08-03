@@ -63,6 +63,28 @@ class TestWrapper(unittest.TestCase):
         matching_statements = [sql for sql in all_sql if any(pattern in sql for pattern in sql_patterns)]
         self.assertListEqual([], matching_statements, message)
 
+    def _capture_sql(self, operation_func):
+        """Helper method to capture the SQL statements an operation generates"""
+        executed_sql = []
+
+        def mock_execute(sql, params=None):
+            executed_sql.append((sql, params))
+
+        # Capture SQL statements without running anything against a real DB.
+        execute_patch = patch.object(self.schema_editor, "execute", side_effect=mock_execute)
+
+        # Work around issue caused by missing encoding configuration in test environment.
+        quote_patch = patch.object(self.schema_editor, "quote_value", side_effect=simple_quote_value)
+
+        with execute_patch, quote_patch:
+            with self.schema_editor:
+                operation_func()
+
+        all_sql = [str(sql) for sql, _ in executed_sql]
+        if hasattr(self.schema_editor, "deferred_sql"):
+            all_sql += [str(sql) for sql in self.schema_editor.deferred_sql]
+        return all_sql
+
     def test_foreign_key_operations_ignored(self):
         """Ensure foreign key constraint operations are ignored for model creation when the feature is disabled"""
 
@@ -81,8 +103,8 @@ class TestWrapper(unittest.TestCase):
 
         self._assert_sql_not_generated(operation, ["FOREIGN KEY", "REFERENCES"], "Should not generate foreign key SQL")
 
-    def test_check_constraint_create_model_ignored(self):
-        """Ensure check constraint operations are ignored for model creation when the feature is disabled"""
+    def test_check_constraint_create_model_inline(self):
+        """CHECK constraints are emitted inline in the CREATE TABLE statement"""
 
         class CheckConstraintModel(models.Model):
             age = models.IntegerField()
@@ -94,10 +116,16 @@ class TestWrapper(unittest.TestCase):
         def operation():
             self.schema_editor.create_model(CheckConstraintModel)
 
-        self._assert_sql_not_generated(operation, ["CHECK"], "Should not generate check constraint SQL")
+        all_sql = self._capture_sql(operation)
+        create_table = [sql for sql in all_sql if sql.startswith("CREATE TABLE")]
+        self.assertTrue(create_table, "Should generate a CREATE TABLE statement")
+        self.assertTrue(
+            any('CONSTRAINT "age_gte_0" CHECK' in sql for sql in create_table),
+            f"CHECK constraint should be inline in CREATE TABLE: {create_table}",
+        )
 
-    def test_check_constraint_add_constraint_ignored(self):
-        """Ensure add_constraint operations ignore check constraints when the feature is disabled"""
+    def test_check_constraint_add_constraint_not_valid_then_validate(self):
+        """add_constraint adds the CHECK as NOT VALID then validates it asynchronously"""
 
         class AddCheckConstraintModel(models.Model):
             age = models.IntegerField()
@@ -110,10 +138,18 @@ class TestWrapper(unittest.TestCase):
         def operation():
             self.schema_editor.add_constraint(AddCheckConstraintModel, constraint)
 
-        self._assert_sql_not_generated(operation, ["CHECK"], "Should not execute check constraint SQL")
+        all_sql = self._capture_sql(operation)
+        self.assertTrue(
+            any("ADD CONSTRAINT" in sql and "CHECK" in sql and "NOT VALID" in sql for sql in all_sql),
+            f"Should add the CHECK constraint as NOT VALID: {all_sql}",
+        )
+        self.assertTrue(
+            any("ALTER TABLE ASYNC" in sql and "VALIDATE CONSTRAINT" in sql for sql in all_sql),
+            f"Should validate the constraint asynchronously: {all_sql}",
+        )
 
-    def test_check_constraint_remove_constraint_ignored(self):
-        """Ensure remove_constraint operations ignore check constraints when the feature is disabled"""
+    def test_check_constraint_remove_constraint_drops(self):
+        """remove_constraint drops the CHECK constraint"""
 
         class RemoveCheckConstraintModel(models.Model):
             age = models.IntegerField()
@@ -126,7 +162,11 @@ class TestWrapper(unittest.TestCase):
         def operation():
             self.schema_editor.remove_constraint(RemoveCheckConstraintModel, constraint)
 
-        self._assert_sql_not_generated(operation, ["CONSTRAINT"], "Should not execute check constraint removal SQL")
+        all_sql = self._capture_sql(operation)
+        self.assertTrue(
+            any("DROP CONSTRAINT" in sql for sql in all_sql),
+            f"Should drop the CHECK constraint: {all_sql}",
+        )
 
     def test_add_index_expression_ignored(self):
         """Ensure add_index operations ignore expression indexes when the feature is disabled"""
