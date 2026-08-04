@@ -19,7 +19,12 @@ jobs:
       - uses: lewagon/wait-on-check-action@v1.9.0
         with:
           ref: ${{ github.sha }}
-          running-workflow-name: "Wait for CI to pass"
+          # Gate only on this package's own CI checks. The repo is a monorepo, so
+          # the release commit also carries unrelated checks (other ORMs, other
+          # release runs' changelog jobs, Dependabot) that must not block — or
+          # fail — this publish. The Django integration-test matrix depends
+          # transitively on build + cluster creation, so it's sufficient.
+          check-regexp: "^Python 3\\.\\d+ - Django .+$"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
