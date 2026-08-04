@@ -65,6 +65,10 @@ Full Changelog: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlal
 <a id="python/sqlalchemy/v1.1.0"></a>
 # [Aurora DSQL dialect for SQLAlchemy v1.1.0 (python/sqlalchemy/v1.1.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.1.0) - 2026-01-29
 
+> **Note:** This release was originally published on Jan 19, 2026 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-sqlalchemy](https://github.com/awslabs/aurora-dsql-sqlalchemy/releases/tag/v1.1.0).
+
+---
+
 This release integrates the [Aurora DSQL Connector for Python](https://github.com/awslabs/aurora-dsql-python-connector), which enables applications to authenticate with Amazon Aurora DSQL using IAM credentials.
 
 A new `create_dsql_engine` method has been introduced, which creates a SQLAlchemy engine that automatically creates a fresh authentication token for each connection. It can use provided IAM credentials, and can be configured using the same parameters as the [Aurora DSQL Connector for Python](https://github.com/awslabs/aurora-dsql-python-connector). See the [updated example code](https://github.com/awslabs/aurora-dsql-sqlalchemy/blob/0df3e45f6d70f103e89e61ac1c2ce93770f9fb13/examples/pet-clinic-app/src/example.py) for more details.
@@ -99,6 +103,10 @@ A new `create_dsql_engine` method has been introduced, which creates a SQLAlchem
 <a id="python/sqlalchemy/v1.0.2"></a>
 # [Aurora DSQL dialect for SQLAlchemy v1.0.2 (python/sqlalchemy/v1.0.2)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.0.2) - 2026-01-29
 
+> **Note:** This release was originally published on Jul 22, 2025 by [@vic-tsang](https://github.com/vic-tsang) in [awslabs/aurora-dsql-sqlalchemy](https://github.com/awslabs/aurora-dsql-sqlalchemy/releases/tag/v1.0.2).
+
+---
+
 - Improved README
 
 
@@ -107,6 +115,10 @@ A new `create_dsql_engine` method has been introduced, which creates a SQLAlchem
 
 <a id="python/sqlalchemy/v1.0.1"></a>
 # [Aurora DSQL dialect for SQLAlchemy v1.0.1 (python/sqlalchemy/v1.0.1)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.0.1) - 2026-01-29
+
+> **Note:** This release was originally published on Jul 04, 2025 by [@vic-tsang](https://github.com/vic-tsang) in [awslabs/aurora-dsql-sqlalchemy](https://github.com/awslabs/aurora-dsql-sqlalchemy/releases/tag/v1.0.1).
+
+---
 
 * Updated Pypi description
 * Updated python version
@@ -118,6 +130,10 @@ A new `create_dsql_engine` method has been introduced, which creates a SQLAlchem
 
 <a id="python/sqlalchemy/v1.0.0"></a>
 # [Aurora DSQL dialect for SQLAlchemy v1.0.0 (python/sqlalchemy/v1.0.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.0.0) - 2026-01-29
+
+> **Note:** This release was originally published on Jul 04, 2025 by [@vic-tsang](https://github.com/vic-tsang) in [awslabs/aurora-dsql-sqlalchemy](https://github.com/awslabs/aurora-dsql-sqlalchemy/releases/tag/v1.0.0).
+
+---
 
 Initial release of Aurora DSQL Dialect for SQLAlchemy
 
