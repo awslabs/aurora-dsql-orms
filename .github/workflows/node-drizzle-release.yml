@@ -1,0 +1,73 @@
+name: Release Node Drizzle
+
+permissions: {}
+
+on:
+  push:
+    tags:
+      - "node/drizzle/v*"
+
+defaults:
+  run:
+    working-directory: node/drizzle
+
+jobs:
+  wait-for-ci:
+    name: Wait for CI to pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lewagon/wait-on-check-action@v1.9.0
+        with:
+          ref: ${{ github.sha }}
+          running-workflow-name: "Wait for CI to pass"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+  publish-to-npm:
+    name: Publish to npm
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+    permissions:
+      id-token: write # required for npm trusted publishing (OIDC)
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+
+      # Node 22's bundled npm (10.x) does not perform the OIDC token
+      # exchange required for Trusted Publishing — only npm >= 11.5.1 does.
+      - name: Upgrade npm to support Trusted Publishing
+        run: npm install -g npm@11.5.1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Publish to npm
+        # Unset NODE_AUTH_TOKEN: actions/setup-node sets a placeholder token
+        # whenever `registry-url` is configured, and npm prefers that token
+        # over OIDC trusted publishing. Clearing it forces the OIDC path.
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ""
+
+  update-changelog:
+    needs: publish-to-npm
+    uses: ./.github/workflows/update-changelog.yml
+    with:
+      tag: ${{ github.ref_name }}
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit

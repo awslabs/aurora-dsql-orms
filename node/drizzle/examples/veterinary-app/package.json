@@ -1,0 +1,33 @@
+{
+  "name": "veterinary-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Veterinary clinic example using Drizzle ORM with Aurora DSQL",
+  "main": "dist/index.js",
+  "scripts": {
+    "db:generate": "aurora-dsql-drizzle generate --out ./drizzle -- --config drizzle.config.ts",
+    "db:migrate": "tsx src/migrate.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "tsc",
+    "presample": "npm run build",
+    "sample": "tsx src/index.ts",
+    "pretest": "npm run build",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.2.0",
+    "@types/pg": "^8.15.0",
+    "drizzle-kit": "^0.31.0",
+    "prettier": "4.0.0-alpha.13",
+    "ts-jest": "^29.4.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@aws/aurora-dsql-drizzle": "file:../..",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.16.0"
+  }
+}
