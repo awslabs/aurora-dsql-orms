@@ -1,0 +1,133 @@
+name: Node Drizzle CI
+
+permissions: {}
+
+on:
+  workflow_call: {}
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: node/drizzle
+
+jobs:
+  build:
+    name: Build & unit test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build package
+        run: npm run build
+
+      # Unit tests are fully mocked (no cluster); they only need the
+      # dsql-lint binary, which installs with the package dependencies.
+      - name: Run unit tests
+        run: npm test
+
+  create-cluster:
+    needs: build
+    uses: ./.github/workflows/dsql-cluster-create.yml
+    with:
+      workflow_name: node-drizzle
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
+  test-example:
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+    env:
+      SSL_CERT_FILE: /tmp/AmazonRootCA1.pem
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ${{ needs.create-cluster.outputs.region }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22.x"
+
+      - name: Download Amazon Root Cert for SSL
+        run: |
+          mkdir -p ~/.postgresql
+          wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O ~/.postgresql/root.crt
+
+      - name: Install and build adapter
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install and build example
+        working-directory: node/drizzle/examples/veterinary-app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run migrations
+        working-directory: node/drizzle/examples/veterinary-app
+        env:
+          CLUSTER_USER: "admin"
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: npm run db:migrate
+
+      - name: Run example integration tests
+        working-directory: node/drizzle/examples/veterinary-app
+        env:
+          CLUSTER_USER: "admin"
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: npm run test -- --testPathPatterns=dsql-client
+
+      # Live migrator coverage: fresh apply, idempotent re-run, status, resume
+      # after partial failure, and breakpoint-free multi-DDL rejection. Runs in
+      # an isolated `drizzle_mig_test` schema it also tears down.
+      - name: Run migrator integration tests
+        working-directory: node/drizzle/examples/veterinary-app
+        env:
+          CLUSTER_USER: "admin"
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: npm run test -- --testPathPatterns=migrator
+
+      - name: Run sample
+        working-directory: node/drizzle/examples/veterinary-app
+        env:
+          CLUSTER_USER: "admin"
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: npm run sample
+
+  delete-cluster:
+    if: always() && needs.create-cluster.result == 'success'
+    needs: [create-cluster, test-example]
+    uses: ./.github/workflows/dsql-cluster-delete.yml
+    with:
+      cluster-id: ${{ needs.create-cluster.outputs.cluster-id }}
+      region: ${{ needs.create-cluster.outputs.region }}
+    secrets:
+      IAM_ROLE: ${{ secrets.IAM_ROLE }}
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials

@@ -156,3 +156,31 @@ jobs:
           orm: Prisma
           framework: Prisma
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  drizzle:
+    name: Drizzle ORM (latest)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: node/drizzle
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      # drizzle-orm is a peer dependency, so upgrade it alongside drizzle-kit:
+      # the CLI generates the SQL this adapter transforms.
+      - name: Upgrade to latest Drizzle
+        run: npm install drizzle-orm@latest drizzle-kit@latest
+      - name: Build + test vs latest Drizzle
+        run: npm run build && npm test
+      - name: Report break
+        if: failure() && inputs.dry-run != true
+        uses: ./.github/actions/report-canary-failure
+        with:
+          orm: Drizzle
+          framework: Drizzle ORM
+          github-token: ${{ secrets.GITHUB_TOKEN }}

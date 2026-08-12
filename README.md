@@ -10,6 +10,7 @@ This monorepo contains ORM adapters for [Amazon Aurora DSQL](https://aws.amazon.
 
 | Package | Description | npm | License(s) |
 |---------|-------------|-----|------------|
+| [@aws/aurora-dsql-drizzle](./node/drizzle/) | Drizzle ORM adapter for Aurora DSQL | [![npm](https://img.shields.io/npm/v/@aws/aurora-dsql-drizzle)](https://www.npmjs.com/package/@aws/aurora-dsql-drizzle) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
 | [@aws/aurora-dsql-prisma-tools](./node/prisma/) | CLI tools for using Prisma with Aurora DSQL | [![npm](https://img.shields.io/npm/v/@aws/aurora-dsql-prisma-tools)](https://www.npmjs.com/package/@aws/aurora-dsql-prisma-tools) | ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) |
 
 ### Python
@@ -37,6 +38,9 @@ This monorepo contains ORM adapters for [Amazon Aurora DSQL](https://aws.amazon.
 Each adapter is published as an independent package. Install the one you need:
 
 ```bash
+# Drizzle ORM
+npm install @aws/aurora-dsql-drizzle
+
 # Django
 pip install aurora-dsql-django
 
@@ -56,6 +60,7 @@ For Java adapters, see the individual adapter documentation for Maven/Gradle ins
 
 See the README in each adapter's directory for detailed usage instructions:
 
+- [Drizzle ORM adapter documentation](./node/drizzle/README.md)
 - [Django adapter documentation](./python/django/README.md)
 - [Hibernate dialect documentation](./java/hibernate/README.md)
 - [SQLAlchemy adapter documentation](./python/sqlalchemy/README.md)
