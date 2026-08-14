@@ -192,13 +192,13 @@ def demo_pet_clinic_operations(engine):
     carlos_salazar = session.scalars(vet_query).one()
     print("Successfully fetched vet data: Carlos Salazar")
 
-    # Test: check read value
+    # Test: check read value. The many-to-many specialties collection has no
+    # defined order, so compare as sets rather than by index.
     assert akua_mansa.name == "Akua Mansa"
-    assert akua_mansa.specialties[0].id == "Dogs"
+    assert {s.id for s in akua_mansa.specialties} == {"Dogs"}
 
     assert carlos_salazar.name == "Carlos Salazar"
-    assert carlos_salazar.specialties[0].id == "Cats"
-    assert carlos_salazar.specialties[1].id == "Dogs"
+    assert {s.id for s in carlos_salazar.specialties} == {"Cats", "Dogs"}
 
     print("Finished demo pet clinic operations")
 
