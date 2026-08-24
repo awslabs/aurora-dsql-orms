@@ -74,7 +74,6 @@ For more info follow the [Aurora DSQL with Django example](examples/pet-clinic-a
 
 ## Features and Limitations
 
-- **[Migration Guide](reference/MIGRATIONS.md)** - How to plan and run Django migrations on Aurora DSQL
 - **[Adapter Behavior](reference/ADAPTER_BEHAVIOR.md)** - How the Aurora DSQL adapter for Django modifies Django behavior for Aurora DSQL compatibility
 - **[Known Issues](reference/KNOWN_ISSUES.md)** - Known limitations and workarounds
 

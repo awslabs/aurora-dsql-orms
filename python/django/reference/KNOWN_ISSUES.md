@@ -46,6 +46,13 @@ LINE 1: ...le.com', "name" = 'example.com' WHERE "django_site"."id" = 1
 
 ## Migration Issues
 
+Use Django migrations normally. To diagnose compatibility errors, inspect the
+generated SQL with:
+
+```bash
+python manage.py sqlmigrate <app> <migration> | uvx dsql-lint -
+```
+
 ### ALTER COLUMN TYPE operations
 
 **Issue:** Django migrations that change a field's database type fail with:
@@ -97,6 +104,3 @@ affected table with its final schema:
    ```bash
    python manage.py migrate <app_name> <migration_number> --fake
    ```
-
-See [Django migrations on Aurora DSQL](MIGRATIONS.md) for migration planning,
-transaction, and data migration guidance.
