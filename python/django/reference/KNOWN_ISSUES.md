@@ -46,32 +46,33 @@ LINE 1: ...le.com', "name" = 'example.com' WHERE "django_site"."id" = 1
 
 ## Migration Issues
 
-### ALTER COLUMN operations
+Use Django migrations normally. To diagnose compatibility errors, inspect the
+generated SQL with:
 
-**Issue:** Default Django migrations that use `ALTER TABLE ALTER COLUMN` statements fail with:
+```bash
+python manage.py sqlmigrate <app> <migration> | uvx dsql-lint -
+```
+
+### ALTER COLUMN TYPE operations
+
+**Issue:** Django migrations that change a field's database type fail with:
 
 ```
 psycopg.errors.FeatureNotSupported:
-    unsupported ALTER TABLE ALTER COLUMN ... statement
+    unsupported ALTER TABLE ALTER COLUMN ... TYPE statement
 ```
 
-See [Aurora DSQL ALTER TABLE syntax support](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-supported-sql-subsets.html#alter-table-syntax-support)
+See [Aurora DSQL ALTER TABLE syntax support](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/alter-table-syntax-support.html)
 for details on supported ALTER TABLE operations.
 
-**Affected Migrations:**
+**Affected Django contrib migrations:**
 
-- `contenttypes.0002_remove_content_type_name`
-    - Table: `django_content_type`
-    - Operations: AlterField on `name` column (set null=True), RemoveField on `name` column
 - `auth.0002_alter_permission_name_max_length`
     - Table: `auth_permission`
     - Operation: AlterField on `name` column (max_length 50→255)
 - `auth.0003_alter_user_email_max_length`
     - Table: `auth_user`
     - Operation: AlterField on `email` column (max_length 75→254)
-- `auth.0005_alter_user_last_login_null`
-    - Table: `auth_user`
-    - Operations: AlterField on `last_login` column (added null=True, blank=True)
 - `auth.0008_alter_user_username_max_length`
     - Table: `auth_user`
     - Operations: AlterField on `username` column (max_length 30→150, updated validators and help text)
@@ -87,15 +88,19 @@ for details on supported ALTER TABLE operations.
 
 **Workaround:**
 
-⚠️ **WARNING: Data loss may occur. Exercise extreme caution when performing these operations.**
+Changing a column's physical type still requires a staged migration or table
+recreation. Keep Django's model state synchronized with manual SQL by using
+`SeparateDatabaseAndState` or `RunSQL(..., state_operations=[...])`.
 
-Manually recreate affected tables with the correct schema:
+For upstream contrib migrations that can't be changed, manually recreate the
+affected table with its final schema:
 
 1. Create a new table with the final schema as described in the migration file (migration files can be found in
    the [Django GitHub repository](https://github.com/django/django/tree/main/django/contrib))
 2. Copy data from the existing table to the new table
 3. Drop the old table and rename the new table
-4. Mark the migration as complete using the `--fake` flag:
+4. Verify the final schema and row counts
+5. Mark only the matching migration as complete using the `--fake` flag:
    ```bash
    python manage.py migrate <app_name> <migration_number> --fake
    ```
