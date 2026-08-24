@@ -168,6 +168,22 @@ class TestWrapper(unittest.TestCase):
             f"Should drop the CHECK constraint: {all_sql}",
         )
 
+    def test_remove_field_uses_native_drop_column(self):
+        class RemoveFieldModel(models.Model):
+            obsolete = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = "test_app"
+                db_table = "remove_field_test"
+
+        def operation():
+            self.schema_editor.remove_field(RemoveFieldModel, RemoveFieldModel._meta.get_field("obsolete"))
+
+        self.assertEqual(
+            self._capture_sql(operation),
+            ['ALTER TABLE "remove_field_test" DROP COLUMN "obsolete" CASCADE'],
+        )
+
     def test_add_index_expression_ignored(self):
         """Ensure add_index operations ignore expression indexes when the feature is disabled"""
 
