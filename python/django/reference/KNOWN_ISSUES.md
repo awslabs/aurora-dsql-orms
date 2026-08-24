@@ -58,12 +58,6 @@ psycopg.errors.FeatureNotSupported:
 See [Aurora DSQL ALTER TABLE syntax support](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/alter-table-syntax-support.html)
 for details on supported ALTER TABLE operations.
 
-Aurora DSQL now supports `DROP COLUMN`, `DROP NOT NULL`, and column default
-changes. Django's inherited PostgreSQL schema editor handles these operations
-without an adapter workaround. In particular,
-`contenttypes.0002_remove_content_type_name` and
-`auth.0005_alter_user_last_login_null` no longer require table recreation.
-
 **Affected Django contrib migrations:**
 
 - `auth.0002_alter_permission_name_max_length`
