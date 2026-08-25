@@ -1,0 +1,73 @@
+{
+  "name": "@aws/aurora-dsql-drizzle",
+  "version": "0.1.0",
+  "description": "Drizzle ORM adapter for Amazon Aurora DSQL",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "aurora-dsql-drizzle": "dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true,
+    "access": "public"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "tsc",
+    "pretest": "npm run build",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "dsql-generate": "tsx src/cli/index.ts generate",
+    "dsql-transform": "tsx src/cli/index.ts transform",
+    "dsql-lint": "tsx src/cli/index.ts lint"
+  },
+  "keywords": [
+    "drizzle",
+    "drizzle-orm",
+    "aurora",
+    "dsql",
+    "aws",
+    "database",
+    "postgresql"
+  ],
+  "author": "Amazon Web Services",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aurora-dsql-orms.git",
+    "directory": "node/drizzle"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.45",
+    "pg": ">=8"
+  },
+  "dependencies": {
+    "@aws/aurora-dsql-node-postgres-connector": ">=0.1.9 <1",
+    "@aws/dsql-lint": ">=0.2.14 <1"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.2.0",
+    "@types/pg": "^8.15.0",
+    "drizzle-kit": "^0.31.0",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.16.0",
+    "prettier": "4.0.0-alpha.13",
+    "ts-jest": "^29.4.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

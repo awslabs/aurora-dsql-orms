@@ -29,5 +29,7 @@ jobs:
 
       - run: npm ci --prefix node/prisma
 
+      - run: npm ci --prefix node/drizzle
+
       - name: Run pre-commit
         run: uvx pre-commit run --all-files

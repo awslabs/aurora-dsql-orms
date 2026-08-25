@@ -93,6 +93,16 @@ repos:
         files: ^node/prisma/
         types_or: [ts, javascript, json]
 
+  # Drizzle formatting (uses prettier from node/drizzle package.json)
+  - repo: local
+    hooks:
+      - id: prettier-drizzle
+        name: prettier (drizzle)
+        entry: npx --prefix node/drizzle --no prettier --write
+        language: system
+        files: ^node/drizzle/
+        types_or: [ts, javascript, json]
+
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.7

@@ -96,6 +96,15 @@ updates:
     groups:
       node-prisma:
         patterns: ["*"]
+  - package-ecosystem: "npm"
+    directories:
+      - "/node/drizzle"
+      - "/node/drizzle/examples/veterinary-app"
+    schedule:
+      interval: "weekly"
+    groups:
+      node-drizzle:
+        patterns: ["*"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

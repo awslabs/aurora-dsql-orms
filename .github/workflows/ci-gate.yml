@@ -16,6 +16,7 @@ jobs:
       dotnet-ef-core: ${{ steps.detect.outputs.dotnet-ef-core }}
       java-hibernate: ${{ steps.detect.outputs.java-hibernate }}
       node-prisma: ${{ steps.detect.outputs.node-prisma }}
+      node-drizzle: ${{ steps.detect.outputs.node-drizzle }}
       python-django: ${{ steps.detect.outputs.python-django }}
       python-sqlalchemy: ${{ steps.detect.outputs.python-sqlalchemy }}
       python-tortoise: ${{ steps.detect.outputs.python-tortoise }}
@@ -28,6 +29,7 @@ jobs:
               'dotnet-ef-core': ['dotnet/ef-core/', '.github/workflows/dotnet-ef-core-ci.yml'],
               'java-hibernate': ['java/hibernate/', '.github/workflows/java-hibernate-ci.yml'],
               'node-prisma': ['node/prisma/', '.github/workflows/node-prisma-ci.yml'],
+              'node-drizzle': ['node/drizzle/', '.github/workflows/node-drizzle-ci.yml'],
               'python-django': ['python/django/', '.github/workflows/python-django-ci.yml'],
               'python-sqlalchemy': ['python/sqlalchemy/', '.github/workflows/python-sqlalchemy-ci.yml'],
               'python-tortoise': ['python/tortoise-orm/', '.github/workflows/python-tortoise-ci.yml'],
@@ -100,6 +102,14 @@ jobs:
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
 
+  node-drizzle:
+    needs: changes
+    if: needs.changes.outputs.node-drizzle == 'true'
+    uses: ./.github/workflows/node-drizzle-ci.yml
+    secrets: inherit
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
+
   python-django:
     needs: changes
     if: needs.changes.outputs.python-django == 'true'
@@ -135,6 +145,7 @@ jobs:
       - python-sqlalchemy
       - python-tortoise
       - node-prisma
+      - node-drizzle
     if: always()
     steps:
       - uses: actions/github-script@v9
