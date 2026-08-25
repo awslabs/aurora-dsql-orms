@@ -19,7 +19,13 @@ jobs:
       - uses: lewagon/wait-on-check-action@v1.9.1
         with:
           ref: ${{ github.sha }}
-          running-workflow-name: "Wait for CI to pass"
+          # Gate only on this package's own CI checks. The repo is a monorepo, so
+          # the release commit also carries unrelated checks (other ORMs,
+          # Dependabot, other releases' changelog jobs) that must not block — or
+          # fail — this publish. Both names are unique to node-drizzle-ci.yml;
+          # the example job needs cluster creation, which needs the build
+          # matrix, so the pair covers the chain.
+          check-regexp: "^(Build & unit test \\(Node \\d+\\)|Example Integration Tests \\(Drizzle\\))$"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
