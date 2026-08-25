@@ -61,12 +61,14 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        # Unset NODE_AUTH_TOKEN: actions/setup-node sets a placeholder token
-        # whenever `registry-url` is configured, and npm prefers that token
-        # over OIDC trusted publishing. Clearing it forces the OIDC path.
+        # actions/setup-node writes a placeholder token whenever `registry-url`
+        # is configured, and npm prefers a token over OIDC trusted publishing —
+        # so this stays empty to force the OIDC path. Trusted publishing cannot
+        # create a package name that does not exist on the registry yet, so set
+        # NPM_BOOTSTRAP_TOKEN for a package's first publish, then delete it.
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ""
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
 
   update-changelog:
     needs: publish-to-npm
