@@ -292,4 +292,9 @@ This guide provides comprehensive information on:
 - Association mappings
 - Collection mappings
 
-When working with DSQL, you can follow these Hibernate guidelines for setting up your entity relationships. The main difference will be in the use of UUID for primary and foreign keys(as DSQL does not support foreign keys), as discussed in the [Using UUID as Primary Key](#using-uuid-as-primary-key) section.
+When working with DSQL, use UUIDs for primary and foreign-key columns as
+discussed in [Using UUID as Primary Key](#using-uuid-as-primary-key). The Aurora
+DSQL schema at `src/main/resources/db/dsql/schema.sql` and `petclinic.sql`
+create database-enforced foreign keys inline. Hibernate-generated schema adds
+foreign keys as `NOT VALID`; validate those constraints separately and wait for
+the returned DSQL job before serving traffic.

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { DsqlPrismaClient } from "../src/dsql-client";
 
 jest.setTimeout(60000);
@@ -54,7 +55,7 @@ describe("DSQL Prisma client", () => {
     expect(deleted).toBeNull();
   });
 
-  test("relations work with relationMode prisma", async () => {
+  test("relations work with native foreign keys", async () => {
     // Create owner
     const owner = await client.owner.create({
       data: {
@@ -84,6 +85,20 @@ describe("DSQL Prisma client", () => {
     // Clean up
     await client.pet.delete({ where: { id: pet.id } });
     await client.owner.delete({ where: { id: owner.id } });
+  });
+
+  test("native foreign keys reject orphan rows", async () => {
+    const insert = client.$executeRaw`
+      INSERT INTO "pet" ("id", "name", "birthDate", "ownerId")
+      VALUES (
+        ${randomUUID()}::uuid,
+        'Orphan',
+        CURRENT_DATE,
+        '00000000-0000-4000-8000-000000000000'::uuid
+      )
+    `;
+
+    await expect(insert).rejects.toThrow(/23503|foreign key/i);
   });
 
   test("UUID generation works", async () => {

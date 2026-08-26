@@ -13,6 +13,7 @@ class AuroraDSQLAsyncpgClient(AsyncpgDBClient):
     """Asyncpg client adapted for Aurora DSQL compatibility."""
 
     schema_generator = AuroraDSQLAsyncpgSchemaGenerator
+    parameter_placeholder = "$1"
 
     def __init__(self, *, database: str | None = "postgres", **kwargs):
         # Database is set for internal Tortoise usage. Connection defaults are

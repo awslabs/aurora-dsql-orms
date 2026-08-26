@@ -192,7 +192,7 @@ Here's how to define a UUID primary key in your entity class:
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Date
+from sqlalchemy import Column, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
 
@@ -220,10 +220,12 @@ class Pet(Base):
     name = Column("name", String(30), nullable=False)
     birth_date = Column("birth_date", Date(), nullable=False)
     owner_id = Column(
-                "owner_id", UUID, nullable=True
+                "owner_id", UUID,
+                ForeignKey("owner.id", ondelete="RESTRICT", onupdate="RESTRICT"),
+                nullable=True
     )
     # One to many
-    owner = relationship("Owner", foreign_keys=[owner_id], primaryjoin="Owner.id == Pet.owner_id")
+    owner = relationship("Owner")
 
 # Define an association table for Vet and Specialty, this is an intermediate table
 # that lets us define the many-to-many mapping
@@ -234,10 +236,14 @@ class VetSpecialties(Base):
                 "id", UUID, primary_key=True, default=text('gen_random_uuid()')
             )
     vet_id = Column(
-                "vet_id", UUID, nullable=True
+                "vet_id", UUID,
+                ForeignKey("vet.id", ondelete="RESTRICT", onupdate="RESTRICT"),
+                nullable=True
     )
     specialty_id = Column(
-                "specialty_id", String(80), nullable=True
+                "specialty_id", String(80),
+                ForeignKey("specialty.name", ondelete="RESTRICT", onupdate="RESTRICT"),
+                nullable=True
     )
 
 # Define a Specialty table
@@ -256,9 +262,7 @@ class Vet(Base):
             )
     name = Column("name", String(30), nullable=False)
     # Many-to-Many mapping
-    specialties = relationship("Specialty", secondary=VetSpecialties.__table__,
-        primaryjoin="foreign(VetSpecialties.vet_id)==Vet.id",
-        secondaryjoin="foreign(VetSpecialties.specialty_id)==Specialty.id")
+    specialties = relationship("Specialty", secondary=VetSpecialties.__table__)
 ```
 
 ## Additional resources

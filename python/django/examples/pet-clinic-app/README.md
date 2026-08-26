@@ -171,7 +171,7 @@ class Pet(models.Model):
     )
     name = models.CharField(max_length=30, blank=False)
     birth_date = models.DateField()
-    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, db_constraint=False, null=True)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
 ```
 
 AutoField and BigAutoField default to UUID as their underlying data type. 
@@ -461,7 +461,9 @@ curl --request DELETE http://0.0.0.0:8000/pet/f397b51b-2fdd-441d-b0ac-f115acd747
 ### One-to-many / Many-to-one
 These relationships can be achieved by having the foreign key constraint on the
 field. For example, an owner can have any number of pets. A pet can have only one
-owner.
+owner. Django creates the constraint inline with the table. Its collector applies
+`on_delete` behavior before deleting the parent, while DSQL enforces the remaining
+relationship with its default `NO ACTION` behavior.
 
 ```sh
 # An owner can adopt a pet
@@ -516,7 +518,7 @@ class Vet(models.Model):
     )
     name = models.CharField(max_length=30, blank=False)
     specialties = models.ManyToManyField(Specialty, through='VetSpecialties')
-    owner = models.OneToOneField(Owner, on_delete=models.SET_DEFAULT, db_constraint=False, null=True, blank=True, default=None)
+    owner = models.OneToOneField(Owner, on_delete=models.SET_DEFAULT, null=True, blank=True, default=None)
     def __str__(self):
         return f'{self.name}'
 
@@ -528,8 +530,8 @@ class VetSpecialties(models.Model):
         default=uuid.uuid4,
         editable=False
     )
-    vet = models.ForeignKey(Vet, on_delete=models.CASCADE, db_constraint=False)
-    specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, db_constraint=False)
+    vet = models.ForeignKey(Vet, on_delete=models.CASCADE)
+    specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE)
 ```
 
 #### Define views

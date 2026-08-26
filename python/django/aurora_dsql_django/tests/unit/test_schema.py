@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.models.constraints import UniqueConstraint
 from django.db.models.query_utils import Q
+from django.db.utils import DatabaseError
 
-from aurora_dsql_django.schema import DatabaseSchemaEditor
+from aurora_dsql_django.schema import DatabaseSchemaEditor, ForeignKeyValidation
 from aurora_dsql_django.tests.utils import create_check_constraint
 
 
@@ -102,6 +103,14 @@ class TestDatabaseSchemaEditor(unittest.TestCase):
             self.schema_editor.sql_validate_check,
             "ALTER TABLE ASYNC %(table)s VALIDATE CONSTRAINT %(name)s",
         )
+        self.assertEqual(
+            self.schema_editor.sql_validate_fk,
+            "ALTER TABLE ASYNC %(table)s VALIDATE CONSTRAINT %(name)s",
+        )
+        self.assertEqual(
+            self.schema_editor.sql_delete_fk,
+            "ALTER TABLE %(table)s DROP CONSTRAINT %(name)s",
+        )
 
     @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.add_constraint")
     def test_add_check_constraint_validates_async(self, mock_super_add_constraint):
@@ -131,6 +140,71 @@ class TestDatabaseSchemaEditor(unittest.TestCase):
 
         mock_super_add_constraint.assert_called_once_with(model, constraint)
         self.schema_editor.execute.assert_not_called()
+
+    def test_async_constraint_validation_waits_for_job(self):
+        cursor = self.connection.cursor.return_value.__enter__.return_value
+        cursor.fetchone.side_effect = [("job-123",), (True,)]
+
+        self.schema_editor.execute(ForeignKeyValidation('ALTER TABLE ASYNC "child" VALIDATE CONSTRAINT "child_parent_fk"'))
+
+        self.assertEqual(
+            cursor.execute.call_args_list,
+            [
+                call(
+                    'ALTER TABLE ASYNC "child" VALIDATE CONSTRAINT "child_parent_fk"',
+                    (),
+                ),
+                call("CALL sys.wait_for_job(%s)", ["job-123"]),
+            ],
+        )
+
+    def test_async_constraint_validation_failure_is_raised(self):
+        cursor = self.connection.cursor.return_value.__enter__.return_value
+        cursor.fetchone.side_effect = [("job-123",), (False,)]
+
+        with self.assertRaisesRegex(DatabaseError, "job job-123 did not succeed"):
+            self.schema_editor.execute(ForeignKeyValidation('ALTER TABLE ASYNC "child" VALIDATE CONSTRAINT "child_parent_fk"'))
+
+    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor.execute")
+    def test_non_fk_async_validation_uses_existing_execution(self, mock_execute):
+        sql = 'ALTER TABLE ASYNC "child" VALIDATE CONSTRAINT "child_check"'
+
+        self.schema_editor.execute(sql)
+
+        mock_execute.assert_called_once_with(sql, ())
+
+    @patch("aurora_dsql_django.schema.schema.DatabaseSchemaEditor._alter_field")
+    def test_altered_foreign_key_is_validated(self, mock_super_alter_field):
+        model = MagicMock()
+        model._meta.db_table = "child"
+        old_field = MagicMock(
+            remote_field=MagicMock(),
+            db_constraint=True,
+        )
+        new_field = MagicMock(
+            remote_field=MagicMock(),
+            db_constraint=True,
+        )
+        self.connection.features.supports_foreign_keys = True
+        self.schema_editor._field_should_be_altered = MagicMock(return_value=True)
+        self.schema_editor._defer_fk_validation = MagicMock()
+
+        self.schema_editor._alter_field(
+            model,
+            old_field,
+            new_field,
+            "uuid",
+            "uuid",
+            {},
+            {},
+        )
+
+        mock_super_alter_field.assert_called_once()
+        self.schema_editor._defer_fk_validation.assert_called_once_with(
+            model,
+            new_field,
+            "_fk_%(to_table)s_%(to_column)s",
+        )
 
 
 if __name__ == "__main__":

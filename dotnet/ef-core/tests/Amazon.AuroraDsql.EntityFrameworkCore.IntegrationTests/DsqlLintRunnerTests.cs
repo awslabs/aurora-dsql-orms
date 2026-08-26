@@ -34,6 +34,17 @@ public class DsqlLintRunnerTests
     }
 
     [Fact]
+    public void FixSql_PreservesDropForeignKeyConstraint()
+    {
+        var runner = new DsqlLintRunner();
+        var input = "ALTER TABLE \"child\" DROP CONSTRAINT \"child_parent_fkey\";";
+        var result = runner.FixSql(input);
+
+        Assert.Contains("DROP CONSTRAINT", result, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("child_parent_fkey", result);
+    }
+
+    [Fact]
     public void FixSql_ThrowsWhenDsqlLintNotFound()
     {
         var runner = new DsqlLintRunner("nonexistent-dsql-lint-binary");

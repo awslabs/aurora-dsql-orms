@@ -22,9 +22,13 @@ in a few ways that shape how the adapter behaves:
   multi-statement migration is not applied atomically. The adapter makes DDL
   idempotent (`CREATE TABLE IF NOT EXISTS`) so a migration can be safely re-run
   after fixing a failure. See [Migrations](#migrations).
-- **Referential Integrity** — DSQL does not enforce foreign keys; navigation
-  properties, `Include`, and joins work normally, but consistency is enforced
-  in your application layer.
+- **Referential Integrity** — DSQL enforces foreign keys and supports
+  `NoAction`, `Restrict`, `Cascade`, `SetNull`, and `SetDefault`. Constraints
+  added to an existing table must use `NOT VALID`, followed by
+  `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT`; the migration transformer
+  reports this requirement when it cannot apply the complete sequence.
+  Cascading actions count toward transaction row limits; FK conflicts can
+  produce serialization failures handled by the adapter's execution strategy.
 
 ## Sample Application
 

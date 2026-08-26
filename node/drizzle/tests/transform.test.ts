@@ -123,25 +123,27 @@ describe("Migration Transformer (dsql-lint)", () => {
     });
   });
 
-  describe("foreign key removal", () => {
-    test("removes ALTER TABLE ADD FOREIGN KEY statements", () => {
+  describe("foreign key support", () => {
+    test("adds NOT VALID to ALTER TABLE ADD FOREIGN KEY statements", () => {
       const input = `ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "user"("id");`;
 
       const result = transformMigration(input);
 
-      // FK removal is FixedWithWarning → exit 3.
       expect(result.exitCode).toBe(3);
-      expect(result.sql).not.toContain("FOREIGN KEY");
-      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).toContain("FOREIGN KEY");
+      expect(result.sql).toContain("REFERENCES");
+      expect(result.sql).toContain("NOT VALID");
+      expect(hasDiagnosticWithStatus(result.output, "fixed_with_warning")).toBe(
+        true,
+      );
     });
 
-    test("DROP CONSTRAINT for foreign keys is unfixable", () => {
+    test("preserves DROP CONSTRAINT for a foreign key", () => {
       const input = `ALTER TABLE "Pet" DROP CONSTRAINT "Pet_ownerId_fkey";`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(1);
-      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("DROP CONSTRAINT");
     });
   });
@@ -198,7 +200,7 @@ describe("transformMigrationFile (Drizzle statement-breakpoint)", () => {
     expect(result.sql.split(BREAKPOINT)).toHaveLength(2);
   });
 
-  test("drops removed statements (foreign keys) and reports exit 3", () => {
+  test("preserves foreign keys and breakpoints while adding NOT VALID", () => {
     const input = [
       `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
       `ALTER TABLE "pet" ADD CONSTRAINT "pet_fk" FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`,
@@ -208,9 +210,9 @@ describe("transformMigrationFile (Drizzle statement-breakpoint)", () => {
 
     expect(result.exitCode).toBe(3);
     expect(result.sql).toContain('CREATE TABLE "pet"');
-    expect(result.sql).not.toContain("FOREIGN KEY");
-    // Only the surviving statement remains — no dangling breakpoint.
-    expect(result.sql).not.toContain(BREAKPOINT);
+    expect(result.sql).toContain("FOREIGN KEY");
+    expect(result.sql).toContain("NOT VALID");
+    expect(result.sql).toContain(BREAKPOINT);
   });
 
   test("single-statement input (no breakpoints) still transforms", () => {

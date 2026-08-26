@@ -50,16 +50,17 @@ npx aurora-dsql-prisma validate prisma/schema.prisma
 
 #### What the Validator Checks
 
-The validator checks that `relationMode = "prisma"` is set in the datasource block (DSQL does not support foreign keys). All other SQL compatibility checks are delegated to [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) — the validator generates SQL from your schema and lints it. See the [dsql-lint README](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for the full list of rules.
+The validator generates SQL from your schema and delegates compatibility checks
+to [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint).
+`relationMode = "prisma"` remains useful for automated migrations, but is no
+longer mandatory.
 
 #### Example Output
 
 ```
-✗ Missing relationMode = "prisma" in datasource block (line 1)
-  → Add relationMode = "prisma" to your datasource block. DSQL does not support foreign key constraints.
 ✗ Column `"id"` uses SERIAL, which is not supported in DSQL.
 
-✗ Validation failed: 2 error(s)
+✗ Validation failed: 1 error(s)
 ```
 
 ### Transform Migrations
@@ -119,13 +120,24 @@ This requires a `prisma.config.ts` that provides database credentials. See the [
 
 ### Handling Unsupported Statements
 
-Sometimes Prisma generates `DROP CONSTRAINT` statements when comparing against a live database. DSQL doesn't support `DROP CONSTRAINT`. If `dsql-lint` reports unfixable errors, review its output and manually adjust the migration.
+Prisma generates post-creation foreign keys with `ALTER TABLE ... ADD
+CONSTRAINT`. Aurora DSQL requires `NOT VALID` on these constraints, so
+`dsql-lint` preserves the foreign key and adds `NOT VALID`. Add a separate
+statement to validate existing rows:
+
+```sql
+ALTER TABLE ASYNC "table_name" VALIDATE CONSTRAINT "constraint_name";
+```
+
+The transform exits with code `3` to ensure you review and add the validation
+statement. The constraint applies to new writes immediately, but existing rows
+remain unvalidated until the asynchronous job completes.
 
 ## Prisma Schema Requirements
 
 When using Prisma with Aurora DSQL:
 
-1. **Set relation mode** - use application-layer relationship management:
+1. **Choose a relation mode**:
 
    ```prisma
    datasource db {
@@ -133,6 +145,18 @@ When using Prisma with Aurora DSQL:
      relationMode = "prisma"
    }
    ```
+
+   Use `relationMode = "prisma"` when the application should emulate
+   referential integrity. To use native DSQL foreign keys, omit it. Aurora DSQL
+   supports `NoAction`, `Restrict`, `Cascade`, `SetNull`, and `SetDefault`.
+   Post-creation constraints are transformed to `NOT VALID`; add the
+   corresponding `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT` statement before
+   applying the migration.
+
+   Cascading actions count toward Aurora DSQL's transaction row-modification
+   limits. Prefer `NoAction` or `Restrict` where child-row cardinality is
+   unbounded, and run transactions through retry handling because foreign-key
+   conflicts can surface as serialization failures.
 
 2. **Use UUID for IDs**:
 

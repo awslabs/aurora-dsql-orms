@@ -91,7 +91,19 @@ The workflow is:
    npx aurora-dsql-drizzle generate --out ./drizzle -- --config drizzle.config.ts
    ```
 
-   This runs `drizzle-kit generate`, then rewrites each statement with [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) — the Aurora DSQL linter and fixer — while preserving Drizzle's `--> statement-breakpoint` markers. It turns `CREATE INDEX` into `CREATE INDEX ASYNC`, rewrites `SERIAL` columns as `BIGINT … GENERATED … AS IDENTITY` (a type widening — review it), removes foreign-key constraints, and reports anything it cannot rewrite. Review and commit the result. (`transform` and `lint` subcommands run those steps on their own.)
+   This runs `drizzle-kit generate`, then rewrites each statement with [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) — the Aurora DSQL linter and fixer — while preserving Drizzle's `--> statement-breakpoint` markers. It turns `CREATE INDEX` into `CREATE INDEX ASYNC`, rewrites `SERIAL` columns as `BIGINT … GENERATED … AS IDENTITY` (a type widening — review it), and adds `NOT VALID` to foreign keys created with `ALTER TABLE`. Review and commit the result. (`transform` and `lint` subcommands run those steps on their own.)
+
+   For every post-creation foreign key, add a separate `ALTER TABLE ASYNC
+... VALIDATE CONSTRAINT ...` statement after the transformed `NOT VALID`
+   statement. The constraint applies to new writes immediately; the validation
+   job checks existing rows. The migrator waits for that asynchronous job.
+
+   Aurora DSQL supports `NO ACTION`, `RESTRICT`, `CASCADE`, `SET NULL`, and
+   `SET DEFAULT`, plus `MATCH SIMPLE`, `MATCH FULL`, and deferrable foreign
+   keys. Cascading actions count toward transaction row-modification limits.
+   Prefer `NO ACTION` or `RESTRICT` for unbounded child cardinality and use
+   transaction retry handling because foreign-key conflicts can surface as
+   serialization failures.
 
    Keep Drizzle Kit's `breakpoints: true` (the default). The adapter applies one statement per marker, so a breakpoint-free file holding more than one statement is rejected with an explanatory error rather than sent as a single multi-statement transaction.
 
@@ -111,7 +123,7 @@ aurora-dsql-drizzle transform [input] [-o output]                    Transform S
 aurora-dsql-drizzle lint [input]                                      Lint SQL for DSQL
 ```
 
-Exit codes: `0` clean, `1` unfixable errors remain (and the adapter's own usage errors, e.g. an unknown flag), `2` usage error propagated from dsql-lint, `3` fixed with advisories (e.g. foreign keys removed — review before applying).
+Exit codes: `0` clean, `1` unfixable errors remain (and the adapter's own usage errors, e.g. an unknown flag), `2` usage error propagated from dsql-lint, `3` fixed with advisories (e.g. `NOT VALID` added to a foreign key — add asynchronous validation before applying).
 
 ## Example
 

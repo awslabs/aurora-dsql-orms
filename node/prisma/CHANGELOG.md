@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `relationMode = "prisma"` is optional. Native foreign-key mode supports
+  `NO ACTION`, `RESTRICT`, `CASCADE`, `SET NULL`, and `SET DEFAULT`.
+  Prisma-generated `ALTER TABLE ... ADD FOREIGN KEY` migrations are preserved
+  and marked `NOT VALID`; add a separate `ALTER TABLE ASYNC ... VALIDATE
+CONSTRAINT` statement to validate existing rows.
+- Require `@aws/dsql-lint` 0.2.17 or later for native foreign-key support.
+
 - Consume `dsql-lint` via the new `@aws/dsql-lint` npm package: the
   prebuilt platform binary is resolved automatically, replacing the
   previous `cargo install dsql-lint` prerequisite. `DSQL_LINT_PATH`
@@ -20,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `0` clean, or all fixes applied without warnings
   - `1` unfixable errors remain
   - `2` usage error (propagated from dsql-lint)
-  - `3` fixes applied with advisories (e.g. foreign keys removed) —
+  - `3` fixes applied with advisories —
     the migration is written; review warnings before applying
 - Validate the dsql-lint JSON `schema_version` at parse time and fail
   with a clear version-skew message if it diverges.

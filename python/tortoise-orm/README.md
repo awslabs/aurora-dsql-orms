@@ -112,6 +112,11 @@ TORTOISE_ORM = {
 The compatibility module patches Aerich to:
 - Use UUID primary keys for migration tracking
 - Execute DDL statements individually (DSQL transactions support only one DDL statement)
+- Add incremental foreign keys with `NOT VALID` and wait for asynchronous
+  validation to finish
+
+Databases created by earlier adapter versions need a one-time explicit foreign
+key backfill migration. See [Adapter Behavior](docs/ADAPTER_BEHAVIOR.md#upgrading-an-existing-database).
 
 ## Features and Limitations
 

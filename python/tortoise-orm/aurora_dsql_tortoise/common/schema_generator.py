@@ -38,22 +38,6 @@ class AuroraDSQLSchemaGeneratorMixin(_Base):
     )
     UNIQUE_INDEX_CREATE_TEMPLATE = INDEX_CREATE_TEMPLATE.replace("INDEX", "UNIQUE INDEX")
 
-    def _create_fk_string(
-        self,
-        constraint_name: str,
-        db_column: str,
-        table: str,
-        field: str,
-        on_delete: str,
-        comment: str,
-    ) -> str:
-        """Return empty string since DSQL doesn't support foreign key constraints.
-
-        Foreign keys can still be defined in Tortoise models for ORM relationships,
-        but the constraints are not forwarded to the database.
-        """
-        return ""
-
     def _get_pk_create_sql(self, field_object: Field, column_name: str, comment: str) -> str:
         """Override to use IDENTITY instead of SERIAL for generated integer PKs.
 

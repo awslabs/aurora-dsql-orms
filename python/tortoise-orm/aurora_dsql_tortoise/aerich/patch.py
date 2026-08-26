@@ -53,12 +53,56 @@ PostgresDDL.schema_generator_cls = AuroraDSQLBaseSchemaGenerator
 
 # --- Patched methods ---
 
+_original_add_fk = PostgresDDL.add_fk
+
+
+def _patched_add_fk(
+    self: PostgresDDL,
+    model,
+    field_describe: dict,
+    reference_table_describe: dict,
+) -> str:
+    """Add and validate a foreign key using DSQL's two-phase ALTER syntax."""
+    add_sql = _original_add_fk(
+        self,
+        model,
+        field_describe,
+        reference_table_describe,
+    )
+    fk_name = self._generate_fk_name(
+        model._meta.db_table,
+        field_describe,
+        reference_table_describe,
+    )
+    return (
+        f"{add_sql} NOT VALID;\n"
+        f'ALTER TABLE ASYNC "{model._meta.db_table}" '
+        f'VALIDATE CONSTRAINT "{fk_name}";'
+    )
+
 
 async def _execute_ddl(conn, sql: str) -> None:
     """Execute DDL statements one at a time; transactions in Aurora DSQL can
     contain only one DDL statement."""
     for stmt in split_sql(sql):
-        await conn.execute_script(stmt)
+        if stmt.lstrip().upper().startswith("ALTER TABLE ASYNC"):
+            _, rows = await conn.execute_query(stmt)
+            job_id = rows[0].get("job_id") if rows else None
+            if not job_id:
+                raise RuntimeError("Aurora DSQL constraint validation returned no job ID.")
+            placeholder = conn.parameter_placeholder
+            _, wait_rows = await conn.execute_query(
+                f"CALL sys.wait_for_job({placeholder})",
+                [job_id],
+            )
+            succeeded = wait_rows[0].get("succeeded") if wait_rows else None
+            if succeeded is not True:
+                raise RuntimeError(
+                    f"Aurora DSQL constraint validation job {job_id} did not succeed "
+                    f"(succeeded={succeeded!r})."
+                )
+        else:
+            await conn.execute_script(stmt)
 
 
 async def _patched_upgrade(self, conn, version_file, fake=False, version_module=None):
@@ -157,3 +201,4 @@ async def _patched_do_init(self, safe: bool, pre_sql: str | None = None, offline
 Command._upgrade = _patched_upgrade  # type: ignore[method-assign]
 Command._do_init = _patched_do_init  # type: ignore[method-assign]
 Command.downgrade = _patched_downgrade  # type: ignore[method-assign]
+PostgresDDL.add_fk = _patched_add_fk  # type: ignore[method-assign]

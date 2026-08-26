@@ -3,7 +3,7 @@
 
 import unittest
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import django
 from django.conf import settings
@@ -144,25 +144,21 @@ class TestAuroraDSQLBackend(unittest.TestCase):
 
     def test_check_constraints(self):
         wrapper = DatabaseWrapper({})
-        # This should not raise any exception
-        wrapper.check_constraints()
+        wrapper.cursor = MagicMock()
+        cursor = wrapper.cursor.return_value.__enter__.return_value
+
         wrapper.check_constraints(table_names=["table1", "table2"])
 
-    def test_disable_constraint_checking(self):
-        wrapper = DatabaseWrapper({})
-        result = wrapper.disable_constraint_checking()
-        self.assertTrue(result)
+        self.assertEqual(
+            cursor.execute.call_args_list,
+            [
+                call("SET CONSTRAINTS ALL IMMEDIATE"),
+                call("SET CONSTRAINTS ALL DEFERRED"),
+            ],
+        )
 
-    def test_enable_constraint_checking(self):
-        wrapper = DatabaseWrapper({})
-        # This should not raise any exception
-        wrapper.enable_constraint_checking()
-
-    def test_constraint_checks_disabled(self):
-        wrapper = DatabaseWrapper({})
-        with wrapper.constraint_checks_disabled():
-            # This context manager should not raise any exception
-            pass
+    def test_disable_constraint_checking_is_not_supported(self):
+        self.assertFalse(self.wrapper.disable_constraint_checking())
 
     def test_autofield_rel_db_type_returns_uuid(self):
         """Test that AutoField rel_db_type returns uuid for foreign keys."""

@@ -7,10 +7,10 @@ from sqlalchemy import BIGINT, Integer, bindparam, select, sql
 from sqlalchemy.dialects.postgresql import pg_catalog
 from sqlalchemy.dialects.postgresql.base import PGDDLCompiler, PGDialect, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.types import OID, REGCLASS
+from sqlalchemy.exc import CompileError
 from sqlalchemy.schema import (
     CheckConstraint,
     ForeignKeyConstraint,
-    PrimaryKeyConstraint,
 )
 from sqlalchemy.sql import expression, sqltypes
 from sqlalchemy.types import TEXT
@@ -96,60 +96,15 @@ class AuroraDSQLDDLCompiler(PGDDLCompiler):
         else:
             return super().get_column_specification(column, **kw)
 
-    def create_table_constraints(
-        self, table, _include_foreign_key_constraints=None, **kw
-    ):
-        """
-        modified from https://github.com/sqlalchemy/sqlalchemy/blob/rel_2_0_41/lib/sqlalchemy/sql/compiler.py
-        """
-
-        constraints = []
-        if table.primary_key:
-            constraints.append(table.primary_key)
-
-        all_fkcs = table.foreign_key_constraints
-        if _include_foreign_key_constraints is not None:
-            omit_fkcs = all_fkcs.difference(_include_foreign_key_constraints)
-        else:
-            omit_fkcs = set()
-
-        constraints.extend(
-            [
-                c
-                for c in table._sorted_constraints
-                if c is not table.primary_key and c not in omit_fkcs
-            ]
-        )
-
-        constraints_without_fk = []
-        for constraint in table.constraints:
-            # Disable foreign key creation since DSQL
-            # doesn't support foreign key
-            if isinstance(constraint, ForeignKeyConstraint):
-                pass
-            # Skip empty primary key constraints
-            elif (
-                isinstance(constraint, PrimaryKeyConstraint) and not constraint.columns
-            ):
-                pass
-            else:
-                constraints_without_fk.append(constraint)
-
-        constraints = constraints_without_fk
-
-        return ", \n\t".join(
-            p
-            for p in (
-                self.process(constraint)
-                for constraint in constraints
-                if (constraint._should_create_for_compiler(self))
-                and (
-                    not self.dialect.supports_alter
-                    or not getattr(constraint, "use_alter", False)
-                )
+    def visit_foreign_key_constraint(self, constraint, **kw):
+        if constraint.match and constraint.match.upper() not in {"FULL", "SIMPLE"}:
+            raise CompileError(
+                f"PostgreSQL does not implement MATCH {constraint.match}; "
+                "Aurora DSQL inherits this behavior. "
+                "Use MATCH SIMPLE or MATCH FULL."
             )
-            if p is not None
-        )
+
+        return super().visit_foreign_key_constraint(constraint, **kw)
 
     def visit_create_index(self, create, **kw):
         """
@@ -213,15 +168,15 @@ class AuroraDSQLDDLCompiler(PGDDLCompiler):
 
     def visit_add_constraint(self, create, **kw):
         """
-        DSQL requires CHECK constraints added to an existing table via
-        ALTER TABLE to be marked NOT VALID; a plain ADD CONSTRAINT ... CHECK
-        is rejected. Existing rows are validated separately and asynchronously
-        with `ALTER TABLE ASYNC <table> VALIDATE CONSTRAINT <name>` (run it as a
-        follow-up statement, e.g. op.execute(...) in an Alembic migration).
-        Non-CHECK constraints fall back to the standard behavior.
+        DSQL requires CHECK and FOREIGN KEY constraints added to an existing
+        table to be marked NOT VALID. Existing rows are validated separately
+        with ALTER TABLE ASYNC ... VALIDATE CONSTRAINT.
         """
         text = super().visit_add_constraint(create, **kw)
-        if isinstance(create.element, CheckConstraint):
+        if (
+            isinstance(create.element, (CheckConstraint, ForeignKeyConstraint))
+            and not create.element.dialect_options["postgresql"]["not_valid"]
+        ):
             text += " NOT VALID"
         return text
 
@@ -239,7 +194,8 @@ class AuroraDSQLDialect(PGDialect):
     insert_returning = True
     supports_ddl_transactions = False
 
-    supports_alter = False
+    # Use ALTER-based ordering for cyclic and use_alter foreign keys.
+    supports_alter = True
     supports_native_enum = False
 
     _supports_create_index_async = True

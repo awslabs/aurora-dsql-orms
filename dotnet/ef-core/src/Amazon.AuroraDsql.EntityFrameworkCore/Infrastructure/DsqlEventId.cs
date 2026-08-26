@@ -30,7 +30,7 @@ internal static class DsqlEventId
     public static readonly EventId OccRetry = new(100004, nameof(OccRetry));
 
     /// <summary>
-    /// Event ID for behavior-changing dsql-lint rewrites during migration (e.g. FK removal).
+    /// Event ID for behavior-changing dsql-lint rewrites during migration.
     /// </summary>
     public static readonly EventId MigrationTransformWarning = new(100005, nameof(MigrationTransformWarning));
 }

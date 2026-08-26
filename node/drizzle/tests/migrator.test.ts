@@ -574,6 +574,35 @@ describe("migrateInternal", () => {
     }
   });
 
+  test("fails when FK validation returns no rows", async () => {
+    const validation: MigrationMeta = {
+      sql: [
+        `ALTER TABLE ASYNC "child" VALIDATE CONSTRAINT "child_parent_fkey"`,
+      ],
+      folderMillis: 1700000002500,
+      hash: "hashV",
+      bps: true,
+    };
+    const execute = jest.fn(async (query: unknown) => {
+      const text = render(query);
+      if (/^\s*SELECT\s+migration_folder_millis/i.test(text)) {
+        return { rows: [] };
+      }
+      return { rows: [] };
+    });
+
+    const result = await migrateInternal(
+      { execute } as never,
+      [validation],
+      "test",
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toContain("Expected a job_id");
+    }
+  });
+
   // Confirmed against a live cluster: DSQL skips this and returns the job_id
   // column with zero rows. Reachable on the resume path, and `dsql-lint --fix`
   // emits this form from `CREATE INDEX IF NOT EXISTS`.

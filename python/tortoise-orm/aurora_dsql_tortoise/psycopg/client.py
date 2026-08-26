@@ -19,6 +19,7 @@ class AuroraDSQLPsycopgClient(PsycopgClient):
     """Psycopg client adapted for Aurora DSQL compatibility."""
 
     schema_generator = AuroraDSQLPsycopgSchemaGenerator
+    parameter_placeholder = "%s"
 
     def __init__(self, *, database: str | None = "postgres", **kwargs):
         # Database is set for internal Tortoise usage. Connection defaults are

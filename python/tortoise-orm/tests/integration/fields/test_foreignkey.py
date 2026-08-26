@@ -7,6 +7,7 @@ import uuid
 
 import pytest
 from tortoise import fields
+from tortoise.exceptions import IntegrityError
 from tortoise.fields.relational import ReverseRelation
 from tortoise.models import Model
 
@@ -45,3 +46,7 @@ class TestForeignKeyField:
         fetched = await FKParent.get(id=parent.id).prefetch_related("children")
         assert len(fetched.children) == 1
         assert fetched.children[0].id == child.id
+
+    async def test_database_rejects_orphaned_foreign_key(self, backend):
+        with pytest.raises(IntegrityError):
+            await FKChild.create(parent_id=uuid.uuid4())

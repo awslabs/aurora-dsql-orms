@@ -51,14 +51,21 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
 
 **DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
-## Foreign key constraints are skipped during migrations
+## Foreign keys
 
-**Behavior:** The Aurora DSQL adapter for Django automatically skips foreign key constraint creation and removal operations during migrations.
+**Behavior:** The adapter emits inline, deferrable foreign keys for `CreateModel`
+migrations. For a nullable foreign key in `AddField`, it adds the column first,
+creates the foreign key with `NOT VALID`, then waits for asynchronous validation
+of existing rows to finish.
 
-**Impact:** 
-- Foreign key constraints are not enforced at the database level
-- Applications must maintain referential integrity through Django model validation and application logic
-- Existing migrations from other databases will continue to work without modification
+**Impact:**
+- Relationships created with a new table are enforced by DSQL.
+- Foreign keys added to existing tables enforce new writes immediately while existing rows are validated asynchronously.
+- Aurora DSQL can't add a `NOT NULL` column to an existing table. Add a nullable
+  foreign key, backfill it, and keep it nullable.
+- Django continues to implement `on_delete` behavior in application code.
+- A failed validation job fails the migration instead of leaving it reported as complete.
+- Foreign-key conflicts can surface as serialization failures, so retry the full transaction.
 
 **DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 

@@ -20,27 +20,8 @@ describe("Schema Validator", () => {
     return schemaPath;
   }
 
-  describe("relationMode validation", () => {
-    test("passes when relationMode = prisma is present", async () => {
-      const schema = `
-datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
-}
-
-model User {
-  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
-}
-`;
-      const result = await validateSchema(createTempSchema(schema));
-      const relationModeErrors = result.issues.filter((i) =>
-        i.message.includes("relationMode"),
-      );
-      expect(relationModeErrors).toHaveLength(0);
-    });
-
-    test("fails when relationMode is missing", async () => {
+  describe("relation mode", () => {
+    test("does not require relationMode prisma", async () => {
       const schema = `
 datasource db {
   provider = "postgresql"
@@ -51,11 +32,9 @@ model User {
   name String
 }
 `;
-      const result = await validateSchema(createTempSchema(schema));
-      expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("relationMode")),
-      ).toBe(true);
+      const result = await validateSchema(createTempSchema(schema), true);
+      expect(result.valid).toBe(true);
+      expect(result.issues).toHaveLength(0);
     });
   });
 

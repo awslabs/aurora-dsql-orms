@@ -44,21 +44,6 @@ await Item.bulk_create(
 
 Note: `bulk_create` does not return `(instance, created)`. Fetch the row afterward if needed.
 
-## Foreign key constraints not enforced
-
-**Issue:** Foreign key relationships defined in models are not enforced at the database level.
-
-```python
-class Pet(Model):
-    owner = fields.ForeignKeyField("models.Owner", related_name="pets")
-```
-
-The relationship works for ORM queries and joins, but:
-- Deleting an Owner does not cascade to Pets at the database level
-- Inserting a Pet with a non-existent `owner_id` succeeds at the database level
-
-**Workaround:** Implement referential integrity checks in application logic.
-
 ## Aerich compatibility module prevents side-by-side PostgreSQL use
 
 **Issue:** Enabling the Aerich compatibility module (`aurora_dsql_tortoise.aerich_compat`) prevents using standard PostgreSQL and Aurora DSQL in the same application.

@@ -407,12 +407,16 @@ export async function migrateInternal(
         const jobId = rows[0]?.["job_id"];
         if (typeof jobId === "string" && jobId.length > 0) {
           await waitForDsqlJob(db, jobId);
-        } else if (isAsyncDdl(stmt) && rows.length > 0) {
-          throw new Error(
-            "Expected a job_id from an asynchronous DDL statement but none " +
-              "was returned, so the background job cannot be awaited. " +
-              "Refusing to record the statement as applied.",
-          );
+        } else if (isAsyncDdl(stmt)) {
+          const skippedIfNotExists =
+            rows.length === 0 && /\bIF\s+NOT\s+EXISTS\b/i.test(stmt);
+          if (!skippedIfNotExists) {
+            throw new Error(
+              "Expected a job_id from an asynchronous DDL statement but none " +
+                "was returned, so the background job cannot be awaited. " +
+                "Refusing to record the statement as applied.",
+            );
+          }
         }
       } catch (e) {
         return fail(migration, stmtIdx, stmt, describeError(e));
