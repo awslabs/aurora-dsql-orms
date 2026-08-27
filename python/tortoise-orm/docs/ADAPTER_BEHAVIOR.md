@@ -2,14 +2,20 @@
 
 This document describes how the Aurora DSQL adapter for Tortoise ORM modifies standard Tortoise behavior for Aurora DSQL compatibility. For details on Aurora DSQL SQL compatibility, see the [Aurora DSQL documentation](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html).
 
-## Foreign key relationships are ORM-only
+## Foreign keys are created inline
 
-**Behavior:** Foreign key relationships defined in Tortoise models work normally for ORM operations, but the adapter does not create foreign key constraints in the database.
+**Behavior:** `ForeignKeyField` and `OneToOneField` relationships create inline
+foreign key constraints that DSQL enforces.
 
 **Impact:**
 - `ForeignKeyField` relationships work for queries, joins, and prefetch operations
-- Constraints are not enforced at the database level
-- Applications should maintain referential integrity through application logic
+- Constraints are enforced at the database level
+- `NO_ACTION`, `RESTRICT`, `CASCADE`, `SET_NULL`, and `SET_DEFAULT` delete actions are supported
+- `SET_DEFAULT` succeeds only when the foreign-key column has a database default
+  that identifies an existing referenced row; otherwise use `SET_NULL` on a
+  nullable field or another action.
+- Cascading actions count toward DSQL's transaction row-modification limit
+- Foreign-key conflicts can surface as serialization failures, so retry the full transaction
 
 **DSQL feature:** [SQL compatibility](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility.html)
 
@@ -64,3 +70,27 @@ When `aurora_dsql_tortoise.aerich_compat` is included in your models, the follow
 **Individual DDL execution:** Migration files may contain multiple DDL statements. The compatibility module splits these and executes each statement separately.
 
 **Disabled transaction wrapping:** Generated migration files set `RUN_IN_TRANSACTION = False` for DDL compatibility.
+
+**Incremental foreign keys:** Aerich adds a new relationship with `ADD
+CONSTRAINT ... NOT VALID`, starts `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT`,
+and waits for the validation job. A failed validation fails the migration.
+
+### Upgrading an existing database
+
+Existing databases created by adapter versions that omitted foreign keys need a
+one-time Aerich migration. Aerich model-state comparison won't generate this
+migration because the relationship was already present in the model state.
+Add the constraint explicitly:
+
+```sql
+ALTER TABLE "child"
+  ADD CONSTRAINT "child_parent_fk"
+  FOREIGN KEY ("parent_id") REFERENCES "parent" ("id")
+  ON DELETE NO ACTION NOT VALID;
+ALTER TABLE ASYNC "child"
+  VALIDATE CONSTRAINT "child_parent_fk";
+```
+
+The compatibility runner waits for the validation job before recording the
+migration as complete. Repeat this pattern for each relationship that existed
+before native foreign-key support was enabled.

@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Index, Q
 from django.db.models.functions import Upper
+from django.db.utils import NotSupportedError
 
 from aurora_dsql_django.base import DatabaseWrapper
 from aurora_dsql_django.features import DatabaseFeatures
@@ -85,23 +86,118 @@ class TestWrapper(unittest.TestCase):
             all_sql += [str(sql) for sql in self.schema_editor.deferred_sql]
         return all_sql
 
-    def test_foreign_key_operations_ignored(self):
-        """Ensure foreign key constraint operations are ignored for model creation when the feature is disabled"""
+    def test_create_model_generates_inline_foreign_key(self):
+        """Foreign keys created with their table use DSQL-supported inline syntax."""
 
         class ParentModel(models.Model):
             class Meta:
-                app_label = "test_app"
+                app_label = "inline_fk_test"
 
         class ChildModel(models.Model):
             parent = models.ForeignKey(ParentModel, on_delete=models.CASCADE)
 
             class Meta:
-                app_label = "test_app"
+                app_label = "inline_fk_test"
 
         def operation():
             self.schema_editor.create_model(ChildModel)
 
-        self._assert_sql_not_generated(operation, ["FOREIGN KEY", "REFERENCES"], "Should not generate foreign key SQL")
+        executed_sql = self._capture_sql(operation)
+        self.assertTrue(
+            any(sql.startswith("CREATE TABLE") and "REFERENCES" in sql for sql in executed_sql),
+            f"Expected inline foreign key SQL, got: {executed_sql}",
+        )
+
+    def test_add_foreign_key_field_uses_not_valid_then_validate(self):
+        class ParentModel(models.Model):
+            class Meta:
+                app_label = "add_fk_test"
+
+        class ChildModel(models.Model):
+            class Meta:
+                app_label = "add_fk_test"
+
+        field = models.ForeignKey(ParentModel, on_delete=models.RESTRICT, null=True)
+        field.set_attributes_from_name("parent")
+        field.model = ChildModel
+
+        def operation():
+            self.schema_editor.add_field(ChildModel, field)
+
+        all_sql = self._capture_sql(operation)
+        self.assertTrue(
+            any("ADD COLUMN" in sql and "REFERENCES" not in sql for sql in all_sql),
+            f"Expected the column to be added without an inline constraint: {all_sql}",
+        )
+        self.assertTrue(
+            any("ADD CONSTRAINT" in sql and "FOREIGN KEY" in sql and "NOT VALID" in sql for sql in all_sql),
+            f"Expected the foreign key to be added NOT VALID: {all_sql}",
+        )
+        self.assertTrue(
+            any("ALTER TABLE ASYNC" in sql and "VALIDATE CONSTRAINT" in sql for sql in all_sql),
+            f"Expected asynchronous foreign key validation: {all_sql}",
+        )
+
+    def test_add_non_null_foreign_key_field_is_rejected(self):
+        class ParentModel(models.Model):
+            class Meta:
+                app_label = "add_required_fk_test"
+
+        class ChildModel(models.Model):
+            class Meta:
+                app_label = "add_required_fk_test"
+
+        field = models.ForeignKey(ParentModel, on_delete=models.RESTRICT)
+        field.set_attributes_from_name("parent")
+        field.model = ChildModel
+
+        with self.assertRaisesRegex(NotSupportedError, "Add the field with null=True"):
+            self.schema_editor.add_field(ChildModel, field)
+
+    def test_add_many_to_many_field_does_not_access_db_constraint(self):
+        class RelatedModel(models.Model):
+            class Meta:
+                app_label = "add_m2m_test"
+
+        class SourceModel(models.Model):
+            related = models.ManyToManyField(RelatedModel)
+
+            class Meta:
+                app_label = "add_m2m_test"
+
+        field = SourceModel._meta.get_field("related")
+        with patch.object(
+            DatabaseSchemaEditor.__mro__[1],
+            "add_field",
+        ) as mock_super_add_field:
+            self.schema_editor.add_field(SourceModel, field)
+
+        mock_super_add_field.assert_called_once_with(SourceModel, field)
+
+    def test_remove_foreign_key_uses_fk_drop_constraint_sql(self):
+        class ParentModel(models.Model):
+            class Meta:
+                app_label = "drop_fk_test"
+
+        class ChildModel(models.Model):
+            parent = models.ForeignKey(ParentModel, on_delete=models.CASCADE)
+
+            class Meta:
+                app_label = "drop_fk_test"
+                db_table = "child"
+
+        def operation():
+            self.schema_editor.execute(
+                self.schema_editor._delete_fk_sql(
+                    ChildModel,
+                    "child_parent_fk",
+                )
+            )
+
+        self.assertEqual(
+            self._capture_sql(operation),
+            ['ALTER TABLE "child" DROP CONSTRAINT "child_parent_fk"'],
+        )
 
     def test_check_constraint_create_model_inline(self):
         """CHECK constraints are emitted inline in the CREATE TABLE statement"""

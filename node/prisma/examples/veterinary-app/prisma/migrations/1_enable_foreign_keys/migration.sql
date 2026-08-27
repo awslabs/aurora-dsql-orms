@@ -1,0 +1,26 @@
+-- AddForeignKey
+BEGIN;
+ALTER TABLE "pet"
+  ADD CONSTRAINT "pet_ownerId_fkey"
+  FOREIGN KEY ("ownerId") REFERENCES "owner"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE
+  NOT VALID;
+COMMIT;
+
+-- AddForeignKey
+BEGIN;
+ALTER TABLE "_SpecialtyToVet"
+  ADD CONSTRAINT "_SpecialtyToVet_A_fkey"
+  FOREIGN KEY ("A") REFERENCES "specialty"("name")
+  ON DELETE CASCADE ON UPDATE CASCADE
+  NOT VALID;
+COMMIT;
+
+-- AddForeignKey
+BEGIN;
+ALTER TABLE "_SpecialtyToVet"
+  ADD CONSTRAINT "_SpecialtyToVet_B_fkey"
+  FOREIGN KEY ("B") REFERENCES "vet"("id")
+  ON DELETE CASCADE ON UPDATE CASCADE
+  NOT VALID;
+COMMIT;

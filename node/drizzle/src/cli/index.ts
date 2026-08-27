@@ -40,7 +40,7 @@ Exit codes (generate / transform / lint):
   0  Clean, or all fixes applied without warnings
   1  Unfixable errors remain — review the diagnostics and fix manually
   2  Usage error (invalid arguments, propagated from dsql-lint)
-  3  Fixes applied, but some produced advisories (e.g. foreign keys removed).
+  3  Fixes applied, but some produced advisories (e.g. NOT VALID added to a foreign key).
      The migration is written; review the warnings before applying.
 `;
 

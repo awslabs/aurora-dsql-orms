@@ -27,3 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for DSQL via `dsql-lint` (>= 0.2) while preserving `--> statement-breakpoint`
   markers.
 - Veterinary app example demonstrating the full workflow on a live cluster.
+
+### Changed
+
+- Preserve native foreign keys in generated migrations. Foreign keys created
+  with `ALTER TABLE` are marked `NOT VALID`; add a separate `ALTER TABLE ASYNC
+... VALIDATE CONSTRAINT` statement to validate existing rows.
+- Require `@aws/dsql-lint` 0.2.17 or later for native foreign-key support.

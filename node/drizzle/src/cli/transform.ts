@@ -69,7 +69,7 @@ export interface FileTransformResult {
  * Transform a whole migration file for DSQL. Drizzle splits statements with
  * `--> statement-breakpoint`; each statement is transformed independently and
  * the markers are re-inserted so the runtime migrator can still split the file.
- * Statements that dsql-lint removes entirely (e.g. foreign keys) are dropped.
+ * Statements that dsql-lint removes entirely are dropped.
  */
 export function transformMigrationFile(sql: string): FileTransformResult {
   if (!sql.includes(BREAKPOINT)) {

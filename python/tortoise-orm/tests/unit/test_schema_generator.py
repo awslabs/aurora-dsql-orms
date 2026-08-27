@@ -62,13 +62,33 @@ def _create_mock_client():
 @pytest.mark.parametrize(
     "generator_cls", [AuroraDSQLPsycopgSchemaGenerator, AuroraDSQLAsyncpgSchemaGenerator]
 )
-async def test_schema_excludes_fk_references(initialized_models, generator_cls):
-    """Test that generated schema SQL does not contain FK REFERENCES clause."""
+async def test_schema_includes_fk_references(initialized_models, generator_cls):
+    """Supported foreign keys are emitted inline with CREATE TABLE."""
     generator = generator_cls(_create_mock_client())
     schema_sql = generator.get_create_schema_sql(safe=True)
 
     assert "parent_id" in schema_sql, f"Schema should contain FK column:\n{schema_sql}"
-    assert "REFERENCES" not in schema_sql, f"Schema should not contain FK REFERENCES:\n{schema_sql}"
+    assert "REFERENCES" in schema_sql, f"Schema should contain FK REFERENCES:\n{schema_sql}"
+    assert "ON DELETE CASCADE" in schema_sql
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "generator_cls", [AuroraDSQLPsycopgSchemaGenerator, AuroraDSQLAsyncpgSchemaGenerator]
+)
+async def test_schema_supports_cascading_fk_action(initialized_models, generator_cls):
+    generator = generator_cls(_create_mock_client())
+
+    fk_sql = generator._create_fk_string(
+        "child_parent_fk",
+        "parent_id",
+        "test_parent",
+        "id",
+        "CASCADE",
+        "",
+    )
+
+    assert "ON DELETE CASCADE" in fk_sql
 
 
 @pytest.mark.asyncio

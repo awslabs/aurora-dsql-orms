@@ -103,7 +103,13 @@ natively. The only two lock modes that should be used are:
 ## Dialect Features
 
 - **Data types:** Correct `float`, `double`, `numeric` precision and `varchar` size limits.
-- **Foreign Keys:** Disabled — referential integrity is maintained at the application level.
+- **Foreign Keys:** Generated foreign keys use `ALTER TABLE ... ADD CONSTRAINT
+  ... NOT VALID`, which enforces new writes immediately. Validate existing rows
+  separately with `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT`, capture its
+  `job_id`, and wait with `CALL sys.wait_for_job(job_id)`. Hibernate's schema
+  exporter cannot monitor that asynchronous job. DSQL supports all standard
+  referential actions; cascading actions count toward the transaction
+  row-modification limit.
 - **Index creation:** Uses `CREATE INDEX ASYNC` and `CREATE UNIQUE INDEX ASYNC`.
 - **Locking:** OCC with `SELECT ... FOR UPDATE` support.
 - **Sequences:** Correct syntax with mandatory `CACHE` parameter.

@@ -23,7 +23,7 @@ class Pet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=30, blank=False)
     birth_date = models.DateField()
-    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, db_constraint=False, null=True)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
 
 
 class Specialty(models.Model):
@@ -37,7 +37,13 @@ class Vet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=30, blank=False)
     specialties = models.ManyToManyField(Specialty, through="VetSpecialties")
-    owner = models.OneToOneField(Owner, on_delete=models.SET_DEFAULT, db_constraint=False, null=True, blank=True, default=None)
+    owner = models.OneToOneField(
+        Owner,
+        on_delete=models.SET_DEFAULT,
+        null=True,
+        blank=True,
+        default=None,
+    )
 
     def __str__(self):
         return f"{self.name}"
@@ -47,13 +53,13 @@ class Vet(models.Model):
 # keys as integers. We use UUID as default primary key which is not an integer.
 class VetSpecialties(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    vet = models.ForeignKey(Vet, on_delete=models.CASCADE, db_constraint=False)
-    specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, db_constraint=False)
+    vet = models.ForeignKey(Vet, on_delete=models.CASCADE)
+    specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE)
 
 
 class Visits(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    pet = models.ForeignKey(Pet, on_delete=models.CASCADE, db_constraint=False)
-    vet = models.ForeignKey(Vet, on_delete=models.CASCADE, db_constraint=False)
+    pet = models.ForeignKey(Pet, on_delete=models.CASCADE)
+    vet = models.ForeignKey(Vet, on_delete=models.CASCADE)
     visit_date = models.DateField()
     description = models.TextField()

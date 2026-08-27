@@ -19,7 +19,7 @@ class TestDatabaseFeatures(unittest.TestCase):
         self.assertTrue(self.features.supports_forward_references)
 
     def test_supports_foreign_keys(self):
-        self.assertFalse(self.features.supports_foreign_keys)
+        self.assertTrue(self.features.supports_foreign_keys)
 
     def test_supports_check_constraints(self):
         self.assertTrue(self.features.supports_table_check_constraints)
@@ -31,7 +31,7 @@ class TestDatabaseFeatures(unittest.TestCase):
         self.assertFalse(self.features.can_clone_databases)
 
     def test_can_defer_constraint_checks(self):
-        self.assertFalse(self.features.can_defer_constraint_checks)
+        self.assertTrue(self.features.can_defer_constraint_checks)
 
     def test_supports_deferrable_unique_constraints(self):
         self.assertFalse(self.features.supports_deferrable_unique_constraints)
@@ -63,7 +63,7 @@ class TestDatabaseFeatures(unittest.TestCase):
 
         # Check that we've actually overridden some attributes
         self.assertNotEqual(self.features.can_rollback_ddl, postgresql_features.can_rollback_ddl)
-        self.assertNotEqual(self.features.supports_foreign_keys, postgresql_features.supports_foreign_keys)
+        self.assertEqual(self.features.supports_foreign_keys, postgresql_features.supports_foreign_keys)
         self.assertNotEqual(self.features.can_clone_databases, postgresql_features.can_clone_databases)
 
 

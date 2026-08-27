@@ -55,8 +55,8 @@ public class AuroraDSQLDialectTest {
   public void testForeignKeySupport() {
     Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
     assertNotNull(exporter);
-    assertFalse(dialect.supportsCascadeDelete());
-    assertFalse(dialect.dropConstraints());
+    assertTrue(dialect.supportsCascadeDelete());
+    assertTrue(dialect.dropConstraints());
   }
 
   @Test

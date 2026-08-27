@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "prisma:generate": "npx prisma generate --schema=prisma/veterinary-schema.prisma",
-    "prisma:migrate-up": "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy --schema=prisma/veterinary-schema.prisma",
+    "prisma:migrate-up": "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy --schema=prisma/veterinary-schema.prisma && tsx src/validate-foreign-keys.ts",
     "prisma:migrate-down": "npx prisma db execute --file prisma/migrations/0_init/down.sql",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

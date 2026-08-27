@@ -31,8 +31,7 @@ describe("Prisma DSQL Workflow", () => {
   describe("valid schema workflow", () => {
     const validSchema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 generator client {
@@ -93,14 +92,15 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
     test("step 2: transform fixes all issues", () => {
       const result = transformMigration(prismaMigrationOutput);
 
-      // FK removal is FixedWithWarning → exit 3, still a successful fix.
+      // Prisma emits ALTER TABLE ADD FOREIGN KEY; DSQL requires NOT VALID.
       expect(result.exitCode).toBe(3);
 
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
 
-      expect(result.sql).not.toContain("FOREIGN KEY");
-      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).toContain("FOREIGN KEY");
+      expect(result.sql).toContain("REFERENCES");
+      expect(result.sql).toContain("NOT VALID");
 
       expect(result.sql).toContain('CREATE TABLE "Owner"');
       expect(result.sql).toContain('CREATE TABLE "Pet"');
@@ -113,12 +113,12 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       const transformResult = transformMigration(prismaMigrationOutput);
 
-      // FK removal → exit 3 (successful fix with warnings).
       expect(transformResult.exitCode).toBe(3);
       const output = transformResult.sql;
 
-      expect(output).not.toContain("FOREIGN KEY");
-      expect(output).not.toContain("REFERENCES");
+      expect(output).toContain("FOREIGN KEY");
+      expect(output).toContain("REFERENCES");
+      expect(output).toContain("NOT VALID");
       expect(output).toContain("CREATE INDEX ASYNC");
       expect(output).not.toMatch(/CREATE\s+INDEX\s+"/);
       expect(output).toContain('CREATE TABLE "Owner"');
@@ -149,8 +149,8 @@ model User {
       );
     });
 
-    test("schema missing relationMode fails validation", async () => {
-      const invalidSchema = `
+    test("schema missing relationMode is accepted when SQL lint is skipped", async () => {
+      const schema = `
 datasource db {
   provider = "postgresql"
 }
@@ -160,13 +160,10 @@ model User {
   name String
 }
 `;
-      const schemaPath = createTempSchema(invalidSchema);
-      const result = await validateSchema(schemaPath);
+      const schemaPath = createTempSchema(schema);
+      const result = await validateSchema(schemaPath, true);
 
-      expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("relationMode")),
-      ).toBe(true);
+      expect(result.valid).toBe(true);
     });
   });
 
@@ -187,14 +184,8 @@ DROP TABLE "Owner";
 
       const result = transformMigration(downMigration);
 
-      // DROP CONSTRAINT is unfixable in dsql-lint (exit code 1, stays in output)
-      expect(result.exitCode).toBe(1);
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("DROP CONSTRAINT");
-      expect(
-        result.output.files.some((f) =>
-          f.diagnostics.some((d) => d.fix_result.status === "unfixable"),
-        ),
-      ).toBe(true);
 
       // Other drops preserved
       expect(result.sql).toContain("DROP INDEX");
@@ -216,7 +207,7 @@ CREATE INDEX "User_name_idx" ON "User"("name");
 
       const result = transformMigration(migration);
 
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain("CREATE UNIQUE INDEX ASYNC");
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(2);

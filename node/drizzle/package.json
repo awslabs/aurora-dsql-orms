@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "@aws/aurora-dsql-node-postgres-connector": ">=0.1.9 <1",
-    "@aws/dsql-lint": ">=0.2.14 <1"
+    "@aws/dsql-lint": ">=0.2.17 <1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

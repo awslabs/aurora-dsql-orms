@@ -20,14 +20,15 @@ class DatabaseFeatures(features.DatabaseFeatures):
     # at the end of each save operation?
     supports_forward_references = True
 
-    supports_foreign_keys = False
+    supports_foreign_keys = True
 
     # Aurora DSQL supports CHECK constraints inline at CREATE TABLE, and can
     # add them to existing tables via ADD CONSTRAINT ... NOT VALID followed by
     # ALTER TABLE ASYNC ... VALIDATE CONSTRAINT (handled in the schema editor).
     supports_table_check_constraints = True
 
-    # Can it create foreign key constraints inline when adding columns?
+    # DSQL can create inline FKs with CREATE TABLE, but not while adding a
+    # column to an existing table.
     can_create_inline_fk = False
 
     # Can the backend clone databases for parallel test execution?
@@ -35,7 +36,7 @@ class DatabaseFeatures(features.DatabaseFeatures):
     can_clone_databases = False
 
     # Can constraint checks be deferred until the end of a transaction?
-    can_defer_constraint_checks = False
+    can_defer_constraint_checks = True
 
     # Does the database support deferrable unique constraints?
     supports_deferrable_unique_constraints = False

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Generate DSQL-compatible foreign keys with `NOT VALID`; applications validate
+  existing rows separately and wait for the asynchronous validation job.
+
 ## [2.0.0] - 2026-06-14
 
 ### Breaking Changes

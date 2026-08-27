@@ -79,3 +79,79 @@ asyncio.run(test())
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert result.returncode == 0, f"stderr: {result.stderr}"
     assert "OK" in result.stdout
+
+
+def test_aerich_foreign_key_migrations_use_two_phase_validation():
+    """Verify Aerich emits and awaits DSQL-compatible incremental FKs."""
+    code = """
+import asyncio
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
+
+from tortoise import Tortoise
+
+async def test():
+    await Tortoise.init(config={
+        'connections': {'default': 'sqlite://:memory:'},
+        'apps': {
+            'models': {
+                'models': ['aerich.models', 'aurora_dsql_tortoise.aerich'],
+                'default_connection': 'default',
+            }
+        }
+    })
+
+    from aerich.ddl.postgres import PostgresDDL
+    from aurora_dsql_tortoise.aerich.patch import _execute_ddl
+
+    ddl = PostgresDDL(MagicMock())
+    ddl._generate_fk_name = MagicMock(return_value='child_parent_fk')
+    model = SimpleNamespace(_meta=SimpleNamespace(db_table='child'))
+    field = {'raw_field': 'parent_id', 'on_delete': 'RESTRICT'}
+    reference = {
+        'table': 'parent',
+        'pk_field': {'db_column': 'id'},
+    }
+    sql = ddl.add_fk(model, field, reference)
+    assert 'NOT VALID' in sql
+    assert (
+        'ALTER TABLE ASYNC "child" VALIDATE CONSTRAINT "child_parent_fk"'
+        in sql
+    )
+    drop_sql = ddl.drop_fk(model, field, reference)
+    assert (
+        drop_sql
+        == 'ALTER TABLE "child" DROP CONSTRAINT IF EXISTS "child_parent_fk"'
+    )
+
+    for placeholder in ('$1', '%s'):
+        conn = MagicMock()
+        conn.parameter_placeholder = placeholder
+        conn.execute_script = AsyncMock()
+        conn.execute_query = AsyncMock(
+            side_effect=[
+                (1, [{'job_id': 'job-123'}]),
+                (1, [{'succeeded': True}]),
+            ]
+        )
+        await _execute_ddl(conn, sql)
+        assert conn.execute_script.await_count == 1
+        assert conn.execute_query.await_count == 2
+        wait_call = conn.execute_query.await_args_list[1]
+        assert f'sys.wait_for_job({placeholder})' in wait_call.args[0]
+
+    conn = MagicMock()
+    conn.execute_script = AsyncMock()
+    conn.execute_query = AsyncMock()
+    await _execute_ddl(conn, drop_sql)
+    conn.execute_script.assert_awaited_once_with(drop_sql)
+    conn.execute_query.assert_not_awaited()
+
+    await Tortoise.close_connections()
+    print('OK')
+
+asyncio.run(test())
+"""
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, f"stderr: {result.stderr}"
+    assert "OK" in result.stdout

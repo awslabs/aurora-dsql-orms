@@ -107,7 +107,7 @@ describe("CLI Integration", () => {
     expect(execError?.status).toBe(1);
   });
 
-  test("transform removes foreign keys and exits 3 (fixed with advisories)", () => {
+  test("transform marks foreign keys NOT VALID and exits 3", () => {
     const inputPath = path.join(tempDir, "fk-input.sql");
     const outputPath = path.join(tempDir, "fk-output.sql");
     fs.writeFileSync(
@@ -131,12 +131,16 @@ describe("CLI Integration", () => {
 
     const output = fs.readFileSync(outputPath, "utf-8");
     expect(output).toContain('CREATE TABLE "post"');
-    expect(output).not.toContain("FOREIGN KEY");
+    expect(output).toContain("FOREIGN KEY");
+    expect(output).toContain("NOT VALID");
   });
 
   test("transform reports unfixable statements with a non-zero exit", () => {
     const inputPath = path.join(tempDir, "unfixable.sql");
-    fs.writeFileSync(inputPath, `ALTER TABLE "t" DROP CONSTRAINT "t_pkey";`);
+    fs.writeFileSync(
+      inputPath,
+      `ALTER TABLE "t" ADD CONSTRAINT "t_pkey" PRIMARY KEY ("id");`,
+    );
 
     let execError: { stderr?: string; status?: number } | undefined;
     try {

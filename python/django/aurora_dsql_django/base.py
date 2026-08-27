@@ -191,19 +191,3 @@ class DatabaseWrapper(base.DatabaseWrapper):
             psycopg2.extras.register_default_jsonb(conn_or_curs=connection, loads=lambda x: x)
 
         return connection
-
-    def check_constraints(self, table_names=None):
-        """
-        Override to do nothing since SET CONSTRAINTS is not supported.
-        """
-
-    def disable_constraint_checking(self):
-        """
-        Override to do nothing since SET CONSTRAINTS is not supported.
-        """
-        return True
-
-    def enable_constraint_checking(self):
-        """
-        Override to do nothing since SET CONSTRAINTS is not supported.
-        """

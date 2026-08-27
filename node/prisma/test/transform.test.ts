@@ -74,8 +74,8 @@ CREATE TABLE "post" (
 
       const result = transformMigration(input);
 
-      // Fixed (no warning), exit 0.
-      expect(result.exitCode).toBe(0);
+      // Making an index asynchronous changes readiness semantics.
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
       expect(result.sql).not.toMatch(/CREATE\s+INDEX\s+"/);
     });
@@ -85,7 +85,7 @@ CREATE TABLE "post" (
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain("CREATE UNIQUE INDEX ASYNC");
     });
 
@@ -106,7 +106,7 @@ CREATE UNIQUE INDEX "idx3" ON "user"("username");`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
       expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(3);
     });
 
@@ -116,14 +116,14 @@ CREATE INDEX "idx2" ON "user"("name");`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
       expect(result.sql).not.toContain("ASYNC ASYNC");
       expect((result.sql.match(/INDEX\s+ASYNC/g) || []).length).toBe(2);
     });
   });
 
-  describe("foreign key removal", () => {
-    test("removes ALTER TABLE ADD FOREIGN KEY statements", () => {
+  describe("foreign key validation", () => {
+    test("adds NOT VALID to ALTER TABLE ADD FOREIGN KEY statements", () => {
       const input = `CREATE TABLE "post" (
     "id" UUID NOT NULL,
     "authorId" UUID NOT NULL,
@@ -134,14 +134,17 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
 
       const result = transformMigration(input);
 
-      // FK removal is FixedWithWarning → exit 3.
       expect(result.exitCode).toBe(3);
-      expect(result.sql).not.toContain("FOREIGN KEY");
-      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).toContain("FOREIGN KEY");
+      expect(result.sql).toContain("REFERENCES");
+      expect(result.sql).toContain("NOT VALID");
+      expect(hasDiagnosticWithStatus(result.output, "fixed_with_warning")).toBe(
+        true,
+      );
       expect(result.sql).toContain('CREATE TABLE "post"');
     });
 
-    test("removes inline REFERENCES from CREATE TABLE", () => {
+    test("preserves supported inline REFERENCES in CREATE TABLE", () => {
       const input = `CREATE TABLE "post" (
     "id" UUID NOT NULL,
     "authorId" UUID REFERENCES "user"("id"),
@@ -150,29 +153,31 @@ ALTER TABLE "post" ADD CONSTRAINT "post_authorId_fkey" FOREIGN KEY ("authorId") 
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(3);
-      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain("REFERENCES");
       expect(result.sql).toContain('CREATE TABLE "post"');
     });
 
-    test("removes FK with ON DELETE CASCADE", () => {
-      const input = `ALTER TABLE "post" ADD CONSTRAINT "fk_author" FOREIGN KEY ("authorId") REFERENCES "user"("id") ON DELETE CASCADE;`;
+    test("preserves supported cascading referential actions", () => {
+      const input = `CREATE TABLE "post" (
+    "authorId" UUID REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE SET NULL
+);`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(3);
-      expect(result.sql).not.toContain("REFERENCES");
-      expect(result.sql).not.toContain("FOREIGN KEY");
-      expect(result.sql.trim()).toBe("");
+      expect(result.exitCode).toBe(0);
+      expect(result.sql).toContain("REFERENCES");
+      expect(result.sql).toContain("ON DELETE CASCADE");
+      expect(result.sql).toContain("ON UPDATE SET NULL");
+      expect(result.output.summary.errors).toBe(0);
     });
 
-    test("DROP CONSTRAINT for foreign keys is unfixable", () => {
+    test("preserves DROP CONSTRAINT for a foreign key", () => {
       const input = `ALTER TABLE "Pet" DROP CONSTRAINT "Pet_ownerId_fkey";`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(1);
-      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
+      expect(result.exitCode).toBe(0);
       expect(result.sql).toContain("DROP CONSTRAINT");
     });
   });
@@ -205,11 +210,11 @@ ALTER TABLE "pet" ADD CONSTRAINT "pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       const result = transformMigration(input);
 
-      // FK removal → exit 3, not 0.
       expect(result.exitCode).toBe(3);
       expect(result.sql).toContain("CREATE INDEX ASYNC");
-      expect(result.sql).not.toContain("FOREIGN KEY");
-      expect(result.sql).not.toContain("REFERENCES");
+      expect(result.sql).toContain("FOREIGN KEY");
+      expect(result.sql).toContain("REFERENCES");
+      expect(result.sql).toContain("NOT VALID");
       expect(result.sql).toContain('CREATE TABLE "owner"');
       expect(result.sql).toContain('CREATE TABLE "pet"');
       expect(result.sql).toContain("gen_random_uuid()");
@@ -263,16 +268,20 @@ DROP TABLE IF EXISTS "post";`;
       expect(result.sql).toContain("email");
     });
 
-    test("returns exit code 1 for unfixable errors", () => {
-      const input = `ALTER TABLE "t" DROP CONSTRAINT "t_pkey";`;
+    test("returns exit code 3 when adding NOT VALID to a foreign key", () => {
+      const input = `ALTER TABLE "t" ADD CONSTRAINT "t_parent_fkey"
+FOREIGN KEY ("parent_id") REFERENCES "parent"("id");`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(1);
-      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
+      expect(result.exitCode).toBe(3);
+      expect(result.sql).toContain("NOT VALID");
+      expect(hasDiagnosticWithStatus(result.output, "fixed_with_warning")).toBe(
+        true,
+      );
     });
 
-    test("compound ALTER TABLE with DROP CONSTRAINT is unfixable", () => {
+    test("compound ALTER TABLE with ADD PRIMARY KEY is unfixable", () => {
       const input = `ALTER TABLE "vet" DROP CONSTRAINT "vet_pkey",
 ADD COLUMN     "phone" VARCHAR(20),
 ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;

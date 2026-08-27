@@ -2,7 +2,6 @@
  * Aurora DSQL Schema Validator for Prisma
  *
  * Validates Prisma schemas for DSQL compatibility and reports issues.
- * The relationMode check is handled here (Prisma-specific). All other
  * SQL-level checks are delegated to dsql-lint by generating SQL via
  * `prisma migrate diff` and running it through dsql-lint's lint mode.
  */
@@ -39,11 +38,6 @@ export async function validateSchema(
     };
   }
 
-  const schemaContent = fs.readFileSync(schemaPath, "utf-8");
-  const lines = schemaContent.split("\n");
-
-  checkRelationMode(schemaContent, lines, issues);
-
   if (!skipSqlLint) {
     await checkSqlCompatibility(schemaPath, issues);
   }
@@ -52,25 +46,6 @@ export async function validateSchema(
     valid: issues.length === 0,
     issues,
   };
-}
-
-function checkRelationMode(
-  content: string,
-  lines: string[],
-  issues: ValidationIssue[],
-): void {
-  const hasDatasource = content.includes("datasource");
-  const hasRelationMode = /relationMode\s*=\s*["']prisma["']/.test(content);
-
-  if (hasDatasource && !hasRelationMode) {
-    const datasourceLine = lines.findIndex((l) => l.includes("datasource"));
-    issues.push({
-      message: 'Missing relationMode = "prisma" in datasource block',
-      line: datasourceLine + 1,
-      suggestion:
-        'Add relationMode = "prisma" to your datasource block. DSQL does not support foreign key constraints.',
-    });
-  }
 }
 
 async function checkSqlCompatibility(

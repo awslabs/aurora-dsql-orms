@@ -123,8 +123,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * specific capabilities and constraints:
  *
  * <ul>
- *   <li>Foreign key constraints are unsupported — referential integrity is maintained at the
- *       application layer.
+ *   <li>Generated foreign keys use DSQL's {@code ADD CONSTRAINT ... NOT VALID}. Applications
+ *       validate existing rows separately and wait for the returned asynchronous job.
  *   <li>Index creation uses {@code CREATE INDEX ASYNC} / {@code CREATE UNIQUE INDEX ASYNC}.
  *   <li>Multi-table mutations use CTE-based strategies, working within DSQL without temporary
  *       tables.
@@ -168,13 +168,17 @@ public class AuroraDSQLDialect extends Dialect {
     identityColumnSupport = new AuroraDSQLIdentitySupport(sequenceCacheSize);
   }
 
-  private final Exporter<ForeignKey> NO_FK_SUPPORT_EXPORTER =
+  private final Exporter<ForeignKey> foreignKeyExporter =
       new StandardForeignKeyExporter(this) {
         @Override
         public String[] getSqlCreateStrings(
             ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
-          // Foreign key constraints are unsupported in Aurora DSQL
-          return NO_COMMANDS;
+          String[] commands = super.getSqlCreateStrings(foreignKey, metadata, context);
+          if (commands.length == 0) {
+            return commands;
+          }
+
+          return new String[] {commands[0] + " not valid"};
         }
       };
 
@@ -212,7 +216,7 @@ public class AuroraDSQLDialect extends Dialect {
 
   @Override
   public boolean dropConstraints() {
-    return false;
+    return true;
   }
 
   @Override
@@ -228,12 +232,12 @@ public class AuroraDSQLDialect extends Dialect {
 
   @Override
   public Exporter<ForeignKey> getForeignKeyExporter() {
-    return NO_FK_SUPPORT_EXPORTER;
+    return foreignKeyExporter;
   }
 
   @Override
   public boolean supportsCascadeDelete() {
-    return false;
+    return true;
   }
 
   @Override

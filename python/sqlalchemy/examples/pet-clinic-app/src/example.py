@@ -3,7 +3,7 @@
 
 import os
 
-from sqlalchemy import Date, String, event, select
+from sqlalchemy import Date, ForeignKey, String, event, select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
@@ -78,11 +78,12 @@ class Pet(Base):
     )
     name: Mapped[str] = mapped_column(String(30))
     birth_date: Mapped[Date] = mapped_column(Date())
-    owner_id: Mapped[str | None] = mapped_column(UUID)
-    # One to many
-    owner: Mapped["Owner"] = relationship(
-        "Owner", foreign_keys=[owner_id], primaryjoin="Owner.id == Pet.owner_id"
+    owner_id: Mapped[str | None] = mapped_column(
+        UUID,
+        ForeignKey("owner.id", ondelete="RESTRICT", onupdate="RESTRICT"),
     )
+    # One to many
+    owner: Mapped["Owner"] = relationship("Owner")
 
 
 # Define an association table for Vet and Speacialty, this is an intermediate table
@@ -93,8 +94,14 @@ class VetSpecialties(Base):
     id: Mapped[str] = mapped_column(
         UUID, primary_key=True, default=text("gen_random_uuid()")
     )
-    vet_id: Mapped[str | None] = mapped_column(UUID)
-    specialty_id: Mapped[str | None] = mapped_column(String(80))
+    vet_id: Mapped[str | None] = mapped_column(
+        UUID,
+        ForeignKey("vet.id", ondelete="RESTRICT", onupdate="RESTRICT"),
+    )
+    specialty_id: Mapped[str | None] = mapped_column(
+        String(80),
+        ForeignKey("specialty.name", ondelete="RESTRICT", onupdate="RESTRICT"),
+    )
 
 
 # Define a Specialty table
@@ -115,8 +122,6 @@ class Vet(Base):
     specialties: Mapped[list["Specialty"]] = relationship(
         "Specialty",
         secondary=VetSpecialties.__table__,
-        primaryjoin="foreign(VetSpecialties.vet_id)==Vet.id",
-        secondaryjoin="foreign(VetSpecialties.specialty_id)==Specialty.id",
     )
 
 
@@ -124,12 +129,12 @@ def demo_pet_clinic_operations(engine):
     print("Starting demo pet clinic operations")
     print("Starting cleanup of existing tables")
     # Clean up any existing tables
-    for table in Base.metadata.tables.values():
+    for table in reversed(Base.metadata.sorted_tables):
         table.drop(engine, checkfirst=True)
     print("Successfully cleaned up existing tables")
     print("Creating new tables")
     # Create all tables
-    for table in Base.metadata.tables.values():
+    for table in Base.metadata.sorted_tables:
         table.create(engine, checkfirst=True)
     print("All tables created successfully")
     session = Session(engine)

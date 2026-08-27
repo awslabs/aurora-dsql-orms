@@ -6,7 +6,7 @@ A sample application demonstrating Prisma with Amazon Aurora DSQL.
 
 This example shows:
 
-- DSQL-compatible Prisma schema with UUID primary keys and `relationMode = "prisma"`
+- DSQL-compatible Prisma schema with UUID primary keys and native foreign keys
 - DsqlPrismaClient wrapper with automatic IAM authentication
 - CRUD operations for a veterinary clinic domain (owners, pets, vets, specialties)
 - Integration tests
@@ -39,9 +39,14 @@ This example shows:
    ```
 
 4. Apply migrations:
+
    ```bash
    npm run prisma:migrate-up
    ```
+
+   The incremental foreign key migration uses `NOT VALID`. The migration
+   command then validates each constraint with `ALTER TABLE ASYNC`, captures
+   its returned `job_id`, and waits with `CALL sys.wait_for_job(...)`.
 
 ## Run
 
