@@ -161,7 +161,7 @@ async def test_aerich_add_column_migration(migration_dir, backend):
     assert "description" not in columns
 
     # Switch to V2 model and apply migration.
-    await migrate_to([ADD_COLUMN_V2], migration_dir, backend, "add_description")
+    command = await migrate_to([ADD_COLUMN_V2], migration_dir, backend, "add_description")
 
     # Verify new column exists.
     conn = Tortoise.get_connection("default")
@@ -179,8 +179,13 @@ async def test_aerich_add_column_migration(migration_dir, backend):
     )
     assert result[1][0]["description"] == "test desc"
 
-    # Note: Downgrade not tested here because DSQL doesn't support ALTER TABLE DROP COLUMN.
-    # See other tests for downgrade testing.
+    # Downgrade and verify the column is removed.
+    await command.downgrade(version=-1, delete=False)
+
+    conn = Tortoise.get_connection("default")
+    columns = await get_table_columns(conn, "incremental_test_model")
+    assert "description" not in columns, "description should be dropped after downgrade"
+    assert "name" in columns, "name should still exist"
 
 
 @pytest.mark.asyncio
