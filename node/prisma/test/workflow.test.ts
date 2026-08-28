@@ -131,8 +131,7 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
     test("schema with autoincrement fails validation", async () => {
       const invalidSchema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -147,23 +146,6 @@ model User {
       expect(result.issues.some((i) => i.message.includes("SERIAL"))).toBe(
         true,
       );
-    });
-
-    test("schema missing relationMode is accepted when SQL lint is skipped", async () => {
-      const schema = `
-datasource db {
-  provider = "postgresql"
-}
-
-model User {
-  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
-}
-`;
-      const schemaPath = createTempSchema(schema);
-      const result = await validateSchema(schemaPath, true);
-
-      expect(result.valid).toBe(true);
     });
   });
 

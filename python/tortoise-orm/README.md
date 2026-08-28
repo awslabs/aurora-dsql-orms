@@ -115,8 +115,8 @@ The compatibility module patches Aerich to:
 - Add incremental foreign keys with `NOT VALID` and wait for asynchronous
   validation to finish
 
-Databases created by earlier adapter versions need a one-time explicit foreign
-key backfill migration. See [Adapter Behavior](docs/ADAPTER_BEHAVIOR.md#upgrading-an-existing-database).
+Databases created with `aurora-dsql-tortoise` 0.2.0 or earlier need a one-time
+foreign-key backfill migration. See [Adapter Behavior](docs/ADAPTER_BEHAVIOR.md#upgrading-an-existing-database).
 
 ## Features and Limitations
 
