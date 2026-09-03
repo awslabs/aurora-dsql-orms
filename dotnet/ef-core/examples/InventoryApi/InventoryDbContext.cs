@@ -32,7 +32,6 @@ public class InventoryDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UnitPrice).HasColumnType("numeric");
-            // DSQL enforces FKs created inline with the initial table migration.
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.Items)
                 .HasForeignKey(e => e.OrderId)

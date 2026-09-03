@@ -44,9 +44,9 @@ This example shows:
    npm run prisma:migrate-up
    ```
 
-   The incremental foreign key migration uses `NOT VALID`. The migration
-   command then validates each constraint with `ALTER TABLE ASYNC`, captures
-   its returned `job_id`, and waits with `CALL sys.wait_for_job(...)`.
+   Foreign keys added to existing tables use `NOT VALID`. The migration command
+   then validates each constraint with `ALTER TABLE ASYNC`, captures its
+   returned `job_id`, and waits with `CALL sys.wait_for_job(...)`.
 
 ## Run
 

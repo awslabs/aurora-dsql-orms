@@ -52,8 +52,6 @@ npx aurora-dsql-prisma validate prisma/schema.prisma
 
 The validator generates SQL from your schema and delegates compatibility checks
 to [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint).
-`relationMode = "prisma"` remains useful for automated migrations, but is no
-longer mandatory.
 
 #### Example Output
 
@@ -137,26 +135,11 @@ remain unvalidated until the asynchronous job completes.
 
 When using Prisma with Aurora DSQL:
 
-1. **Choose a relation mode**:
-
-   ```prisma
-   datasource db {
-     provider     = "postgresql"
-     relationMode = "prisma"
-   }
-   ```
-
-   Use `relationMode = "prisma"` when the application should emulate
-   referential integrity. To use native DSQL foreign keys, omit it. Aurora DSQL
-   supports `NoAction`, `Restrict`, `Cascade`, `SetNull`, and `SetDefault`.
-   Post-creation constraints are transformed to `NOT VALID`; add the
-   corresponding `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT` statement before
-   applying the migration.
-
-   Cascading actions count toward Aurora DSQL's transaction row-modification
-   limits. Prefer `NoAction` or `Restrict` where child-row cardinality is
-   unbounded, and run transactions through retry handling because foreign-key
-   conflicts can surface as serialization failures.
+1. **Use database foreign keys**: Aurora DSQL supports `NoAction`, `Restrict`,
+   `Cascade`, `SetNull`, and `SetDefault`. Cascading actions count toward
+   transaction row-modification limits, so prefer `NoAction` or `Restrict`
+   where child-row cardinality is unbounded. Retry transactions when
+   foreign-key conflicts surface as serialization failures.
 
 2. **Use UUID for IDs**:
 
@@ -188,7 +171,6 @@ See [examples/veterinary-app/](examples/veterinary-app/) for a complete working 
 - [Unsupported PostgreSQL Features in DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html)
 - [Aurora DSQL Connector for node-postgres](https://github.com/awslabs/aurora-dsql-connectors/tree/main/node/node-postgres/)
 - [Prisma Documentation](https://www.prisma.io/docs)
-- [Prisma Relation Mode](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/relation-mode)
 
 ## Security
 
