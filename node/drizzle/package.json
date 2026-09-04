@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.2.0",
+    "@types/node": "^26.4.0",
     "@types/pg": "^8.15.0",
     "drizzle-kit": "^0.31.0",
     "drizzle-orm": "^0.45.2",
@@ -68,6 +68,6 @@
     "prettier": "4.0.0-alpha.13",
     "ts-jest": "^29.4.1",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^7.0.2"
   }
 }
