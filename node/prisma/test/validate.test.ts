@@ -20,16 +20,22 @@ describe("Schema Validator", () => {
     return schemaPath;
   }
 
-  describe("relation mode", () => {
-    test("does not require relationMode prisma", async () => {
+  describe("relations", () => {
+    test("accepts native foreign key relations", async () => {
       const schema = `
 datasource db {
   provider = "postgresql"
 }
 
-model User {
+model Owner {
   id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
+  pets Pet[]
+}
+
+model Pet {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerId String @db.Uuid
+  owner   Owner  @relation(fields: [ownerId], references: [id])
 }
 `;
       const result = await validateSchema(createTempSchema(schema), true);
@@ -42,8 +48,7 @@ model User {
     test("fails when autoincrement() is used (SERIAL in SQL)", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -61,8 +66,7 @@ model User {
     test("reports CREATE INDEX without ASYNC", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -82,8 +86,7 @@ model User {
     test("fails when @db.Serial is used", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -101,8 +104,7 @@ model User {
     test("fails when @db.SmallSerial is used", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -120,8 +122,7 @@ model User {
     test("fails when @db.BigSerial is used", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -139,8 +140,7 @@ model User {
     test("fails when @@fulltext is used", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -162,8 +162,7 @@ model User {
     test("passes for DSQL-compatible schema", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
@@ -214,8 +213,7 @@ model User {
     test("returns error when prisma cannot parse schema", async () => {
       const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {

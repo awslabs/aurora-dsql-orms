@@ -63,7 +63,6 @@ of existing rows to finish.
 - Foreign keys added to existing tables enforce new writes immediately while existing rows are validated asynchronously.
 - Aurora DSQL can't add a `NOT NULL` column to an existing table. Add a nullable
   foreign key, backfill it, and keep it nullable.
-- Django continues to implement `on_delete` behavior in application code.
 - A failed validation job fails the migration instead of leaving it reported as complete.
 - Foreign-key conflicts can surface as serialization failures, so retry the full transaction.
 

@@ -5,7 +5,7 @@ A small veterinary clinic schema demonstrating [@aws/aurora-dsql-drizzle](../../
 ## Layout
 
 - `src/schema.ts` — Drizzle tables with UUID primary keys, native `RESTRICT` foreign keys, and matching `relations()` query metadata
-- `drizzle/` — committed DSQL migrations; `0001` adds foreign keys to existing tables with `NOT VALID` and monitored asynchronous validation
+- `drizzle/` — committed DSQL migrations, including monitored asynchronous validation for constraints added to existing tables
 - `src/dsql-client.ts` — builds the `drizzle()` database
 - `src/migrate.ts` — applies migrations via the adapter's `migrate()`
 - `src/example.ts` — populates and verifies data
