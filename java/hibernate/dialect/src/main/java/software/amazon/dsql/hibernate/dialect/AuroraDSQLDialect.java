@@ -129,7 +129,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  *   <li>Multi-table mutations use CTE-based strategies, working within DSQL without temporary
  *       tables.
  *   <li>{@code TRUNCATE} is replaced with {@code DELETE}.
- *   <li>Locking is OCC-only; {@code SELECT ... FOR UPDATE} is supported for additional read checks.
+ *   <li>Locking is OCC-only; {@code SELECT ... FOR UPDATE} adds commit-time conflict checks for
+ *       rows targeted by the locking clause. Each targeted row's primary key counts toward the 10 MiB
+ *       transaction-size limit.
  *   <li>Sequences and identity columns require a mandatory {@code CACHE} parameter.
  * </ul>
  *

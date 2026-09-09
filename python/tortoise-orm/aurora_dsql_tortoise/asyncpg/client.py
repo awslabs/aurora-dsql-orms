@@ -6,6 +6,7 @@ import aurora_dsql_asyncpg as dsql
 from tortoise.backends.asyncpg.client import AsyncpgDBClient
 
 from aurora_dsql_tortoise.asyncpg.schema_generator import AuroraDSQLAsyncpgSchemaGenerator
+from aurora_dsql_tortoise.common.capabilities import dsql_capabilities
 from aurora_dsql_tortoise.common.config import DSQL_CONNECTOR_PARAMS
 
 
@@ -14,6 +15,7 @@ class AuroraDSQLAsyncpgClient(AsyncpgDBClient):
 
     schema_generator = AuroraDSQLAsyncpgSchemaGenerator
     parameter_placeholder = "$1"
+    capabilities = dsql_capabilities(AsyncpgDBClient.capabilities)
 
     def __init__(self, *, database: str | None = "postgres", **kwargs):
         # Database is set for internal Tortoise usage. Connection defaults are

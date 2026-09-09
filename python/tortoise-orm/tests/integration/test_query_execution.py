@@ -9,6 +9,7 @@ from tortoise.expressions import Q
 from tortoise.fields.relational import ReverseRelation
 from tortoise.functions import Avg, Count, Max, Min, Sum
 from tortoise.models import Model
+from tortoise.transactions import in_transaction
 
 from tests.conftest import BACKENDS
 
@@ -59,6 +60,62 @@ class TestJoins:
         books = await Book.filter(author__name="Carol").all()
         assert len(books) == 1
         assert books[0].title == "C1"
+
+
+@pytest.mark.asyncio
+@pytest.mark.use_schemas
+@pytest.mark.parametrize("backend", BACKENDS, indirect=True)
+class TestSelectForUpdate:
+    async def test_non_key_filter(self, backend):
+        author = await Author.create(name="Lock Author")
+        await Book.create(title="Lock Book", price=42, author=author)
+
+        async with in_transaction() as connection:
+            book = await Book.filter(price=42).using_db(connection).select_for_update().first()
+
+            assert book is not None
+            assert book.title == "Lock Book"
+
+    async def test_no_key_falls_back_to_for_update(self, backend):
+        sql = Book.all().select_for_update(no_key=True).sql()
+
+        assert "FOR UPDATE" in sql
+        assert "FOR NO KEY UPDATE" not in sql
+
+    async def test_update_or_create_creates(self, backend):
+        author = await Author.create(name="Create Author")
+
+        book, created = await Book.update_or_create(
+            title="Created Book",
+            author=author,
+            defaults={"price": 10},
+        )
+
+        assert created is True
+        assert book.price == 10
+
+    async def test_update_or_create_updates(self, backend, monkeypatch):
+        select_for_update_called = False
+        original_select_for_update = Book.select_for_update
+
+        def tracked_select_for_update(cls, *args, **kwargs):
+            nonlocal select_for_update_called
+            select_for_update_called = True
+            return original_select_for_update(*args, **kwargs)
+
+        monkeypatch.setattr(Book, "select_for_update", classmethod(tracked_select_for_update))
+        author = await Author.create(name="Update Author")
+        await Book.create(title="Updated Book", price=10, author=author)
+
+        book, created = await Book.update_or_create(
+            title="Updated Book",
+            author=author,
+            defaults={"price": 20},
+        )
+
+        assert created is False
+        assert book.price == 20
+        assert select_for_update_called is True
 
 
 @pytest.mark.asyncio

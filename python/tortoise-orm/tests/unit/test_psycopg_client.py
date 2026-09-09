@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aurora_dsql_psycopg as dsql
 import psycopg
 import pytest
+from tortoise.backends.psycopg.client import PsycopgClient
 
 from aurora_dsql_tortoise.psycopg.client import AuroraDSQLPsycopgClient
 from tests.unit.conftest import TEST_HOST, TEST_USER
@@ -188,3 +189,9 @@ async def test_default_connection_class(mock_pool, captured_kwargs):
     await client.create_pool(**pool_kwargs())
 
     assert captured_kwargs["connection_class"] is dsql.DSQLAsyncConnection
+
+
+def test_select_for_update_capabilities():
+    expected = vars(PsycopgClient.capabilities) | {"support_for_no_key_update": False}
+
+    assert vars(AuroraDSQLPsycopgClient.capabilities) == expected

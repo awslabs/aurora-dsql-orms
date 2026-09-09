@@ -65,7 +65,7 @@ public class AuroraDSQLDialectTest {
     assertFalse(dialect.supportsOuterJoinForUpdate());
     assertFalse(dialect.supportsWait());
 
-    // DSQL uses OCC; FOR UPDATE is supported for read-checks
+    // DSQL uses OCC; FOR UPDATE adds commit-time conflict checks
     assertEquals(" for update", dialect.getForUpdateString());
     assertEquals(" for update", dialect.getForUpdateString(null, new LockOptions()));
     assertEquals(" for update", dialect.getWriteLockString(0));
