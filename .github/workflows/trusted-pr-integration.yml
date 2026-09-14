@@ -1,5 +1,5 @@
 name: Trusted PR Integration
-run-name: Trusted PR #${{ inputs.pull-request-number }} @ ${{ inputs.head-sha }}
+run-name: Trusted PR #${{ inputs.pull-request-number }}
 
 permissions: {}
 
@@ -10,14 +10,53 @@ on:
         description: "Open pull request to test"
         required: true
         type: number
-      head-sha:
-        description: "Exact current head SHA shown on the pull request"
-        required: true
-        type: string
 
 jobs:
+  resolve:
+    name: Resolve exact PR commit
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      head-sha: ${{ steps.resolve.outputs.head-sha }}
+    steps:
+      - uses: actions/github-script@v9
+        id: resolve
+        env:
+          PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
+        with:
+          script: |
+            const pullNumber = Number(process.env.PULL_REQUEST_NUMBER);
+            if (!Number.isInteger(pullNumber) || pullNumber < 1) {
+              core.setFailed('Pull request number must be a positive integer');
+              return;
+            }
+
+            const response = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+            const pr = response.data;
+            if (pr.state !== 'open') {
+              core.setFailed(`Pull request #${pullNumber} is not open`);
+              return;
+            }
+            if (pr.base.repo.full_name !== `${context.repo.owner}/${context.repo.repo}` ||
+                pr.base.ref !== 'main') {
+              core.setFailed(`Pull request #${pullNumber} does not target main`);
+              return;
+            }
+
+            core.setOutput('head-sha', pr.head.sha);
+            await core.summary
+              .addHeading(`Trusted PR #${pullNumber}`)
+              .addRaw(`Commit awaiting approval: \`${pr.head.sha}\``)
+              .write();
+
   authorize:
     name: Authorize exact PR commit
+    needs: resolve
     runs-on: ubuntu-latest
     environment: pr-integration
     permissions:
@@ -30,17 +69,13 @@ jobs:
         id: validate
         env:
           PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
-          EXPECTED_HEAD_SHA: ${{ inputs.head-sha }}
+          EXPECTED_HEAD_SHA: ${{ needs.resolve.outputs.head-sha }}
         with:
           script: |
             const pullNumber = Number(process.env.PULL_REQUEST_NUMBER);
             const expectedHead = process.env.EXPECTED_HEAD_SHA.toLowerCase();
-            if (!Number.isInteger(pullNumber) || pullNumber < 1) {
-              core.setFailed('Pull request number must be a positive integer');
-              return;
-            }
             if (!/^[0-9a-f]{40}$/.test(expectedHead)) {
-              core.setFailed('Head SHA must be a full 40-character commit SHA');
+              core.setFailed('Resolved head SHA is not a full commit SHA');
               return;
             }
 
