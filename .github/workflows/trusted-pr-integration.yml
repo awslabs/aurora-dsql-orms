@@ -1,8 +1,7 @@
 name: Trusted PR Integration
-run-name: Trusted PR #${{ inputs.pull-request-number }} @ ${{ inputs.head-sha }}
+run-name: "Trusted PR #${{ inputs.pull-request-number }} @ ${{ inputs.head-sha }}"
 
 permissions: {}
-cache-mode: read
 
 on:
   workflow_dispatch:
