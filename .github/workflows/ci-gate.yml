@@ -3,11 +3,30 @@
 # the single required status check in GitHub branch protection.
 name: CI Gate
 
-permissions: {}
+permissions:
+  contents: read
+  pull-requests: read
 
 on:
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      checkout-ref:
+        description: "Exact commit to test; defaults to the triggering ref"
+        required: false
+        type: string
+        default: ""
+      pull-request-number:
+        description: "Pull request used for changed-path detection"
+        required: false
+        type: number
+        default: 0
+      run-integration:
+        description: "Allow jobs that use AWS credentials"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   changes:
@@ -20,9 +39,13 @@ jobs:
       python-django: ${{ steps.detect.outputs.python-django }}
       python-sqlalchemy: ${{ steps.detect.outputs.python-sqlalchemy }}
       python-tortoise: ${{ steps.detect.outputs.python-tortoise }}
+      run-integration: ${{ steps.detect.outputs.run-integration }}
     steps:
       - uses: actions/github-script@v9
         id: detect
+        env:
+          PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
+          RUN_INTEGRATION: ${{ inputs.run-integration }}
         with:
           script: |
             const config = {
@@ -38,10 +61,26 @@ jobs:
               '.github/workflows/ci-gate.yml',
               '.github/workflows/dsql-cluster-create.yml',
               '.github/workflows/dsql-cluster-delete.yml',
+              '.github/workflows/trusted-pr-integration.yml',
               '.pre-commit-config.yaml',
             ];
 
-            const pr = context.payload.pull_request;
+            let pr = context.payload.pull_request;
+            const pullNumber = Number(process.env.PULL_REQUEST_NUMBER);
+            if (!pr && pullNumber) {
+              const response = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+              });
+              pr = response.data;
+            }
+
+            const sameRepository = !pr ||
+              pr.head.repo.full_name === `${context.repo.owner}/${context.repo.repo}`;
+            const runIntegration =
+              process.env.RUN_INTEGRATION === 'true' || sameRepository;
+            core.setOutput('run-integration', String(runIntegration));
 
             // Manual dispatch: run all CI
             if (!pr) {
@@ -77,11 +116,16 @@ jobs:
   pre-commit:
     needs: changes
     uses: ./.github/workflows/pre-commit.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
 
   dotnet-ef-core:
     needs: changes
     if: needs.changes.outputs.dotnet-ef-core == 'true'
     uses: ./.github/workflows/dotnet-ef-core-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -90,6 +134,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.java-hibernate == 'true'
     uses: ./.github/workflows/java-hibernate-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -98,6 +145,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.node-prisma == 'true'
     uses: ./.github/workflows/node-prisma-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -106,6 +156,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.node-drizzle == 'true'
     uses: ./.github/workflows/node-drizzle-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -114,6 +167,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.python-django == 'true'
     uses: ./.github/workflows/python-django-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -122,6 +178,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.python-sqlalchemy == 'true'
     uses: ./.github/workflows/python-sqlalchemy-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -130,6 +189,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.python-tortoise == 'true'
     uses: ./.github/workflows/python-tortoise-ci.yml
+    with:
+      checkout-ref: ${{ inputs.checkout-ref }}
+      run-integration: ${{ needs.changes.outputs.run-integration == 'true' }}
     secrets: inherit
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -156,4 +218,42 @@ jobs:
               if (result.result === 'failure' || result.result === 'cancelled') {
                 core.setFailed(`Job ${job} ${result.result}`);
               }
+            }
+
+  integration-status:
+    name: Report DSQL integration result
+    if: >-
+      always() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    needs: [changes, gate]
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
+      - uses: actions/github-script@v9
+        env:
+          GATE_RESULT: ${{ needs.gate.result }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_INTEGRATION: ${{ needs.changes.outputs.run-integration }}
+        with:
+          script: |
+            const passed =
+              process.env.RUN_INTEGRATION === 'true' &&
+              process.env.GATE_RESULT === 'success';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: process.env.HEAD_SHA,
+              state: passed ? 'success' : 'failure',
+              context: 'dsql-integration',
+              description: passed
+                ? 'DSQL integration tests passed'
+                : 'DSQL integration tests failed',
+              target_url:
+                `https://github.com/${context.repo.owner}/${context.repo.repo}` +
+                `/actions/runs/${context.runId}`,
+            });
+            if (!passed) {
+              core.setFailed(`CI gate ${process.env.GATE_RESULT}`);
             }

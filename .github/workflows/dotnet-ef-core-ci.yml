@@ -3,8 +3,30 @@ name: .NET EF Core CI
 permissions: {}
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      checkout-ref:
+        description: "Exact commit to test; defaults to the triggering ref"
+        required: false
+        type: string
+        default: ""
+      run-integration:
+        description: "Allow jobs that use AWS credentials"
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
+    inputs:
+      checkout-ref:
+        description: "Exact commit to test; defaults to the triggering ref"
+        required: false
+        type: string
+        default: ""
+      run-integration:
+        description: "Allow jobs that use AWS credentials"
+        required: false
+        type: boolean
+        default: true
   push:
     branches: [main]
 
@@ -21,6 +43,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.checkout-ref }}
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v6
@@ -38,6 +62,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.checkout-ref }}
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v6
@@ -48,6 +74,7 @@ jobs:
         run: dotnet build "$EXAMPLE" --configuration Release
 
   create-cluster:
+    if: github.event_name == 'push' || inputs.run-integration
     needs: build-and-unit-test
     uses: ./.github/workflows/dsql-cluster-create.yml
     with:
@@ -65,6 +92,8 @@ jobs:
       id-token: write # required by aws-actions/configure-aws-credentials
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.checkout-ref }}
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v6
@@ -91,6 +120,8 @@ jobs:
       id-token: write # required by aws-actions/configure-aws-credentials
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.checkout-ref }}
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v6
