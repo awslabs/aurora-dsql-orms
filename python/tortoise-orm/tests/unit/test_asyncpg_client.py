@@ -4,6 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tortoise.backends.asyncpg.client import AsyncpgDBClient
 
 from aurora_dsql_tortoise.asyncpg.client import AuroraDSQLAsyncpgClient
 from tests.unit.conftest import TEST_HOST, TEST_USER
@@ -97,3 +98,9 @@ async def test_pool_param_passed_to_create_pool(param, value, mock_create_pool, 
     await client.create_pool(**pool_kwargs(**{param: value}))
 
     assert param in captured_kwargs["kwargs"], f"{param} should be passed to dsql.create_pool"
+
+
+def test_select_for_update_capabilities():
+    expected = vars(AsyncpgDBClient.capabilities) | {"support_for_no_key_update": False}
+
+    assert vars(AuroraDSQLAsyncpgClient.capabilities) == expected

@@ -17,6 +17,8 @@ import org.hibernate.query.Query;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import software.amazon.dsql.hibernate.dialect.integration.model.M2OEntityA;
+import software.amazon.dsql.hibernate.dialect.integration.model.M2OEntityB;
 import software.amazon.dsql.hibernate.dialect.integration.model.SimpleEntity;
 import software.amazon.dsql.hibernate.dialect.integration.model.VersionedEntity;
 
@@ -127,6 +129,36 @@ public class LockingTest extends DSQLHibernateBaseTest {
     }
   }
 
+  @Test
+  void testPessimisticLockWithJoinedNonKeyQuery() {
+    try (Session session = getSession()) {
+      session.beginTransaction();
+      M2OEntityB parent = new M2OEntityB();
+      parent.setValue("Lock Parent");
+      M2OEntityA child = new M2OEntityA();
+      child.setValue("Lock Child");
+      child.setEntityB(parent);
+      session.persist(parent);
+      session.persist(child);
+      session.getTransaction().commit();
+    }
+
+    try (Session session = getSession()) {
+      session.beginTransaction();
+      Query<M2OEntityA> query =
+          session
+              .createQuery(
+                  "SELECT a FROM M2OEntityA a JOIN FETCH a.m2OEntityB b WHERE b.value = :value",
+                  M2OEntityA.class)
+              .setParameter("value", "Lock Parent")
+              .setLockMode(PESSIMISTIC_WRITE);
+      M2OEntityA entity = query.getSingleResult();
+      Assertions.assertEquals("Lock Child", entity.getValue());
+      Assertions.assertEquals("Lock Parent", entity.getEntityB().getValue());
+      session.getTransaction().commit();
+    }
+  }
+
   /**
    * This test verifies that FOR UPDATE works with Hibernate's pessimistic locking. In this
    * scenario, a first transaction reads a value in entity 1 with SELECT FOR UPDATE, then attempts
@@ -210,6 +242,6 @@ public class LockingTest extends DSQLHibernateBaseTest {
 
   @Override
   protected List<Class<?>> getAnnotatedClasses() {
-    return List.of(SimpleEntity.class, VersionedEntity.class);
+    return List.of(SimpleEntity.class, VersionedEntity.class, M2OEntityA.class, M2OEntityB.class);
   }
 }

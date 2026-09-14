@@ -118,6 +118,21 @@ The compatibility module patches Aerich to:
 Databases created by earlier adapter versions need a one-time explicit foreign
 key backfill migration. See [Adapter Behavior](docs/ADAPTER_BEHAVIOR.md#upgrading-an-existing-database).
 
+### SELECT FOR UPDATE
+
+Use `select_for_update()` inside `in_transaction()` and bind the queryset to that connection.
+Non-key predicates are supported. Tortoise relation filters and `select_related()` emit
+`LEFT OUTER JOIN`; do not combine them with untargeted `select_for_update()`. Use explicit SQL
+with an `INNER JOIN` for joined locking queries. Aurora DSQL does not take blocking row locks;
+rows targeted by the locking clause participate in commit-time optimistic conflict checks. Each
+targeted row's primary key counts toward the 10 MiB transaction-size limit. Retry the whole
+transaction with backoff when a conflict returns SQLSTATE `40001`, and keep external side effects
+outside the retried callback or make them idempotent.
+
+Tortoise `no_key=True` falls back to regular `FOR UPDATE` because Aurora DSQL does not support
+`FOR NO KEY UPDATE`. `update_or_create()` is supported because its existing-row path uses
+`SELECT FOR UPDATE`; both create and update paths can encounter commit-time conflicts.
+
 ## Features and Limitations
 
 - **[Adapter Behavior](docs/ADAPTER_BEHAVIOR.md)** - How the adapter modifies Tortoise ORM behavior for Aurora DSQL compatibility
