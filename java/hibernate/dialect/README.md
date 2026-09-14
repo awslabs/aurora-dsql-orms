@@ -55,7 +55,7 @@ dialect/
 
 ## Hibernate Version Compatibility
 
-This version (2.0.0) targets Hibernate ORM 7.2+ and is forward-compatible
+This version (2.1.0) targets Hibernate ORM 7.2+ and is forward-compatible
 through 7.4+. Key differences from the 1.0.x branch (Hibernate 6.6):
 
 - `PgJdbcHelper` imported from `org.hibernate.dialect.type` (relocated in Hibernate 7.0)

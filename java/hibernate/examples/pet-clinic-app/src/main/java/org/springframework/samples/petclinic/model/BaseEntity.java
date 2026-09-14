@@ -21,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.io.Serializable;
 import java.util.UUID;
+import org.hibernate.annotations.ColumnDefault;
 
 /**
  * Simple JavaBean domain object with an id property. Used as a base class for objects needing this
@@ -34,11 +35,8 @@ public class BaseEntity implements Serializable {
 
   @GeneratedValue
   @Id
-  @Column(
-      name = "id",
-      updatable = false,
-      nullable = false,
-      columnDefinition = "UUID DEFAULT gen_random_uuid()")
+  @ColumnDefault("gen_random_uuid()")
+  @Column(name = "id", updatable = false, nullable = false)
   private UUID id;
 
   public UUID getId() {

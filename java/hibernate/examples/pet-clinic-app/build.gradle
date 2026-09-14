@@ -48,7 +48,7 @@ dependencies {
   implementation 'software.amazon.awssdk:dsql:2.54.2'
   implementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.5.0'
 
-  // Aurora DSQL Hibernate dialect 2.0.0 (Hibernate 7.x) is provided as a locally-built JAR
+  // Aurora DSQL Hibernate dialect 2.1.0 (Hibernate 7.x) is provided as a locally-built JAR
   // in lib/ by CI; it is not yet published to Maven Central. The DSQL profile loads it at
   // runtime via spring.jpa.database-platform.
   implementation fileTree(dir: 'lib', includes: ['*.jar'])
