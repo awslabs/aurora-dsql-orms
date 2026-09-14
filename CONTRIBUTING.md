@@ -65,11 +65,11 @@ requests therefore run formatting and the build or unit checks that do not
 need credentials, without the live Aurora DSQL integration jobs.
 
 After reviewing the exact pull request commit, a maintainer can run the
-**Trusted PR Integration** workflow with the pull request number from the
-`main` workflow ref. Verify the commit recorded by the resolve job, then
-approve the `pr-integration` environment. If the pull request changes before
-authorization, the workflow fails instead of testing the new commit. This
-workflow approval is separate from approving the pull request review.
+**Trusted PR Integration** workflow with the pull request number and its full
+head SHA from the `main` workflow ref. Approving the `pr-integration`
+environment runs the existing CI against that commit with the credentials
+required for live Aurora DSQL tests. This workflow approval is separate from
+approving the pull request review.
 
 
 ## Finding contributions to work on

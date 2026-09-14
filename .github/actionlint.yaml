@@ -1,0 +1,4 @@
+paths:
+  .github/workflows/trusted-pr-integration.yml:
+    ignore:
+      - 'unexpected key "cache-mode" for "workflow" section'
