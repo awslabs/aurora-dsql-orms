@@ -17,11 +17,6 @@ on:
         default: true
   workflow_dispatch:
     inputs:
-      checkout-ref:
-        description: "Exact commit to test; defaults to the triggering ref"
-        required: false
-        type: string
-        default: ""
       run-integration:
         description: "Allow jobs that use AWS credentials"
         required: false
