@@ -3,8 +3,25 @@ name: Django CI
 permissions: {}
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      checkout-ref:
+        description: "Exact commit to test; defaults to the triggering ref"
+        required: false
+        type: string
+        default: ""
+      run-integration:
+        description: "Allow jobs that use AWS credentials"
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
+    inputs:
+      run-integration:
+        description: "Allow jobs that use AWS credentials"
+        required: false
+        type: boolean
+        default: true
   push:
     branches: [main]
 
@@ -19,6 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.checkout-ref }}
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v7
       - name: Check lock file
@@ -27,6 +45,7 @@ jobs:
         run: uv build
 
   create-cluster:
+    if: github.event_name == 'push' || inputs.run-integration
     needs: build
     uses: ./.github/workflows/dsql-cluster-create.yml
     with:
@@ -56,6 +75,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.checkout-ref }}
 
       - uses: astral-sh/setup-uv@v7
       - run: uv python install ${{ matrix.python-version }}
