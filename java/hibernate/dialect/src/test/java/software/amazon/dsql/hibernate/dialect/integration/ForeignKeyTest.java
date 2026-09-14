@@ -271,6 +271,13 @@ public class ForeignKeyTest extends DSQLHibernateBaseTest {
       Assertions.assertTrue(
           script.toLowerCase().contains("create table m2oentityb"),
           "Script should create M2OEntityB table");
+      String normalizedScript = script.toLowerCase().replaceAll("\\s+", " ");
+      Assertions.assertTrue(
+          normalizedScript.contains("id uuid default gen_random_uuid() not null"),
+          "Entity IDs should have a database-generated UUID default.");
+      Assertions.assertFalse(
+          normalizedScript.contains("entity_b_id uuid default"),
+          "Foreign key columns must not generate unrelated UUID defaults.");
     } finally {
       Files.deleteIfExists(scriptLocationTemp);
     }

@@ -176,7 +176,7 @@ jobs:
         env:
           CLUSTER_USER: "admin"
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
-        run: npm run test -- --testPathPatterns=dsql-client
+        run: npm test
 
       - name: Run sample
         working-directory: node/prisma/examples/veterinary-app

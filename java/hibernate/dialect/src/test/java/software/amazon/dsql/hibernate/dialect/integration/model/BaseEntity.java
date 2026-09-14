@@ -8,17 +8,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.io.Serializable;
 import java.util.UUID;
+import org.hibernate.annotations.ColumnDefault;
 
 @MappedSuperclass
 public class BaseEntity implements Serializable {
 
   @Id
   @GeneratedValue
-  @Column(
-      name = "id",
-      updatable = false,
-      nullable = false,
-      columnDefinition = "UUID DEFAULT gen_random_uuid()")
+  @ColumnDefault("gen_random_uuid()")
+  @Column(name = "id", updatable = false, nullable = false)
   private UUID id;
 
   public UUID getId() {

@@ -10,7 +10,7 @@
 
 -- DropTable
 BEGIN;
-DROP TABLE IF EXISTS "owner";
+DROP TABLE IF EXISTS "_SpecialtyToVet";
 COMMIT;
 
 -- DropTable
@@ -20,7 +20,7 @@ COMMIT;
 
 -- DropTable
 BEGIN;
-DROP TABLE IF EXISTS "specialty";
+DROP TABLE IF EXISTS "owner";
 COMMIT;
 
 -- DropTable
@@ -30,7 +30,7 @@ COMMIT;
 
 -- DropTable
 BEGIN;
-DROP TABLE IF EXISTS "_SpecialtyToVet";
+DROP TABLE IF EXISTS "specialty";
 COMMIT;
 
 BEGIN;
