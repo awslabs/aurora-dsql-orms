@@ -60,7 +60,7 @@
     "lodash": "^4.17.23",
     "hono": "^4.11.10",
     "fast-xml-parser": "^5.4.1",
-    "js-yaml": "^3.15.0"
+    "js-yaml": "^3.15.2"
   },
   "comments": {
     "overrides": {
