@@ -15,13 +15,6 @@ on:
         required: false
         type: boolean
         default: true
-  workflow_dispatch:
-    inputs:
-      run-integration:
-        description: "Allow jobs that use AWS credentials"
-        required: false
-        type: boolean
-        default: true
   push:
     branches: [main]
 

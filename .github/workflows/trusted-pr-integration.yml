@@ -23,16 +23,19 @@ jobs:
     permissions:
       pull-requests: read
       statuses: write
-    outputs:
-      head-sha: ${{ steps.validate.outputs.head-sha }}
     steps:
-      - uses: actions/github-script@v9
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: validate
         env:
           PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
           EXPECTED_HEAD_SHA: ${{ inputs.head-sha }}
         with:
           script: |
+            if (context.ref !== 'refs/heads/main') {
+              core.setFailed('Trusted PR Integration must be run from main');
+              return;
+            }
+
             const pullNumber = Number(process.env.PULL_REQUEST_NUMBER);
             const expectedHead = process.env.EXPECTED_HEAD_SHA.toLowerCase();
             if (!Number.isInteger(pullNumber) || pullNumber < 1) {
@@ -66,61 +69,36 @@ jobs:
               return;
             }
 
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: expectedHead,
-              state: 'pending',
-              context: 'dsql-integration',
-              description: 'Trusted DSQL integration tests are running',
-              target_url:
-                `https://github.com/${context.repo.owner}/${context.repo.repo}` +
-                `/actions/runs/${context.runId}`,
-            });
             core.setOutput('head-sha', expectedHead);
+            require('fs').writeFileSync(
+              'trusted-pr-request.json',
+              JSON.stringify({
+                pullNumber,
+                headSha: expectedHead,
+                baseSha: pr.base.sha,
+              })
+            );
 
-  integration:
-    needs: authorize
-    uses: awslabs/aurora-dsql-orms/.github/workflows/ci-gate.yml@main
-    with:
-      checkout-ref: ${{ needs.authorize.outputs.head-sha }}
-      pull-request-number: ${{ inputs.pull-request-number }}
-      run-integration: true
-    secrets: inherit
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: read
-      statuses: write
+      - name: Upload approved request
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: trusted-pr-request
+          path: trusted-pr-request.json
+          retention-days: 1
 
-  report:
-    name: Report trusted integration result
-    if: always() && needs.authorize.result == 'success'
-    needs: [authorize, integration]
-    runs-on: ubuntu-latest
-    permissions:
-      statuses: write
-    steps:
-      - uses: actions/github-script@v9
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          HEAD_SHA: ${{ needs.authorize.outputs.head-sha }}
-          INTEGRATION_RESULT: ${{ needs.integration.result }}
+          HEAD_SHA: ${{ steps.validate.outputs.head-sha }}
         with:
           script: |
-            const passed = process.env.INTEGRATION_RESULT === 'success';
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: process.env.HEAD_SHA,
-              state: passed ? 'success' : 'failure',
+              state: 'pending',
               context: 'dsql-integration',
-              description: passed
-                ? 'Trusted DSQL integration tests passed'
-                : 'Trusted DSQL integration tests failed',
+              description: 'Trusted DSQL integration tests are queued',
               target_url:
                 `https://github.com/${context.repo.owner}/${context.repo.repo}` +
                 `/actions/runs/${context.runId}`,
             });
-            if (!passed) {
-              core.setFailed(`Integration workflow ${process.env.INTEGRATION_RESULT}`);
-            }
