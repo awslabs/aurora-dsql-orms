@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Prisma-generated `ALTER TABLE ... ADD FOREIGN KEY` migrations are preserved
   and marked `NOT VALID`; add a separate `ALTER TABLE ASYNC ... VALIDATE
 CONSTRAINT` statement to validate existing rows.
-- Require `@aws/dsql-lint` 0.2.17 or later for native foreign-key support.
+- Validate schemas through the same `dsql-lint --fix` path used for migration
+  transformation. Fixable SQL passes with advisories; unfixable SQL still
+  fails.
+- Resolve `@aws/dsql-lint` through npm's `latest` dist-tag on fresh dependency
+  resolution.
 
 - Consume `dsql-lint` via the new `@aws/dsql-lint` npm package: the
   prebuilt platform binary is resolved automatically, replacing the

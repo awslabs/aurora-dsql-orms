@@ -1,6 +1,6 @@
 {
   "name": "@aws/aurora-dsql-prisma-tools",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "CLI tools for using Prisma with Amazon Aurora DSQL",
   "main": "dist/cli/index.js",
   "bin": {
@@ -44,7 +44,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@aws/dsql-lint": "^0.2.17"
+    "@aws/dsql-lint": "latest"
   },
   "devDependencies": {
     "@aws-sdk/dsql-signer": "^3.980.0",

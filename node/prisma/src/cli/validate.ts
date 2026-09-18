@@ -3,12 +3,13 @@
  *
  * Validates Prisma schemas for DSQL compatibility and reports issues.
  * SQL-level checks are delegated to dsql-lint by generating SQL via
- * `prisma migrate diff` and running it through dsql-lint's lint mode.
+ * `prisma migrate diff` and running it through the same dsql-lint fix path
+ * used to transform migrations.
  */
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { lintMigration } from "./transform";
+import { transformMigration } from "./transform";
 
 export interface ValidationIssue {
   message: string;
@@ -19,6 +20,7 @@ export interface ValidationIssue {
 export interface ValidationResult {
   valid: boolean;
   issues: ValidationIssue[];
+  advisories: ValidationIssue[];
 }
 
 export async function validateSchema(
@@ -26,10 +28,12 @@ export async function validateSchema(
   skipSqlLint?: boolean,
 ): Promise<ValidationResult> {
   const issues: ValidationIssue[] = [];
+  const advisories: ValidationIssue[] = [];
 
   if (!fs.existsSync(schemaPath)) {
     return {
       valid: false,
+      advisories,
       issues: [
         {
           message: `Schema file not found: ${schemaPath}`,
@@ -39,18 +43,20 @@ export async function validateSchema(
   }
 
   if (!skipSqlLint) {
-    await checkSqlCompatibility(schemaPath, issues);
+    await checkSqlCompatibility(schemaPath, issues, advisories);
   }
 
   return {
     valid: issues.length === 0,
     issues,
+    advisories,
   };
 }
 
 async function checkSqlCompatibility(
   schemaPath: string,
   issues: ValidationIssue[],
+  advisories: ValidationIssue[],
 ): Promise<void> {
   let sql: string;
   try {
@@ -76,23 +82,30 @@ async function checkSqlCompatibility(
     return;
   }
 
-  const result = lintMigration(sql);
-  if (result.exitCode === 0) {
-    return;
-  }
+  const result = transformMigration(sql);
 
   // Consume structured diagnostics directly — no regex scraping of stderr.
   for (const file of result.output.files) {
     for (const d of file.diagnostics) {
-      issues.push({
+      const issue = {
         message: d.message,
         line: d.line,
-        suggestion: d.suggestion,
-      });
+        suggestion:
+          d.fix_result.status !== "unfixable" && "detail" in d.fix_result
+            ? d.fix_result.detail
+            : d.suggestion,
+      };
+      (d.fix_result.status === "unfixable" ? issues : advisories).push(issue);
     }
     if (file.error) {
       issues.push({ message: file.error });
     }
+  }
+
+  if (result.exitCode !== 0 && result.exitCode !== 1 && result.exitCode !== 3) {
+    issues.push({ message: `dsql-lint exited with code ${result.exitCode}` });
+  } else if (result.exitCode === 1 && issues.length === 0) {
+    issues.push({ message: "dsql-lint reported an unfixable error" });
   }
 }
 
@@ -106,7 +119,7 @@ export function formatValidationResult(
   const lines: string[] = [];
   const fileName = path.basename(schemaPath);
 
-  if (result.issues.length === 0) {
+  if (result.issues.length === 0 && result.advisories.length === 0) {
     lines.push(`✓ ${fileName}: Schema is DSQL-compatible`);
     return lines.join("\n");
   }
@@ -122,8 +135,23 @@ export function formatValidationResult(
     }
   }
 
+  for (const advisory of result.advisories) {
+    const lineInfo = advisory.line ? ` (line ${advisory.line})` : "";
+    lines.push(`⚠ ${advisory.message}${lineInfo}`);
+    if (advisory.suggestion) {
+      lines.push(`  → ${advisory.suggestion}`);
+    }
+  }
+
   lines.push("");
-  lines.push(`✗ Validation failed: ${result.issues.length} error(s)`);
+  if (result.issues.length > 0) {
+    lines.push(`✗ Validation failed: ${result.issues.length} error(s)`);
+  } else {
+    const suffix = result.advisories.length === 1 ? "advisory" : "advisories";
+    lines.push(
+      `✓ Validation passed with ${result.advisories.length} ${suffix}`,
+    );
+  }
 
   return lines.join("\n");
 }
