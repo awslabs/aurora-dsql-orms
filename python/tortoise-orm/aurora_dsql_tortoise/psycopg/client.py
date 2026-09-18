@@ -11,6 +11,7 @@ from tortoise.backends.psycopg.client import (
     PsycopgClient,
 )
 
+from aurora_dsql_tortoise.common.capabilities import dsql_capabilities
 from aurora_dsql_tortoise.common.config import DSQL_CONNECTOR_PARAMS
 from aurora_dsql_tortoise.psycopg.schema_generator import AuroraDSQLPsycopgSchemaGenerator
 
@@ -20,6 +21,7 @@ class AuroraDSQLPsycopgClient(PsycopgClient):
 
     schema_generator = AuroraDSQLPsycopgSchemaGenerator
     parameter_placeholder = "%s"
+    capabilities = dsql_capabilities(PsycopgClient.capabilities)
 
     def __init__(self, *, database: str | None = "postgres", **kwargs):
         # Database is set for internal Tortoise usage. Connection defaults are

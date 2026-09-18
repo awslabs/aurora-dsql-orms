@@ -25,12 +25,12 @@ COMMIT;
 
 -- DropTable
 BEGIN;
-DROP TABLE IF EXISTS "specialty";
+DROP TABLE IF EXISTS "vet";
 COMMIT;
 
 -- DropTable
 BEGIN;
-DROP TABLE IF EXISTS "vet";
+DROP TABLE IF EXISTS "specialty";
 COMMIT;
 
 BEGIN;

@@ -97,8 +97,9 @@ Users should not use Hibernate's `OPTIMISTIC` lock mode, as DSQL handles OCC
 natively. The only two lock modes that should be used are:
 
 - `NONE` — standard DSQL OCC
-- `PESSIMISTIC_WRITE` — adds `SELECT ... FOR UPDATE`, which provides additional
-  read checks on selected rows
+- `PESSIMISTIC_WRITE` — adds `SELECT ... FOR UPDATE`, which adds optimistic
+  commit-time conflict checks for rows targeted by the locking clause. Each targeted
+  row's primary key counts toward the 10 MiB transaction-size limit
 
 ## Dialect Features
 

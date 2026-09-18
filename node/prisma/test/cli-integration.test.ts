@@ -67,7 +67,8 @@ CREATE INDEX "user_idx" ON "user"("id");`;
     test("validator catches invalid schema", () => {
       const invalidSchema = `
 datasource db {
-  provider = "postgresql"
+  provider     = "postgresql"
+  relationMode = "prisma"
 }
 
 model User {
@@ -95,7 +96,8 @@ model User {
     test("validator passes valid schema", () => {
       const validSchema = `
 datasource db {
-  provider = "postgresql"
+  provider     = "postgresql"
+  relationMode = "prisma"
 }
 
 model User {

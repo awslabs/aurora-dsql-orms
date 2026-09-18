@@ -191,7 +191,9 @@ Here's how to define a UUID primary key in your entity class:
 
 ```java
 @Id
-@Column(name = "id", updatable = false, nullable = false, columnDefinition = "UUID DEFAULT gen_random_uuid()")
+@GeneratedValue
+@ColumnDefault("gen_random_uuid()")
+@Column(name = "id", updatable = false, nullable = false)
 private UUID id;
 ```
 
@@ -201,6 +203,7 @@ Remember to import the necessary UUID class:
 
 ```java
 import java.util.UUID;
+import org.hibernate.annotations.ColumnDefault;
 ```
 
 ## Defining Entity Classes
@@ -212,17 +215,18 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
-import org.hibernate.annotations.Generated;
-
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import org.hibernate.annotations.ColumnDefault;
 
 @MappedSuperclass
 public class Person implements Serializable {
 
     @GeneratedValue
     @Id
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "UUID DEFAULT gen_random_uuid()")
+    @ColumnDefault("gen_random_uuid()")
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     @Column(name = "first_name")
