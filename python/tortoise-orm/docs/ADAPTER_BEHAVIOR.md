@@ -77,10 +77,11 @@ and waits for the validation job. A failed validation fails the migration.
 
 ### Upgrading an existing database
 
-Existing databases created by adapter versions that omitted foreign keys need a
-one-time Aerich migration. Aerich model-state comparison won't generate this
-migration because the relationship was already present in the model state.
-Add the constraint explicitly:
+Databases created with `aurora-dsql-tortoise-orm` 0.2.0 or earlier need a
+one-time Aerich migration to add missing foreign-key constraints. Aerich
+model-state comparison won't generate this migration because the relationship
+was already present in the model state. Confirm the constraint is absent, then
+add it explicitly:
 
 ```sql
 ALTER TABLE "child"
@@ -92,5 +93,5 @@ ALTER TABLE ASYNC "child"
 ```
 
 The compatibility runner waits for the validation job before recording the
-migration as complete. Repeat this pattern for each relationship that existed
-before native foreign-key support was enabled.
+migration as complete. Repeat this pattern for each relationship created with
+version 0.2.0 or earlier that does not already have a database constraint.
