@@ -145,8 +145,8 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-      - name: Upgrade to latest Prisma
-        run: npm install prisma@latest
+      - name: Upgrade to latest Prisma and dsql-lint
+        run: npm install prisma@latest @aws/dsql-lint@latest
       - name: Build + test vs latest Prisma
         run: npm run build && npm test
       - name: Report break

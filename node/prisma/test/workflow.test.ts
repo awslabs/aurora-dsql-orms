@@ -80,12 +80,14 @@ CREATE INDEX "Pet_ownerId_idx" ON "Pet"("ownerId");
 ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Owner"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 `;
 
-    test("step 1: validator reports issues that transform will fix", async () => {
+    test("step 1: validator accepts SQL that transform will fix", async () => {
       const schemaPath = createTempSchema(validSchema);
       const result = await validateSchema(schemaPath);
 
+      expect(result.valid).toBe(true);
+      expect(result.issues).toHaveLength(0);
       expect(
-        result.issues.some((i) => i.message.includes("CREATE INDEX")),
+        result.advisories.some((i) => i.message.includes("CREATE INDEX")),
       ).toBe(true);
     });
 
@@ -106,10 +108,12 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(result.sql).toContain('CREATE TABLE "Pet"');
     });
 
-    test("full workflow: validate reports, transform fixes", async () => {
+    test("full workflow: validate advises, transform fixes", async () => {
       const schemaPath = createTempSchema(validSchema);
       const validationResult = await validateSchema(schemaPath);
-      expect(validationResult.issues.length).toBeGreaterThan(0);
+      expect(validationResult.valid).toBe(true);
+      expect(validationResult.issues).toHaveLength(0);
+      expect(validationResult.advisories.length).toBeGreaterThan(0);
 
       const transformResult = transformMigration(prismaMigrationOutput);
 
@@ -127,9 +131,9 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
     });
   });
 
-  describe("invalid schema workflow", () => {
-    test("schema with autoincrement fails validation", async () => {
-      const invalidSchema = `
+  describe("schema transformation workflow", () => {
+    test("schema with autoincrement passes with a transformation advisory", async () => {
+      const schema = `
 datasource db {
   provider     = "postgresql"
   relationMode = "prisma"
@@ -140,13 +144,18 @@ model User {
   name String
 }
 `;
-      const schemaPath = createTempSchema(invalidSchema);
+      const schemaPath = createTempSchema(schema);
       const result = await validateSchema(schemaPath);
 
-      expect(result.valid).toBe(false);
-      expect(result.issues.some((i) => i.message.includes("SERIAL"))).toBe(
-        true,
-      );
+      expect(result).toMatchObject({
+        valid: true,
+        issues: [],
+        advisories: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("SERIAL"),
+          }),
+        ]),
+      });
     });
 
     test("schema missing relationMode is accepted when SQL lint is skipped", async () => {

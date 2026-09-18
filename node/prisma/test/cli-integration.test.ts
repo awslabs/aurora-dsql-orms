@@ -64,20 +64,19 @@ CREATE INDEX "user_idx" ON "user"("id");`;
       expect(output).toContain("CREATE INDEX ASYNC");
     });
 
-    test("validator catches invalid schema", () => {
-      const invalidSchema = `
+    test("validator exits nonzero for unfixable SQL", () => {
+      const schema = `
 datasource db {
-  provider     = "postgresql"
-  relationMode = "prisma"
+  provider = "postgresql"
 }
 
 model User {
-  id   Int    @id @default(autoincrement())
-  name String
+  id   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tags String[]
 }
 `;
       const schemaPath = path.join(tempDir, "invalid.prisma");
-      fs.writeFileSync(schemaPath, invalidSchema);
+      fs.writeFileSync(schemaPath, schema);
 
       try {
         execSync(`npm run validate ${schemaPath}`, {
@@ -88,7 +87,7 @@ model User {
         fail("Expected validator to fail");
       } catch (error: unknown) {
         const execError = error as { stdout?: string; status?: number };
-        expect(execError.stdout).toContain("SERIAL");
+        expect(execError.stdout?.toLowerCase()).toContain("array");
         expect(execError.status).toBe(1);
       }
     });

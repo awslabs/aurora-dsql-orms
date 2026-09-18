@@ -26,7 +26,11 @@ npm install --save-dev @aws/aurora-dsql-prisma-tools
 
 **Supported Node.js versions:** 20+ (Active and LTS releases)
 
-`@aws/dsql-lint` is included and uses its bundled binary by default (no setup required). To use a custom or existing installation, set `DSQL_LINT_PATH`.
+`@aws/dsql-lint` is included using npm's `latest` dist-tag and uses its bundled
+binary by default (no setup required). Fresh dependency resolution installs the
+current release; existing lockfiles keep their recorded version until the
+dependency is updated or the lockfile is regenerated. To use a custom or
+existing installation, set `DSQL_LINT_PATH`.
 
 ## Quick Start
 
@@ -51,16 +55,18 @@ npx aurora-dsql-prisma validate prisma/schema.prisma
 #### What the Validator Checks
 
 The validator generates SQL from your schema and delegates compatibility checks
-to [`dsql-lint`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint).
-`relationMode = "prisma"` remains useful for automated migrations, but is no
-longer mandatory.
+to [`dsql-lint --fix`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint),
+the same path used to transform migrations. Transformable SQL passes validation
+with advisories; unfixable SQL fails. `relationMode = "prisma"` remains useful
+for automated migrations, but is no longer mandatory.
 
 #### Example Output
 
 ```
-✗ Column `"id"` uses SERIAL, which is not supported in DSQL.
+⚠ Column `"id"` uses SERIAL, which is not supported in DSQL.
+  → Replaced SERIAL with a DSQL-compatible identity column.
 
-✗ Validation failed: 1 error(s)
+✓ Validation passed with 1 advisory
 ```
 
 ### Transform Migrations

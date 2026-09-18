@@ -39,7 +39,7 @@ model User {
   });
 
   describe("dsql-lint SQL validation", () => {
-    test("fails when autoincrement() is used (SERIAL in SQL)", async () => {
+    test("accepts autoincrement() after transforming SERIAL", async () => {
       const schema = `
 datasource db {
   provider     = "postgresql"
@@ -52,13 +52,18 @@ model User {
 }
 `;
       const result = await validateSchema(createTempSchema(schema));
-      expect(result.valid).toBe(false);
-      expect(result.issues.some((i) => i.message.includes("SERIAL"))).toBe(
-        true,
-      );
+      expect(result).toMatchObject({
+        valid: true,
+        issues: [],
+        advisories: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("SERIAL"),
+          }),
+        ]),
+      });
     });
 
-    test("reports CREATE INDEX without ASYNC", async () => {
+    test("accepts indexes after transforming CREATE INDEX to ASYNC", async () => {
       const schema = `
 datasource db {
   provider     = "postgresql"
@@ -73,10 +78,61 @@ model User {
 }
 `;
       const result = await validateSchema(createTempSchema(schema));
+      expect(result).toMatchObject({
+        valid: true,
+        issues: [],
+        advisories: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("CREATE INDEX"),
+          }),
+        ]),
+      });
+    });
+
+    test("accepts native foreign keys after adding NOT VALID", async () => {
+      const schema = `
+datasource db {
+  provider = "postgresql"
+}
+
+model Owner {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pets Pet[]
+}
+
+model Pet {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerId String @db.Uuid
+  owner   Owner  @relation(fields: [ownerId], references: [id])
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
+      expect(result).toMatchObject({
+        valid: true,
+        issues: [],
+        advisories: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("FOREIGN KEY"),
+            suggestion: expect.stringContaining("NOT VALID"),
+          }),
+        ]),
+      });
+    });
+
+    test("fails when generated SQL contains an unfixable array type", async () => {
+      const schema = `
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tags String[]
+}
+`;
+      const result = await validateSchema(createTempSchema(schema));
       expect(result.valid).toBe(false);
-      expect(
-        result.issues.some((i) => i.message.includes("CREATE INDEX")),
-      ).toBe(true);
+      expect(result.issues.some((i) => /array/i.test(i.message))).toBe(true);
     });
 
     test("fails when @db.Serial is used", async () => {
@@ -175,15 +231,34 @@ model User {
       const result = await validateSchema(createTempSchema(schema));
       expect(result.valid).toBe(true);
       expect(result.issues).toHaveLength(0);
+      expect(result).toMatchObject({ advisories: [] });
     });
   });
 
   describe("formatValidationResult", () => {
     test("formats success message", async () => {
-      const result = { valid: true, issues: [] };
+      const result = { valid: true, issues: [], advisories: [] };
       const output = formatValidationResult(result, "schema.prisma");
       expect(output).toContain("✓");
       expect(output).toContain("DSQL-compatible");
+    });
+
+    test("formats transformations as advisories without failing", async () => {
+      const result = {
+        valid: true,
+        issues: [],
+        advisories: [
+          {
+            message: "FOREIGN KEY requires NOT VALID",
+            suggestion: "Added NOT VALID",
+          },
+        ],
+      };
+      const output = formatValidationResult(result, "schema.prisma");
+      expect(output).toContain("⚠");
+      expect(output).toContain("Added NOT VALID");
+      expect(output).toContain("Validation passed with 1 advisory");
+      expect(output).not.toContain("Validation failed");
     });
 
     test("formats error messages with line numbers", async () => {
@@ -196,6 +271,7 @@ model User {
             suggestion: "Fix it",
           },
         ],
+        advisories: [],
       };
       const output = formatValidationResult(result, "schema.prisma");
       expect(output).toContain("✗");
