@@ -1,3 +1,23 @@
+<a id="python/sqlalchemy/v1.3.0"></a>
+# [Aurora DSQL dialect for SQLAlchemy v1.3.0 (python/sqlalchemy/v1.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.3.0) - 2026-09-23
+
+This release adds native Aurora DSQL foreign-key support for SQLAlchemy models.
+
+## What's New
+
+* Emit `ForeignKey` and `ForeignKeyConstraint` definitions instead of removing them from generated table DDL.
+* Add `NOT VALID` automatically when foreign-key constraints are added to existing tables.
+* Support cyclic and `use_alter=True` foreign keys through `ALTER TABLE`.
+* Reject unsupported `MATCH PARTIAL` foreign keys during SQL compilation.
+* Update the pet-clinic example and compiler tests to use native foreign keys.
+
+## What's Changed
+
+* Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/pull/598)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.2.0...python/sqlalchemy/v1.3.0
+
+
 <a id="python/sqlalchemy/v1.1.3"></a>
 # [Aurora DSQL dialect for SQLAlchemy v1.1.3 (python/sqlalchemy/v1.1.3)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/sqlalchemy/v1.1.3) - 2026-01-30
 
