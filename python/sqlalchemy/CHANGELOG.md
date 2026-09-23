@@ -3,19 +3,17 @@
 
 This release adds native Aurora DSQL foreign-key support for SQLAlchemy models.
 
-## What's New
-
-* Emit `ForeignKey` and `ForeignKeyConstraint` definitions instead of removing them from generated table DDL.
-* Add `NOT VALID` automatically when foreign-key constraints are added to existing tables.
-* Support cyclic and `use_alter=True` foreign keys through `ALTER TABLE`.
-* Reject unsupported `MATCH PARTIAL` foreign keys during SQL compilation.
-* Update the pet-clinic example and compiler tests to use native foreign keys.
-
 ## What's Changed
 
+* Fix flaky specialty assertion in SQLAlchemy pet-clinic example by [@praba2210](https://github.com/praba2210) in [#564](https://github.com/awslabs/aurora-dsql-orms/pull/564)
 * Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/pull/598)
+* build(deps-dev): update psycopg requirement from >=3.3.4 to >=3.3.5 in /python/sqlalchemy/examples/pet-clinic-app in the python-sqlalchemy-example group by [@dependabot](https://github.com/dependabot)[bot] in [#617](https://github.com/awslabs/aurora-dsql-orms/pull/617)
+* build(deps-dev): update psycopg2-binary requirement from >=2.9.12 to >=2.9.13 in /python/sqlalchemy/examples/pet-clinic-app in the python-sqlalchemy-example group by [@dependabot](https://github.com/dependabot)[bot] in [#630](https://github.com/awslabs/aurora-dsql-orms/pull/630)
+* build(deps): bump the python-sqlalchemy group across 1 directory with 8 updates by [@dependabot](https://github.com/dependabot)[bot] in [#580](https://github.com/awslabs/aurora-dsql-orms/pull/580)
 
 **Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.2.0...python/sqlalchemy/v1.3.0
+
+[Changes][python/sqlalchemy/v1.3.0]
 
 
 <a id="python/sqlalchemy/v1.1.3"></a>
@@ -148,6 +146,7 @@ Initial release of Aurora DSQL Dialect for SQLAlchemy
 [Changes][python/sqlalchemy/v1.0.0]
 
 
+[python/sqlalchemy/v1.3.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.2.0...python/sqlalchemy/v1.3.0
 [python/sqlalchemy/v1.1.3]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.2...python/sqlalchemy/v1.1.3
 [python/sqlalchemy/v1.1.2]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.1...python/sqlalchemy/v1.1.2
 [python/sqlalchemy/v1.1.1]: https://github.com/awslabs/aurora-dsql-orms/compare/python/sqlalchemy/v1.1.0...python/sqlalchemy/v1.1.1
