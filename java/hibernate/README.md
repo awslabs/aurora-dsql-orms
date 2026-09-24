@@ -15,9 +15,9 @@ Aurora DSQL's distributed architecture and high availability.
 | Dialect Version | Hibernate ORM | Spring Boot | Java |
 |----------------|---------------|-------------|------|
 | 1.0.x          | 6.6.x         | 3.x         | 17+  |
-| **2.0.0**      | **7.2+**      | **4.x**     | 17+  |
+| **2.x**        | **7.2+**      | **4.x**     | 17+  |
 
-> **Note:** Version 2.0.0 targets Hibernate ORM 7.2+ and is incompatible with
+> **Note:** Version 2.x targets Hibernate ORM 7.2+ and is incompatible with
 > Hibernate 6.x. If you are on Spring Boot 3.x, continue using version 1.0.x.
 
 ## Prerequisites
@@ -36,13 +36,13 @@ Add the dependency to your Maven or Gradle application:
 <dependency>
     <groupId>software.amazon.dsql</groupId>
     <artifactId>aurora-dsql-hibernate-dialect</artifactId>
-    <version>2.0.0</version>
+    <version>2.2.0</version>
 </dependency>
 ```
 
 ```groovy
 // Gradle
-implementation("software.amazon.dsql:aurora-dsql-hibernate-dialect:2.0.0")
+implementation("software.amazon.dsql:aurora-dsql-hibernate-dialect:2.2.0")
 ```
 
 Configure the dialect in your application:
@@ -119,10 +119,10 @@ natively. The only two lock modes that should be used are:
 
 ## Migration from 1.0.x
 
-If upgrading from dialect version 1.0.x (Hibernate 6.6) to 2.0.0 (Hibernate 7.2+):
+If upgrading from dialect version 1.0.x (Hibernate 6.6) to 2.x (Hibernate 7.2+):
 
 1. Upgrade to Spring Boot 4.x / Hibernate 7.2+
-2. Replace the dependency version from `1.0.x` to `2.0.0`
+2. Replace the dependency version from `1.0.x` to `2.2.0`
 3. No application code changes are needed — the dialect class name and
    configuration properties are unchanged.
 

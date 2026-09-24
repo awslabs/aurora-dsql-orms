@@ -317,9 +317,9 @@
   </pluginRepositories>
 
   <profiles>
-    <!-- The Aurora DSQL Hibernate dialect 2.1.0 (Hibernate 7.x) is not yet published to Maven
-         Central. CI installs the locally-built JAR into the local repo before running the dsql
-         profile, so the dependency is only declared here, activated by -Dspring.profiles.active=dsql. -->
+    <!-- The Aurora DSQL Hibernate dialect is installed as a locally built JAR in the local Maven
+         repository by CI so the sample tests the current source before publication. The dependency
+         is declared only in the dsql profile, activated by -Dspring.profiles.active=dsql. -->
     <profile>
       <id>dsql</id>
       <activation>
@@ -332,7 +332,7 @@
         <dependency>
           <groupId>software.amazon.dsql</groupId>
           <artifactId>aurora-dsql-hibernate-dialect</artifactId>
-          <version>2.1.0</version>
+          <version>2.2.0</version>
         </dependency>
       </dependencies>
     </profile>
