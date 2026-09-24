@@ -1,10 +1,26 @@
 # Changelog
 
-## Unreleased
+## [2.2.0] - 2026-09-24
+
+### Added
+- Native foreign-key generation using DSQL-compatible `NOT VALID` constraints,
+  including constraint drops and cascading referential actions. Applications
+  validate existing rows separately and wait for the asynchronous validation
+  job.
 
 ### Changed
-- Generate DSQL-compatible foreign keys with `NOT VALID`; applications validate
-  existing rows separately and wait for the asynchronous validation job.
+- Documented and tested `PESSIMISTIC_WRITE` (`SELECT ... FOR UPDATE`) with
+  inner joins and non-key predicates.
+- Updated the pet-clinic sample to rely on database-enforced foreign keys and
+  prevent association columns from inheriting UUID defaults.
+- Updated Hibernate dialect and pet-clinic sample dependencies.
+
+## [2.1.0] - 2026-08-04
+
+### Added
+- CHECK constraint generation using `NOT VALID`; applications validate existing
+  rows separately with `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT` and wait for
+  the asynchronous validation job.
 
 ## [2.0.0] - 2026-06-14
 
