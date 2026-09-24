@@ -1,3 +1,24 @@
+<a id="python/tortoise-orm/v0.3.0"></a>
+# [Aurora DSQL Adapter for Tortoise ORM v0.3.0 (python/tortoise-orm/v0.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.3.0) - 2026-09-24
+
+This release adds native Aurora DSQL foreign-key support and enables `SELECT ... FOR UPDATE` row locking.
+
+## What's Changed
+
+* build(deps-dev): bump ruff from 0.15.21 to 0.15.22 in /python/tortoise-orm in the python-tortoise group across 1 directory by [@dependabot](https://github.com/dependabot)[bot] in [#524](https://github.com/awslabs/aurora-dsql-orms/pull/524)
+* build(deps): bump setuptools from 80.9.0 to 83.0.0 in /python/tortoise-orm by [@dependabot](https://github.com/dependabot)[bot] in [#533](https://github.com/awslabs/aurora-dsql-orms/pull/533)
+* Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/pull/598)
+* build(deps-dev): bump pip from 26.1.2 to 26.2 in /python/tortoise-orm by [@dependabot](https://github.com/dependabot)[bot] in [#611](https://github.com/awslabs/aurora-dsql-orms/pull/611)
+* Update Hibernate and Tortoise SELECT FOR UPDATE support by [@mchenjh](https://github.com/mchenjh) in [#626](https://github.com/awslabs/aurora-dsql-orms/pull/626)
+* build(deps-dev): bump the python-tortoise group across 1 directory with 6 updates by [@dependabot](https://github.com/dependabot)[bot] in [#632](https://github.com/awslabs/aurora-dsql-orms/pull/632)
+* Rely on native foreign keys in ORM samples by [@amaksimo](https://github.com/amaksimo) in [#601](https://github.com/awslabs/aurora-dsql-orms/pull/601)
+* build(deps): bump anyio from 4.12.1 to 4.14.2 in /python/tortoise-orm by [@dependabot](https://github.com/dependabot)[bot] in [#647](https://github.com/awslabs/aurora-dsql-orms/pull/647)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.2.0...python/tortoise-orm/v0.3.0
+
+[Changes][python/tortoise-orm/v0.3.0]
+
+
 <a id="python/tortoise-orm/v0.2.0"></a>
 # [Aurora DSQL Adapter for Tortoise ORM v0.2.0 (python/tortoise-orm/v0.2.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.2.0) - 2026-07-13
 
@@ -124,6 +145,7 @@ Initial release of Aurora DSQL Adapter for Tortoise ORM.
 [Changes][python/tortoise-orm/v0.1.0]
 
 
+[python/tortoise-orm/v0.3.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.2.0...python/tortoise-orm/v0.3.0
 [python/tortoise-orm/v0.2.0]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.4...python/tortoise-orm/v0.2.0
 [python/tortoise-orm/v0.1.4]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.3...python/tortoise-orm/v0.1.4
 [python/tortoise-orm/v0.1.3]: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.1.2...python/tortoise-orm/v0.1.3
