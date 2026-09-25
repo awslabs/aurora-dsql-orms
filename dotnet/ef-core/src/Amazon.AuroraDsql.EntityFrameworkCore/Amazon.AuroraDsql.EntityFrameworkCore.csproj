@@ -9,7 +9,7 @@
 
     <!-- Package Metadata -->
     <PackageId>Amazon.AuroraDsql.EntityFrameworkCore</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>AWS Aurora DSQL Team</Authors>
     <Description>Entity Framework Core adapter for Amazon Aurora DSQL</Description>
     <PackageTags>ef-core;entity-framework;aurora-dsql;aws;postgresql</PackageTags>
