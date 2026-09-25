@@ -1,5 +1,4 @@
 <a id="node/drizzle/v0.2.0"></a>
-
 # [Aurora DSQL adapter for Drizzle ORM v0.2.0 (node/drizzle/v0.2.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/node/drizzle/v0.2.0) - 2026-09-25
 
 This release preserves native Aurora DSQL foreign keys in generated migrations.
@@ -9,18 +8,19 @@ This release preserves native Aurora DSQL foreign keys in generated migrations.
 
 ## What's Changed
 
-- Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/pull/598)
-- build(deps-dev): bump js-yaml from 3.15.1 to 3.15.2 in /node/drizzle by [@dependabot](https://github.com/dependabot)[bot] in [#628](https://github.com/awslabs/aurora-dsql-orms/pull/628)
-- build(deps-dev): bump js-yaml from 3.15.1 to 3.15.2 in /node/drizzle/examples/veterinary-app by [@dependabot](https://github.com/dependabot)[bot] in [#641](https://github.com/awslabs/aurora-dsql-orms/pull/641)
-- build(deps): bump the node-drizzle group across 1 directory with 5 updates by [@dependabot](https://github.com/dependabot)[bot] in [#635](https://github.com/awslabs/aurora-dsql-orms/pull/635)
-- Rely on native foreign keys in ORM samples by [@amaksimo](https://github.com/amaksimo) in [#601](https://github.com/awslabs/aurora-dsql-orms/pull/601)
+- Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/issues/598)
+- build(deps-dev): bump js-yaml from 3.15.1 to 3.15.2 in /node/drizzle by [@dependabot](https://github.com/dependabot)[bot] in [#628](https://github.com/awslabs/aurora-dsql-orms/issues/628)
+- build(deps-dev): bump js-yaml from 3.15.1 to 3.15.2 in /node/drizzle/examples/veterinary-app by [@dependabot](https://github.com/dependabot)[bot] in [#641](https://github.com/awslabs/aurora-dsql-orms/issues/641)
+- build(deps): bump the node-drizzle group across 1 directory with 5 updates by [@dependabot](https://github.com/dependabot)[bot] in [#635](https://github.com/awslabs/aurora-dsql-orms/issues/635)
+- Rely on native foreign keys in ORM samples by [@amaksimo](https://github.com/amaksimo) in [#601](https://github.com/awslabs/aurora-dsql-orms/issues/601)
 
 **Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/node/drizzle/v0.1.0...node/drizzle/v0.2.0
 
+
 [Changes][node/drizzle/v0.2.0]
 
-<a id="node/drizzle/v0.1.0"></a>
 
+<a id="node/drizzle/v0.1.0"></a>
 # [Aurora DSQL adapter for Drizzle ORM v0.1.0 (node/drizzle/v0.1.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/node/drizzle/v0.1.0) - 2026-08-25
 
 Initial release of the Aurora DSQL adapter for Drizzle ORM
@@ -33,17 +33,13 @@ Initial release of the Aurora DSQL adapter for Drizzle ORM
 
 See README for full documentation.
 
-## What's Changed
+## Contributors
 
-- Add Aurora DSQL adapter for Drizzle ORM by [@praba2210](https://github.com/praba2210) in [#563](https://github.com/awslabs/aurora-dsql-orms/pull/563)
-- Scope the Drizzle release gate to its own checks by [@praba2210](https://github.com/praba2210) in [#595](https://github.com/awslabs/aurora-dsql-orms/pull/595)
-- Allow a token for a package's first npm publish by [@praba2210](https://github.com/praba2210) in [#596](https://github.com/awslabs/aurora-dsql-orms/pull/596)
+* Add Aurora DSQL adapter for Drizzle ORM by [@praba2210](https://github.com/praba2210) in [#563](https://github.com/awslabs/aurora-dsql-orms/pull/563)
 
-Thanks to [@amaksimo](https://github.com/amaksimo) for the review.
-
-**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/commits/node/drizzle/v0.1.0
 
 [Changes][node/drizzle/v0.1.0]
+
 
 [node/drizzle/v0.2.0]: https://github.com/awslabs/aurora-dsql-orms/compare/node/drizzle/v0.1.0...node/drizzle/v0.2.0
 [node/drizzle/v0.1.0]: https://github.com/awslabs/aurora-dsql-orms/tree/node/drizzle/v0.1.0
