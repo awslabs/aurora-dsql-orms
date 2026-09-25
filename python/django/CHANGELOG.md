@@ -1,44 +1,46 @@
 <a id="python/django/v0.7.0"></a>
-# [Aurora DSQL adapter for Django v0.7.0 (python/django/v0.7.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.7.0) - 2026-09-24
+# [Aurora DSQL adapter for Django v0.7.0 (python/django/v0.7.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.7.0) - 2026-09-25
 
 This release adds native Aurora DSQL foreign-key support for Django models.
 
 ## What's Changed
-* build(deps-dev): bump django from 5.2.15 to 5.2.16 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#555](https://github.com/awslabs/aurora-dsql-orms/pull/555)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#558](https://github.com/awslabs/aurora-dsql-orms/pull/558)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#567](https://github.com/awslabs/aurora-dsql-orms/pull/567)
-* build(deps): bump sqlparse from 0.5.5 to 0.6.0 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#575](https://github.com/awslabs/aurora-dsql-orms/pull/575)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#578](https://github.com/awslabs/aurora-dsql-orms/pull/578)
-* docs(django): clarify migration compatibility workflow by [@amaksimo](https://github.com/amaksimo) in [#588](https://github.com/awslabs/aurora-dsql-orms/pull/588)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#591](https://github.com/awslabs/aurora-dsql-orms/pull/591)
-* Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/pull/598)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#604](https://github.com/awslabs/aurora-dsql-orms/pull/604)
-* build(deps-dev): bump pip from 26.1.2 to 26.2 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#612](https://github.com/awslabs/aurora-dsql-orms/pull/612)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#618](https://github.com/awslabs/aurora-dsql-orms/pull/618)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#631](https://github.com/awslabs/aurora-dsql-orms/pull/631)
-* build(deps): bump the python-django group across 1 directory with 8 updates by [@dependabot](https://github.com/dependabot)[bot] in [#633](https://github.com/awslabs/aurora-dsql-orms/pull/633)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#650](https://github.com/awslabs/aurora-dsql-orms/pull/650)
+* build(deps-dev): bump django from 5.2.15 to 5.2.16 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#555](https://github.com/awslabs/aurora-dsql-orms/issues/555)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#558](https://github.com/awslabs/aurora-dsql-orms/issues/558)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#567](https://github.com/awslabs/aurora-dsql-orms/issues/567)
+* build(deps): bump sqlparse from 0.5.5 to 0.6.0 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#575](https://github.com/awslabs/aurora-dsql-orms/issues/575)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#578](https://github.com/awslabs/aurora-dsql-orms/issues/578)
+* docs(django): clarify migration compatibility workflow by [@amaksimo](https://github.com/amaksimo) in [#588](https://github.com/awslabs/aurora-dsql-orms/issues/588)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#591](https://github.com/awslabs/aurora-dsql-orms/issues/591)
+* Foreign key feature release updates by [@davidrz15](https://github.com/davidrz15) in [#598](https://github.com/awslabs/aurora-dsql-orms/issues/598)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#604](https://github.com/awslabs/aurora-dsql-orms/issues/604)
+* build(deps-dev): bump pip from 26.1.2 to 26.2 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#612](https://github.com/awslabs/aurora-dsql-orms/issues/612)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#618](https://github.com/awslabs/aurora-dsql-orms/issues/618)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#631](https://github.com/awslabs/aurora-dsql-orms/issues/631)
+* build(deps): bump the python-django group across 1 directory with 8 updates by [@dependabot](https://github.com/dependabot)[bot] in [#633](https://github.com/awslabs/aurora-dsql-orms/issues/633)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#650](https://github.com/awslabs/aurora-dsql-orms/issues/650)
 
 **Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.6.0...python/django/v0.7.0
+
 
 [Changes][python/django/v0.7.0]
 
 
 <a id="python/django/v0.6.0"></a>
-# [Aurora DSQL adapter for Django v0.6.0 (python/django/v0.6.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.6.0) - 2026-08-04
+# [Aurora DSQL adapter for Django v0.6.0 (python/django/v0.6.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.6.0) - 2026-09-25
 
 This release adds CHECK constraint support using `NOT VALID` with asynchronous validation.
 
 ## What's Changed
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#518](https://github.com/awslabs/aurora-dsql-orms/pull/518)
-* build(deps-dev): bump django from 5.2.14 to 5.2.15 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#519](https://github.com/awslabs/aurora-dsql-orms/pull/519)
-* build(deps): bump the python-django-example group across 1 directory with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#523](https://github.com/awslabs/aurora-dsql-orms/pull/523)
-* build(deps): bump setuptools from 80.9.0 to 83.0.0 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#532](https://github.com/awslabs/aurora-dsql-orms/pull/532)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#538](https://github.com/awslabs/aurora-dsql-orms/pull/538)
-* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#546](https://github.com/awslabs/aurora-dsql-orms/pull/546)
-* feat(orms): support CHECK constraints (NOT VALID + VALIDATE ASYNC) in Django, SQLAlchemy, Hibernate by [@agarwal-govind](https://github.com/agarwal-govind) in [#528](https://github.com/awslabs/aurora-dsql-orms/pull/528)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#518](https://github.com/awslabs/aurora-dsql-orms/issues/518)
+* build(deps-dev): bump django from 5.2.14 to 5.2.15 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#519](https://github.com/awslabs/aurora-dsql-orms/issues/519)
+* build(deps): bump the python-django-example group across 1 directory with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#523](https://github.com/awslabs/aurora-dsql-orms/issues/523)
+* build(deps): bump setuptools from 80.9.0 to 83.0.0 in /python/django by [@dependabot](https://github.com/dependabot)[bot] in [#532](https://github.com/awslabs/aurora-dsql-orms/issues/532)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#538](https://github.com/awslabs/aurora-dsql-orms/issues/538)
+* build(deps): bump the python-django-example group in /python/django/examples/pet-clinic-app with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in [#546](https://github.com/awslabs/aurora-dsql-orms/issues/546)
+* feat(orms): support CHECK constraints (NOT VALID + VALIDATE ASYNC) in Django, SQLAlchemy, Hibernate by [@agarwal-govind](https://github.com/agarwal-govind) in [#528](https://github.com/awslabs/aurora-dsql-orms/issues/528)
 
 **Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.5.0...python/django/v0.6.0
+
 
 [Changes][python/django/v0.6.0]
 
@@ -49,9 +51,9 @@ This release adds CHECK constraint support using `NOT VALID` with asynchronous v
 This release adds sequence and identity primary key support and enables native JSONB.
 
 ## What's Changed
-* Add sequence and identity support for Django by [@vic-tsang](https://github.com/vic-tsang) in [#153](https://github.com/awslabs/aurora-dsql-orms/pull/153)
-* Enable native JSONB support in adapters by [@amaksimo](https://github.com/amaksimo) in [#476](https://github.com/awslabs/aurora-dsql-orms/pull/476)
-* Replace inline DSQL limitation language with links to official docs by [@amaksimo](https://github.com/amaksimo) in [#439](https://github.com/awslabs/aurora-dsql-orms/pull/439)
+* **Sequence and identity column support** — `AutoField`/`BigAutoField` can now generate `BIGINT GENERATED BY DEFAULT AS IDENTITY` columns via the `USE_SEQUENCE_AUTOFIELDS` setting (with configurable `SEQUENCE_CACHE_SIZE`), plus a new `SequenceAutoField` for per-model sequence-backed integer PKs. by [@vic-tsang](https://github.com/vic-tsang) in [#153](https://github.com/awslabs/aurora-dsql-orms/issues/153)
+* **Native JSONB support** — removed the `has_native_json_field = False` override so `JSONField` uses Aurora DSQL's native JSONB. by [@amaksimo](https://github.com/amaksimo) in [#476](https://github.com/awslabs/aurora-dsql-orms/issues/476)
+* **Docs** — replaced inline DSQL limitation language with links to the official Aurora DSQL documentation. by [@amaksimo](https://github.com/amaksimo) in [#439](https://github.com/awslabs/aurora-dsql-orms/issues/439)
 
 **Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/django/v0.4.1...python/django/v0.5.0
 
@@ -123,6 +125,10 @@ Full Changelog: https://github.com/awslabs/aurora-dsql-orms/compare/python/djang
 <a id="python/django/v0.3.0"></a>
 # [Aurora DSQL adapter for Django v0.3.0 (python/django/v0.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.3.0) - 2026-01-29
 
+> **Note:** This release was originally published on Oct 01, 2025 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.3.0).
+
+---
+
 This release removes support for Python 3.8, which is end of life according to [python.org](https://devguide.python.org/versions/).
 
 ## What's Changed
@@ -141,6 +147,10 @@ This release removes support for Python 3.8, which is end of life according to [
 <a id="python/django/v0.2.1"></a>
 # [Aurora DSQL adapter for Django v0.2.1 (python/django/v0.2.1)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.2.1) - 2026-01-29
 
+> **Note:** This release was originally published on Oct 01, 2025 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.1).
+
+---
+
 This release fixes the relative links shown on the PyPI project page. There should be no library behavior change.
 
 ## What's Changed
@@ -157,6 +167,10 @@ This release fixes the relative links shown on the PyPI project page. There shou
 
 <a id="python/django/v0.2.0"></a>
 # [Aurora DSQL adapter for Django v0.2.0 (python/django/v0.2.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.2.0) - 2026-01-29
+
+> **Note:** This release was originally published on Sep 29, 2025 by [@danielfrankcom](https://github.com/danielfrankcom) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.2.0).
+
+---
 
 This release includes the following changes:
 - Added documentation for known issues and workarounds
@@ -218,6 +232,10 @@ The release also adds verified support for Python 3.13.
 
 <a id="python/django/v0.1.0"></a>
 # [Aurora DSQL adapter for Django v0.1.0 (python/django/v0.1.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/django/v0.1.0) - 2026-01-29
+
+> **Note:** This release was originally published on Dec 04, 2024 by [@srudeepk](https://github.com/srudeepk) in [awslabs/aurora-dsql-django](https://github.com/awslabs/aurora-dsql-django/releases/tag/v0.1.0).
+
+---
 
 ## What's Changed
 
