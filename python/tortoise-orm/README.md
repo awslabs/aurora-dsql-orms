@@ -60,9 +60,7 @@ from aurora_dsql_tortoise import register_backends
 register_backends()
 
 TORTOISE_ORM = {
-    "connections": {
-        "default": "dsql+asyncpg://admin@<cluster_id>.dsql.<region>.on.aws/postgres"
-    },
+    "connections": {"default": "dsql+asyncpg://admin@<cluster_id>.dsql.<region>.on.aws/postgres"},
     "apps": {
         "models": {
             "models": ["your.models"],
@@ -80,6 +78,7 @@ UUID primary keys are recommended for optimal performance with Aurora DSQL:
 import uuid
 from tortoise import fields
 from tortoise.models import Model
+
 
 class Owner(Model):
     id = fields.UUIDField(primary_key=True, default=uuid.uuid4)

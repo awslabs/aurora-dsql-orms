@@ -35,11 +35,14 @@ def mock_pool(captured_kwargs):
         captured_kwargs["conn"] = kwargs
         captured_kwargs["connection_class"] = connection_class
 
-    with patch("aurora_dsql_tortoise.psycopg.client.AsyncConnectionPool.__init__", capture_init):
-        with patch(
-            "aurora_dsql_tortoise.psycopg.client.AsyncConnectionPool.open", new_callable=AsyncMock
-        ):
-            yield
+    with (
+        patch("aurora_dsql_tortoise.psycopg.client.AsyncConnectionPool.__init__", capture_init),
+        patch(
+            "aurora_dsql_tortoise.psycopg.client.AsyncConnectionPool.open",
+            new_callable=AsyncMock,
+        ),
+    ):
+        yield
 
 
 def create_client(**kwargs):

@@ -1,7 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-__all__ = ["register_backends", "register_asyncpg", "register_psycopg"]
+__all__ = ["register_asyncpg", "register_backends", "register_psycopg"]
 
 from aurora_dsql_tortoise._version import __version__ as __version__
 

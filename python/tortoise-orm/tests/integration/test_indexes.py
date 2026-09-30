@@ -3,6 +3,7 @@
 
 import uuid
 from collections.abc import Sequence
+from typing import ClassVar
 
 import pytest
 from tortoise import Tortoise, fields
@@ -19,7 +20,7 @@ class IndexTestModel(Model):
 
     class Meta:
         table = "index_test_model"
-        indexes = [Index(fields=["name"])]
+        indexes: ClassVar[list[Index]] = [Index(fields=["name"])]
 
 
 class UniqueIndexTestModel(Model):
