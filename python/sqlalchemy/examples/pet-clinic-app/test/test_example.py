@@ -15,5 +15,5 @@ def test_example():
         engine = create_dsql_engine()
         demo_pet_clinic_operations(engine)
         demo_retry_mechanism(engine)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - convert any smoke-test failure to pytest output
         pytest.fail(f"Unexpected exception: {e}")

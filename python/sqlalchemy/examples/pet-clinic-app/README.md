@@ -132,12 +132,15 @@ from aurora_dsql_sqlalchemy import create_dsql_engine
 ADMIN = "admin"
 NON_ADMIN_SCHEMA = "myschema"
 
+
 def create_engine_for_example():
     cluster_user = os.environ.get("CLUSTER_USER", None)
     assert cluster_user is not None, "CLUSTER_USER environment variable is not set"
 
     cluster_endpoint = os.environ.get("CLUSTER_ENDPOINT", None)
-    assert cluster_endpoint is not None, "CLUSTER_ENDPOINT environment variable is not set"
+    assert cluster_endpoint is not None, (
+        "CLUSTER_ENDPOINT environment variable is not set"
+    )
 
     driver = os.environ.get("DRIVER", None)
     assert driver is not None, "DRIVER environment variable is not set"
@@ -181,7 +184,7 @@ DSQL does not support serialized primary keys or identity columns (auto-incremen
 Here's how to define a UUID primary key in your entity class:
 
 ```py
-    id = Column("id", UUID, primary_key=True, default=text('gen_random_uuid()'))
+id = Column("id", UUID, primary_key=True, default=text("gen_random_uuid()"))
 ```
 
 `gen_random_uuid()` returns UUID version 4 as the default value
@@ -196,70 +199,69 @@ from sqlalchemy import Column, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text
 
+
 class Base(DeclarativeBase):
     pass
+
 
 # Define a Owner table
 class Owner(Base):
     __tablename__ = "owner"
 
-    id = Column(
-                "id", UUID, primary_key=True, default=text('gen_random_uuid()')
-            )
+    id = Column("id", UUID, primary_key=True, default=text("gen_random_uuid()"))
     name = Column("name", String(30), nullable=False)
     city = Column("city", String(80), nullable=False)
     telephone = Column("telephone", String(20), nullable=True, default=None)
+
 
 # Define a Pet table
 class Pet(Base):
     __tablename__ = "pet"
 
-    id = Column(
-                "id", UUID, primary_key=True, default=text('gen_random_uuid()')
-            )
+    id = Column("id", UUID, primary_key=True, default=text("gen_random_uuid()"))
     name = Column("name", String(30), nullable=False)
     birth_date = Column("birth_date", Date(), nullable=False)
     owner_id = Column(
-                "owner_id", UUID,
-                ForeignKey("owner.id", ondelete="RESTRICT", onupdate="RESTRICT"),
-                nullable=True
+        "owner_id",
+        UUID,
+        ForeignKey("owner.id", ondelete="RESTRICT", onupdate="RESTRICT"),
+        nullable=True,
     )
     # One to many
     owner = relationship("Owner")
+
 
 # Define an association table for Vet and Specialty, this is an intermediate table
 # that lets us define the many-to-many mapping
 class VetSpecialties(Base):
     __tablename__ = "vetSpecialties"
 
-    id = Column(
-                "id", UUID, primary_key=True, default=text('gen_random_uuid()')
-            )
+    id = Column("id", UUID, primary_key=True, default=text("gen_random_uuid()"))
     vet_id = Column(
-                "vet_id", UUID,
-                ForeignKey("vet.id", ondelete="RESTRICT", onupdate="RESTRICT"),
-                nullable=True
+        "vet_id",
+        UUID,
+        ForeignKey("vet.id", ondelete="RESTRICT", onupdate="RESTRICT"),
+        nullable=True,
     )
     specialty_id = Column(
-                "specialty_id", String(80),
-                ForeignKey("specialty.name", ondelete="RESTRICT", onupdate="RESTRICT"),
-                nullable=True
+        "specialty_id",
+        String(80),
+        ForeignKey("specialty.name", ondelete="RESTRICT", onupdate="RESTRICT"),
+        nullable=True,
     )
+
 
 # Define a Specialty table
 class Specialty(Base):
     __tablename__ = "specialty"
-    id = Column(
-                "name", String(80), primary_key=True
-            )
+    id = Column("name", String(80), primary_key=True)
+
 
 # Define a Vet table
 class Vet(Base):
     __tablename__ = "vet"
 
-    id = Column(
-                "id", UUID, primary_key=True, default=text('gen_random_uuid()')
-            )
+    id = Column("id", UUID, primary_key=True, default=text("gen_random_uuid()"))
     name = Column("name", String(30), nullable=False)
     # Many-to-Many mapping
     specialties = relationship("Specialty", secondary=VetSpecialties.__table__)
