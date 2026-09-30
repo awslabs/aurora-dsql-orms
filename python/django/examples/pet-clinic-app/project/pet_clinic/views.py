@@ -24,7 +24,10 @@ from pet_clinic.models import Owner, Pet, Specialty, Vet, VetSpecialties
 # First retry occurs after 1 second, second one after 1*2 = 2 seconds,
 # Third one after 2*2 = 4 seconds, forth one after 4*2 = 8 seconds and so on.
 ##
-def with_retries(retries=3, failed_response=HttpResponse(status=500), initial_wait=1, delay_factor=2):
+def with_retries(retries=3, failed_response=None, initial_wait=1, delay_factor=2):
+    if failed_response is None:
+        failed_response = HttpResponse(status=500)
+
     def handle(view):
         def retry_fn(*args, **kwargs):
             delay = initial_wait
@@ -63,7 +66,7 @@ class OwnerView(View):
         id = data.get("id", None)
         try:
             owner = Owner.objects.get(id=id) if id is not None else None
-        except Exception:
+        except Owner.DoesNotExist:
             return HttpResponseBadRequest(f"error: check if owner with id `{html.escape(str(id))}` exists")
 
         name = data.get("name", owner.name if owner else None)
@@ -115,7 +118,7 @@ class PetView(View):
         id = data.get("id", None)
         try:
             pet = Pet.objects.get(id=id) if id is not None else None
-        except Exception:
+        except Pet.DoesNotExist:
             return HttpResponseBadRequest(f"error: check if pet with id `{html.escape(str(id))}` exists")
 
         name = data.get("name", pet.name if pet else None)
@@ -127,7 +130,7 @@ class PetView(View):
         owner_id = data.get("owner_id", pet.owner.id if pet and pet.owner else None)
         try:
             owner = Owner.objects.get(id=owner_id) if owner_id else None
-        except Exception:
+        except Owner.DoesNotExist:
             return HttpResponseBadRequest(f"error: check if owner with id `{html.escape(str(owner_id))}` exists")
 
         if pet is None:
@@ -170,7 +173,7 @@ class VetView(View):
         id = data.get("id", None)
         try:
             vet = Vet.objects.get(id=id) if id is not None else None
-        except Exception:
+        except Vet.DoesNotExist:
             return HttpResponseBadRequest(f"error: check if vet with id `{html.escape(str(id))}` exists")
 
         name = data.get("name", vet.name if vet else None)
@@ -182,7 +185,7 @@ class VetView(View):
         owner_id = data.get("owner_id", vet.owner.id if vet and vet.owner else None)
         try:
             owner = Owner.objects.get(id=owner_id) if owner_id else None
-        except Exception:
+        except Owner.DoesNotExist:
             return HttpResponseBadRequest(f"error: check if owner with id `{html.escape(str(id))}` exists")
 
         specialties_list = data.get("specialties", vet.specialties if vet and vet.specialties else [])
@@ -190,7 +193,7 @@ class VetView(View):
         for specialty in specialties_list:
             try:
                 specialties_obj = Specialty.objects.get(name=specialty)
-            except Exception:
+            except Specialty.DoesNotExist:
                 return HttpResponseBadRequest(f"error: check if specialty `{html.escape(str(specialty))}` exists")
             specialties.append(specialties_obj)
 

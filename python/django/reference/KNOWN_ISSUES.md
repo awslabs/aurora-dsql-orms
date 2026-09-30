@@ -18,9 +18,9 @@ Add `'DISABLE_SERVER_SIDE_CURSORS': True` to your database `OPTIONS`:
 
 ```python
 DATABASES = {
-    'default': {
-        'ENGINE': 'aurora_dsql_django',
-        'DISABLE_SERVER_SIDE_CURSORS': True,
+    "default": {
+        "ENGINE": "aurora_dsql_django",
+        "DISABLE_SERVER_SIDE_CURSORS": True,
         # ... other options
     }
 }

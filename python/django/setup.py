@@ -16,13 +16,14 @@ if "dev" in version:
 else:
     ref = f"v{version}"
 
-readme_content = open("README.md").read()
+with open("README.md", encoding="utf-8") as readme:
+    readme_content = readme.read()
 
 
 def convert_relative_link(match):
     link_text = match.group(1)
     old_url = match.group(2)
-    if old_url.startswith("./") or old_url.startswith("../"):
+    if old_url.startswith(("./", "../")):
         raise ValueError(f"Relative links starting with './' or '../' are not allowed: {old_url}")
     new_url = f"{GITHUB_URL}/blob/{ref}/{SUBDIR}/{old_url}"
     print(f"Converting: {old_url} -> {new_url}")
