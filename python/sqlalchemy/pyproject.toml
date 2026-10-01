@@ -29,7 +29,7 @@ Documentation = "https://github.com/awslabs/aurora-dsql-orms/tree/main/python/sq
 
 [project.optional-dependencies]
 psycopg2 = ["psycopg2-binary>=2.9.0"]
-psycopg = ["psycopg[binary]>=3.2.0"]
+psycopg = ["psycopg[binary,pool]>=3.2.0"]
 
 [project.entry-points."sqlalchemy.dialects"]
 # The default dialect uses psycopg (psycopg3) 
@@ -49,7 +49,7 @@ dev = [
     "ruff",
 ]
 psycopg2 = ["psycopg2-binary>=2.9.0"]
-psycopg = ["psycopg[binary]>=3.2.0"]
+psycopg = ["psycopg[binary,pool]>=3.2.0"]
 
 [tool.uv]
 default-groups = ["dev", "psycopg2", "psycopg"]
