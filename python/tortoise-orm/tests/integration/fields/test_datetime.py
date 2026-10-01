@@ -4,7 +4,7 @@
 """Tests for DatetimeField."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 import pytest
 from tortoise import fields
@@ -26,7 +26,7 @@ class DatetimeModel(Model):
 @pytest.mark.parametrize("backend", BACKENDS, indirect=True)
 class TestDatetimeField:
     async def test_create_read(self, backend):
-        dt = datetime(2025, 6, 15, 10, 30, 0, tzinfo=UTC)
+        dt = datetime(2025, 6, 15, 10, 30, 0, tzinfo=timezone.utc)
         obj = await DatetimeModel.create(value=dt)
         fetched = await DatetimeModel.get(id=obj.id)
         assert fetched.value == dt
