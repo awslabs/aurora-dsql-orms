@@ -26,10 +26,10 @@ from .schema import DatabaseSchemaEditor
 
 logger = logging.getLogger(__name__)
 
-# Import the appropriate connector based on psycopg version
-try:
+# Import the connector that matches the PostgreSQL driver Django selected.
+if is_psycopg3:
     import aurora_dsql_psycopg as dsql_connector
-except ImportError:
+else:
     import aurora_dsql_psycopg2 as dsql_connector
 
 

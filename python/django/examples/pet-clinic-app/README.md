@@ -149,26 +149,20 @@ import uuid
 
 # Create your models here.
 
+
 class Owner(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=30, blank=False)
     # This is many to one relation
     city = models.CharField(max_length=80, blank=False)
     telephone = models.CharField(max_length=20, blank=True, null=True, default=None)
 
     def __str__(self):
-        return f'{self.name}'
-    
+        return f"{self.name}"
+
+
 class Pet(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=30, blank=False)
     birth_date = models.DateField()
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
@@ -239,20 +233,21 @@ import json, time, datetime
 
 from pet_clinic.models import *
 
+
 ##
-# If there is an error, we want to retry instead of giving up immediately. 
+# If there is an error, we want to retry instead of giving up immediately.
 # initial_wait is the amount of time after with the operation is retried
 # delay_factor is the pace at which the retries slow down upon each failure.
 # For example an initial_wait of 1 and delay_factor of 2 implies,
 # First retry occurs after 1 second, second one after 1*2 = 2 seconds,
 # Third one after 2*2 = 4 seconds, forth one after 4*2 = 8 seconds and so on.
 ##
-def with_retries(retries = 3, failed_response = HttpResponse(status=500), initial_wait = 1, delay_factor = 2):
+def with_retries(retries=3, failed_response=HttpResponse(status=500), initial_wait=1, delay_factor=2):
     def handle(view):
         def retry_fn(*args, **kwargs):
             delay = initial_wait
             for i in range(retries):
-                print(("attempt: %s/%s") % (i+1, retries))
+                print(("attempt: %s/%s") % (i + 1, retries))
                 try:
                     return view(*args, **kwargs)
                 except Error as e:
@@ -260,10 +255,13 @@ def with_retries(retries = 3, failed_response = HttpResponse(status=500), initia
                     time.sleep(delay)
                     delay *= delay_factor
             return failed_response
+
         return retry_fn
+
     return handle
 
-@method_decorator(csrf_exempt, name='dispatch')
+
+@method_decorator(csrf_exempt, name="dispatch")
 class OwnerView(View):
     @with_retries()
     def get(self, request, id=None, *args, **kwargs):
@@ -277,24 +275,24 @@ class OwnerView(View):
     @atomic
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body.decode())
-        
+
         # If id is provided we try updating the existing object
-        id = data.get('id', None)
+        id = data.get("id", None)
         try:
             owner = Owner.objects.get(id=id) if id is not None else None
         except:
             return HttpResponseBadRequest(("error: check if owner with id `%s` exists") % (id))
-                     
-        name = data.get('name', owner.name if owner else None)
+
+        name = data.get("name", owner.name if owner else None)
         # Either the name or id must be provided.
         if owner is None and name is None:
             return HttpResponseBadRequest()
-        
-        telephone = data.get('telephone', owner.telephone if owner else None)
-        city = data.get('city', owner.city if owner else None)
-        
+
+        telephone = data.get("telephone", owner.telephone if owner else None)
+        city = data.get("city", owner.city if owner else None)
+
         if owner is None:
-            # Owner _not_ present, creating new one 
+            # Owner _not_ present, creating new one
             print(("owner: %s is not present; adding") % (name))
             owner = Owner(name=name, telephone=telephone, city=city)
         else:
@@ -303,18 +301,19 @@ class OwnerView(View):
             owner.name = name
             owner.telephone = telephone
             owner.city = city
-            
+
         owner.save()
-        return JsonResponse(list(Owner.objects.filter(id=owner.id).values()), safe=False) 
+        return JsonResponse(list(Owner.objects.filter(id=owner.id).values()), safe=False)
 
     @with_retries()
     @atomic
-    def delete(self, request, id=None, *args, **kwargs):        
+    def delete(self, request, id=None, *args, **kwargs):
         if id is not None:
             Owner.objects.filter(id=id).delete()
         return HttpResponse(status=200)
-    
-@method_decorator(csrf_exempt, name='dispatch')
+
+
+@method_decorator(csrf_exempt, name="dispatch")
 class PetView(View):
     @with_retries()
     def get(self, request=None, id=None, *args, **kwargs):
@@ -328,26 +327,26 @@ class PetView(View):
     @atomic
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body.decode())
-        
+
         # If id is provided we try updating the existing object
-        id = data.get('id', None)
+        id = data.get("id", None)
         try:
             pet = Pet.objects.get(id=id) if id is not None else None
         except:
             return HttpResponseBadRequest(("error: check if pet with id `%s` exists") % (id))
-        
-        name = data.get('name', pet.name if pet else None)
+
+        name = data.get("name", pet.name if pet else None)
         # Either the name or id must be provided.
         if pet is None and name is None:
             return HttpResponseBadRequest()
-        
-        birth_date = data.get('birth_date', pet.birth_date if pet else None)
-        owner_id = data.get('owner_id', pet.owner.id if pet and pet.owner else None)
+
+        birth_date = data.get("birth_date", pet.birth_date if pet else None)
+        owner_id = data.get("owner_id", pet.owner.id if pet and pet.owner else None)
         try:
             owner = Owner.objects.get(id=owner_id) if owner_id else None
         except:
             return HttpResponseBadRequest(("error: check if owner with id `%s` exists") % (owner_id))
-        
+
         if pet is None:
             # Pet _not_ present, creating new one
             print(("pet name: %s is not present; adding") % (name))
@@ -381,10 +380,10 @@ from django.urls import path
 from pet_clinic.views import *
 
 urlpatterns = [
-    path('owner/', OwnerView.as_view(), name='owner'),
-    path('owner/<id>', OwnerView.as_view(), name='owner'),
-    path('pet/', PetView.as_view(), name='pet'),
-    path('pet/<id>', PetView.as_view(), name='pet'),
+    path("owner/", OwnerView.as_view(), name="owner"),
+    path("owner/<id>", OwnerView.as_view(), name="owner"),
+    path("pet/", PetView.as_view(), name="pet"),
+    path("pet/<id>", PetView.as_view(), name="pet"),
 ]
 ```
 ### Test
@@ -507,29 +506,25 @@ flagging it can be blank or null but it must be unique.
 ```python
 class Specialty(models.Model):
     name = models.CharField(max_length=80, blank=False, primary_key=True)
+
     def __str__(self):
         return self.name
-    
+
+
 class Vet(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=30, blank=False)
-    specialties = models.ManyToManyField(Specialty, through='VetSpecialties')
+    specialties = models.ManyToManyField(Specialty, through="VetSpecialties")
     owner = models.OneToOneField(Owner, on_delete=models.SET_DEFAULT, null=True, blank=True, default=None)
+
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
+
 
 # Need to use custom intermediate table because Django considers default primary
 # keys as integers. We use UUID as default primary key which is not an integer.
 class VetSpecialties(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     vet = models.ForeignKey(Vet, on_delete=models.CASCADE)
     specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE)
 ```
@@ -539,7 +534,7 @@ Like the view we have created for Owners and Pets, we define the views for Speci
 We can follow the similar CRUD pattern that we followed for Owners and pets.
 
 ```python
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class SpecialtyView(View):
     @with_retries()
     def get(self, request=None, name=None, *args, **kwargs):
@@ -553,10 +548,10 @@ class SpecialtyView(View):
     @atomic
     def post(self, request=None, *args, **kwargs):
         data = json.loads(request.body.decode())
-        name = data.get('name', None)
+        name = data.get("name", None)
         if name is None:
             return HttpResponseBadRequest()
-        
+
         specialty = Specialty(name=name)
         specialty.save()
         return JsonResponse(list(Specialty.objects.filter(name=specialty.name).values()), safe=False)
@@ -568,7 +563,8 @@ class SpecialtyView(View):
             Specialty.objects.filter(name=name).delete()
         return HttpResponse(status=200)
 
-@method_decorator(csrf_exempt, name='dispatch')
+
+@method_decorator(csrf_exempt, name="dispatch")
 class VetView(View):
     @with_retries()
     def get(self, request=None, id=None, *args, **kwargs):
@@ -583,25 +579,25 @@ class VetView(View):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body.decode())
         # If id is provided we try updating the existing object
-        id = data.get('id', None)
+        id = data.get("id", None)
         try:
             vet = Vet.objects.get(id=id) if id is not None else None
         except:
             return HttpResponseBadRequest(("error: check if vet with id `%s` exists") % (id))
-        
-        name = data.get('name', vet.name if vet else None)
-        
+
+        name = data.get("name", vet.name if vet else None)
+
         # Either the name or id must be provided.
         if vet is None and name is None:
             return HttpResponseBadRequest()
-        
-        owner_id = data.get('owner_id', vet.owner.id if vet and vet.owner else None)
+
+        owner_id = data.get("owner_id", vet.owner.id if vet and vet.owner else None)
         try:
             owner = Owner.objects.get(id=owner_id) if owner_id else None
         except:
             return HttpResponseBadRequest(("error: check if owner with id `%s` exists") % (id))
-        
-        specialties_list = data.get('specialties', vet.specialties if vet and vet.specialties else [])
+
+        specialties_list = data.get("specialties", vet.specialties if vet and vet.specialties else [])
         specialties = []
         for specialty in specialties_list:
             try:
@@ -609,7 +605,7 @@ class VetView(View):
             except Exception:
                 return HttpResponseBadRequest(("error: check if specialty `%s` exists") % (specialty))
             specialties.append(specialties_obj)
-        
+
         if vet is None:
             print(("vet name: %s, not present, adding") % (name))
             vet = Vet(name=name, owner_id=owner_id)
@@ -617,7 +613,7 @@ class VetView(View):
             print(("vet name: %s, present, updating") % (name))
             vet.name = name
             vet.owner = owner
-        
+
         # First save the vet so that we have an id. Then we can add specialties.
         # Django needs the id primary key of the parent object before adding relations
         vet.save()
@@ -626,9 +622,11 @@ class VetView(View):
         vet.specialties.add(*specialties)
         return JsonResponse(
             {
-                'Veterinarian': list(Vet.objects.filter(id=vet.id).values()), 
-                'Specialties': list(VetSpecialties.objects.filter(vet=vet.id).values())
-            }, safe=False)
+                "Veterinarian": list(Vet.objects.filter(id=vet.id).values()),
+                "Specialties": list(VetSpecialties.objects.filter(vet=vet.id).values()),
+            },
+            safe=False,
+        )
 
     @with_retries()
     @atomic
@@ -637,13 +635,14 @@ class VetView(View):
             Vet.objects.filter(id=id).delete()
         return HttpResponse(status=200)
 
-@method_decorator(csrf_exempt, name='dispatch')
+
+@method_decorator(csrf_exempt, name="dispatch")
 class VetSpecialtiesView(View):
     @with_retries()
     def get(self, request=None, *args, **kwargs):
         data = json.loads(request.body.decode())
-        vet_id = data.get('vet_id', None)
-        specialty_id = data.get('specialty_id', None)
+        vet_id = data.get("vet_id", None)
+        specialty_id = data.get("specialty_id", None)
         specialties = VetSpecialties.objects
         # Apply filter if specific name is requested.
         if vet_id is not None:
@@ -660,16 +659,16 @@ variable is set like below
 
 ```python
 urlpatterns = [
-    path('owner/', OwnerView.as_view(), name='owner'),
-    path('owner/<id>', OwnerView.as_view(), name='owner'),
-    path('pet/', PetView.as_view(), name='pet'),
-    path('pet/<id>', PetView.as_view(), name='pet'),
-    path('vet/', VetView.as_view(), name='vet'),
-    path('vet/<id>', VetView.as_view(), name='vet'),
-    path('specialty/', SpecialtyView.as_view(), name='specialty'),
-    path('specialty/<name>', SpecialtyView.as_view(), name='specialty'),
-    path('vet-specialties/<vet_id>', VetSpecialtiesView.as_view(), name='vet-specialties'),
-    path('specialty-vets/<specialty_id>', VetSpecialtiesView.as_view(), name='vet-specialties'),
+    path("owner/", OwnerView.as_view(), name="owner"),
+    path("owner/<id>", OwnerView.as_view(), name="owner"),
+    path("pet/", PetView.as_view(), name="pet"),
+    path("pet/<id>", PetView.as_view(), name="pet"),
+    path("vet/", VetView.as_view(), name="vet"),
+    path("vet/<id>", VetView.as_view(), name="vet"),
+    path("specialty/", SpecialtyView.as_view(), name="specialty"),
+    path("specialty/<name>", SpecialtyView.as_view(), name="specialty"),
+    path("vet-specialties/<vet_id>", VetSpecialtiesView.as_view(), name="vet-specialties"),
+    path("specialty-vets/<specialty_id>", VetSpecialtiesView.as_view(), name="vet-specialties"),
 ]
 ```
 

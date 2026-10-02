@@ -22,11 +22,9 @@ DATABASES = {
     "default": {
         # Other database settings
         "ENGINE": "aurora_dsql_django",
-        "USE_SEQUENCE_AUTOFIELDS": True, # Optional, False by default
-        "SEQUENCE_CACHE_SIZE": 65536, # Optional, 65536 by default
-        "OPTIONS": {
-            "sslmode": "require"
-        },
+        "USE_SEQUENCE_AUTOFIELDS": True,  # Optional, False by default
+        "SEQUENCE_CACHE_SIZE": 65536,  # Optional, 65536 by default
+        "OPTIONS": {"sslmode": "require"},
     },
 }
 ```
@@ -35,6 +33,7 @@ DATABASES = {
 
 ```python
 from aurora_dsql_django import SequenceAutoField
+
 
 class Owner(models.Model):
     id = SequenceAutoField(primary_key=True)

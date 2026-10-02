@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import django
@@ -53,9 +54,8 @@ class TestWrapper(unittest.TestCase):
         # Work around issue caused by missing encoding configuration in test environment.
         quote_patch = patch.object(self.schema_editor, "quote_value", side_effect=simple_quote_value)
 
-        with execute_patch, quote_patch:
-            with self.schema_editor:
-                operation_func()
+        with execute_patch, quote_patch, self.schema_editor:
+            operation_func()
 
         all_sql = [str(sql) for sql, _ in executed_sql]
         if hasattr(self.schema_editor, "deferred_sql"):
@@ -77,9 +77,8 @@ class TestWrapper(unittest.TestCase):
         # Work around issue caused by missing encoding configuration in test environment.
         quote_patch = patch.object(self.schema_editor, "quote_value", side_effect=simple_quote_value)
 
-        with execute_patch, quote_patch:
-            with self.schema_editor:
-                operation_func()
+        with execute_patch, quote_patch, self.schema_editor:
+            operation_func()
 
         all_sql = [str(sql) for sql, _ in executed_sql]
         if hasattr(self.schema_editor, "deferred_sql"):
@@ -207,7 +206,7 @@ class TestWrapper(unittest.TestCase):
 
             class Meta:
                 app_label = "test_app"
-                constraints = [create_check_constraint(Q(age__gte=0), "age_gte_0")]
+                constraints: ClassVar[list[models.BaseConstraint]] = [create_check_constraint(Q(age__gte=0), "age_gte_0")]
 
         def operation():
             self.schema_editor.create_model(CheckConstraintModel)

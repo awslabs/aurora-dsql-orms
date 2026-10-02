@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+from typing import ClassVar
 
 from django.db import connections, transaction
 from django.test import TestCase
 
 
 class TestAuroraDSQLAdapter(TestCase):
-    databases = {"default"}
+    databases: ClassVar[set[str]] = {"default"}
 
     @classmethod
     def setUpClass(cls):
@@ -74,10 +75,10 @@ class TestAuroraDSQLAdapter(TestCase):
                 # Complete the transaction
                 cursor.execute("COMMIT")
 
-            except Exception as e:
+            except Exception:
                 # If an error occurs, rollback the transaction
                 cursor.execute("ROLLBACK")
-                raise e
+                raise
 
             finally:
                 # Verify that the table has been deleted
