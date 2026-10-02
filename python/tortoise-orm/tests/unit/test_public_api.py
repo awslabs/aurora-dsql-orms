@@ -29,11 +29,11 @@ BACKENDS = {
 def test_import_doesnt_require_other_backend(subtests, backend):
     """Verify using package doesn't require multiple backends"""
     # We run the entire import tree while pretending that psycopg isn't installed
-    other_backends = {b for b in BACKENDS.keys() if b != backend}
+    other_backends = {b for b in BACKENDS if b != backend}
     no_other_backends = {
-        k: None for k in sys.modules.keys() for other in other_backends if k.startswith(other)
+        k: None for k in sys.modules for other in other_backends if k.startswith(other)
     }
-    evict_dsql = {k for k in sys.modules.keys() if k.startswith("aurora_dsql_tortoise")}
+    evict_dsql = {k for k in sys.modules if k.startswith("aurora_dsql_tortoise")}
 
     with patch.dict(sys.modules, no_other_backends) as mods:
         for mod in evict_dsql:

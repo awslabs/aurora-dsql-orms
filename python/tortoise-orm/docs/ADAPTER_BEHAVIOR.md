@@ -53,6 +53,7 @@ foreign key constraints that DSQL enforces.
 ```python
 from aurora_dsql_tortoise.common.fields import BigIntField
 
+
 class Invoice(Model):
     id = BigIntField(primary_key=True, sequence_cache_size=65536)
 ```

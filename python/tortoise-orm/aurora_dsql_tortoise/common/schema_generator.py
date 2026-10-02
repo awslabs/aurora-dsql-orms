@@ -65,5 +65,3 @@ class AuroraDSQLSchemaGeneratorMixin(_Base):
 class AuroraDSQLBaseSchemaGenerator(AuroraDSQLSchemaGeneratorMixin, BasePostgresSchemaGenerator):
     """Base schema generator for Aurora DSQL, used by aerich for DDL generation
     without driver-specific dependencies."""
-
-    pass

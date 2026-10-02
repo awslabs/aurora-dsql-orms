@@ -23,6 +23,10 @@ CLUSTER_ID, REGION = match.groups()
 OCC_CLEANUP_RETRIES = 5
 
 
+class CleanupError(RuntimeError):
+    """Raised when test-table cleanup exhausts OCC retries."""
+
+
 @pytest.fixture
 async def backend(request):
     # Clear cached queries to avoid cross-backend pollution.
@@ -85,6 +89,6 @@ async def cleanup_test_tables(backend):
                 continue
             raise
     else:
-        raise Exception(f"cleanup failed after retries: {errors}")
+        raise CleanupError(f"cleanup failed after retries: {errors}")
 
     await Tortoise.close_connections()
