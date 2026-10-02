@@ -14,6 +14,7 @@ from sqlalchemy import (
     select,
     text,
 )
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.schema import CreateSequence
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing.assertions import eq_
@@ -27,7 +28,7 @@ class SequenceTest(fixtures.TestBase):
         try:
             connection.execute(text(f"DROP SEQUENCE IF EXISTS {sequence_name} CASCADE"))
             connection.commit()
-        except Exception:
+        except SQLAlchemyError:
             connection.rollback()
 
     def test_int_seq(self, connection, metadata):

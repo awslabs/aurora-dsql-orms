@@ -92,12 +92,7 @@ See [SSL Configuration](docs/SSL_CONFIGURATION.md) for detailed setup instructio
 Server-generated UUIDs are the recommended choice for primary key columns. The following column definition can be used to define a UUID primary key column.
 
 ```python
-Column(
-    "id",
-    UUID(as_uuid=True),
-    primary_key=True,
-    default=text('gen_random_uuid()')
-)
+Column("id", UUID(as_uuid=True), primary_key=True, default=text("gen_random_uuid()"))
 ```
 
 `gen_random_uuid()` returns an UUID version 4 as the default value.
@@ -154,11 +149,7 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
   - `auroradsql_include` - specifies which columns to includes in an index by using the `INCLUDE` clause:
 
     ```python
-    Index(
-        "include_index",
-        table.c.id,
-        auroradsql_include=['name', 'email']
-    )
+    Index("include_index", table.c.id, auroradsql_include=["name", "email"])
     ```
 
     Generated SQL output:
@@ -170,12 +161,7 @@ See the [Working with sequences and identity columns](https://docs.aws.amazon.co
   - `auroradsql_nulls_not_distinct` - controls how `NULL` values are treated in unique indexes:
 
     ```python
-    Index(
-        "idx_name",
-        table.c.column,
-        unique=True,
-        auroradsql_nulls_not_distinct=True
-    )
+    Index("idx_name", table.c.column, unique=True, auroradsql_nulls_not_distinct=True)
     ```
 
     Generated SQL output:

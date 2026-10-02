@@ -220,7 +220,7 @@ def execute_sql_statement_retry(engine, sql_statement, max_retries=None):
                 connection.rollback()
                 error = str(e.orig)
                 if not ("OC001" in error or "OC000" in error):
-                    raise e
+                    raise
                 print(f"Error occurred when executing {sql_statement}, executing retry")
                 if max_retries is not None:
                     max_retries -= 1
@@ -243,7 +243,7 @@ def demo_retry_mechanism(engine):
     try:
         print("Dropping test table abc again which is expected to fail")
         execute_sql_statement_retry(engine, "DROP TABLE abc;")
-    except Exception as e:
+    except DBAPIError as e:
         assert 'table "abc" does not exist' in str(e).lower()
 
     print("Creating test table abc with a maximum of 3 retries")

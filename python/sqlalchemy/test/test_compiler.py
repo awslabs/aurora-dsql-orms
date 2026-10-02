@@ -228,10 +228,14 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         self._assert_fk_only_metadata_alters(
             metadata,
             {
-                "ALTER TABLE left_table ADD CONSTRAINT fk_left_right "
-                "FOREIGN KEY(right_id) REFERENCES right_table (id) NOT VALID",
-                "ALTER TABLE right_table ADD CONSTRAINT fk_right_left "
-                "FOREIGN KEY(left_id) REFERENCES left_table (id) NOT VALID",
+                (
+                    "ALTER TABLE left_table ADD CONSTRAINT fk_left_right "
+                    "FOREIGN KEY(right_id) REFERENCES right_table (id) NOT VALID"
+                ),
+                (
+                    "ALTER TABLE right_table ADD CONSTRAINT fk_right_left "
+                    "FOREIGN KEY(left_id) REFERENCES left_table (id) NOT VALID"
+                ),
             },
             {
                 "ALTER TABLE left_table DROP CONSTRAINT fk_left_right",
@@ -265,8 +269,10 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         self._assert_fk_only_metadata_alters(
             metadata,
             {
-                "ALTER TABLE child ADD CONSTRAINT fk_child_parent "
-                "FOREIGN KEY(parent_id) REFERENCES parent (id) NOT VALID",
+                (
+                    "ALTER TABLE child ADD CONSTRAINT fk_child_parent "
+                    "FOREIGN KEY(parent_id) REFERENCES parent (id) NOT VALID"
+                ),
             },
             {
                 "ALTER TABLE child DROP CONSTRAINT fk_child_parent",

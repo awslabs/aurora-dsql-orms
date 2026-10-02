@@ -11,6 +11,7 @@ from sqlalchemy.exc import CompileError
 from sqlalchemy.schema import (
     CheckConstraint,
     ForeignKeyConstraint,
+    Sequence,
 )
 from sqlalchemy.sql import expression, sqltypes
 from sqlalchemy.types import TEXT
@@ -28,9 +29,8 @@ class AuroraDSQLDDLCompiler(PGDDLCompiler):
         """
 
         sequence = create.element
-        if sequence.data_type is not None:
-            if isinstance(sequence.data_type, Integer):
-                sequence.data_type = BIGINT()
+        if sequence.data_type is not None and isinstance(sequence.data_type, Integer):
+            sequence.data_type = BIGINT()
 
         text = super().visit_create_sequence(create, **kw)
         # Add CACHE if not already present
@@ -59,6 +59,7 @@ class AuroraDSQLDDLCompiler(PGDDLCompiler):
 
             # Add DEFAULT nextval('sequence_name')
             sequence = column.default
+            assert isinstance(sequence, Sequence)
             colspec += f" DEFAULT nextval('{self.preparer.format_sequence(sequence)}')"
 
             return colspec
@@ -220,7 +221,7 @@ class AuroraDSQLDialect(PGDialect):
         if context and context.isddl:
             cursor.connection.commit()
 
-    @lru_cache
+    @lru_cache  # noqa: B019 - cache is bounded by the dialect's fixed query shapes
     def _columns_query(self, schema, has_filter_names, scope, kind):
         """
         modified from https://github.com/sqlalchemy/sqlalchemy/blob/rel_2_0_41/lib/sqlalchemy/dialects/postgresql/base.py

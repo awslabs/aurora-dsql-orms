@@ -1,11 +1,13 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+from contextlib import suppress
 from unittest.mock import patch
 
 from botocore.credentials import CredentialProvider, Credentials
 from botocore.session import get_session
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.testing import fixtures
 
 from aurora_dsql_sqlalchemy import create_dsql_engine
@@ -50,10 +52,8 @@ class TestConnectorIntegration(fixtures.TestBase):
                 driver=DRIVER,
                 connect_args={"profile": "test-profile"},
             )
-            try:
+            with suppress(SQLAlchemyError):
                 engine.connect()
-            except Exception:
-                pass  # Connection will fail with mock token
             mock_session.assert_called_with(profile_name="test-profile")
 
     def test_cluster_id_with_region(self):
