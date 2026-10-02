@@ -45,7 +45,7 @@ dependencies {
   testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
 
   // AWS SDK deps
-  implementation 'software.amazon.awssdk:dsql:2.55.5'
+  implementation 'software.amazon.awssdk:dsql:2.55.7'
   implementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.5.0'
 
   // The Aurora DSQL Hibernate dialect is provided as a locally built JAR in lib/ by CI
