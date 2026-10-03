@@ -1,4 +1,5 @@
 import { transformMigration, lintMigration } from "../src/cli/transform";
+import { transactionBlocks } from "./transactions";
 
 /**
  * Shared assertion: the JSON diagnostics contain at least one entry with
@@ -11,6 +12,11 @@ function hasDiagnosticWithStatus(
   return output.files.some((f) =>
     f.diagnostics.some((d) => d.fix_result.status === status),
   );
+}
+
+/** Leading keywords of each block, e.g. `CREATE TABLE`. */
+function blockKinds(sql: string): string[] {
+  return transactionBlocks(sql).map((b) => b.match(/^\w+(\s+\w+)?/)![0]);
 }
 
 describe("dsql-lint binary resolution", () => {
@@ -62,7 +68,8 @@ CREATE TABLE "post" (
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      // Splitting the two statements into separate transactions is an advisory.
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain('CREATE TABLE "user"');
       expect(result.sql).toContain('CREATE TABLE "post"');
     });
@@ -228,7 +235,8 @@ DROP TABLE IF EXISTS "post";`;
 
       const result = transformMigration(input);
 
-      expect(result.exitCode).toBe(0);
+      // Splitting the two statements into separate transactions is an advisory.
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain('DROP TABLE IF EXISTS "user"');
       expect(result.sql).toContain('DROP TABLE IF EXISTS "post"');
     });
@@ -302,6 +310,259 @@ ADD CONSTRAINT "vet_pkey" PRIMARY KEY ("id");`;
       expect(result.exitCode).toBe(0);
       expect(result.sql).toContain('CREATE TABLE "references"');
       expect(result.sql).toContain("foreign_key");
+    });
+  });
+
+  describe("transaction splitting", () => {
+    // `prisma migrate deploy` can send a migration file as one query, which
+    // PostgreSQL runs as a single implicit transaction. DSQL allows one DDL
+    // statement per transaction, so every statement needs its own.
+    const prismaMigration = `-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
+-- CreateTable
+CREATE TABLE "Owner" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT "Owner_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Pet" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "ownerId" UUID,
+    CONSTRAINT "Pet_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Pet_ownerId_idx" ON "Pet"("ownerId");
+
+-- AddForeignKey
+ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "Owner"("id");
+`;
+
+    test("puts each statement of a Prisma migration in its own transaction", () => {
+      const result = transformMigration(prismaMigration);
+
+      expect(blockKinds(result.sql)).toEqual([
+        "CREATE SCHEMA",
+        "CREATE TABLE",
+        "CREATE TABLE",
+        "CREATE INDEX",
+        "ALTER TABLE",
+      ]);
+      expect(result.sql).toContain("CREATE INDEX ASYNC");
+      expect(result.sql).toContain("NOT VALID");
+    });
+
+    test("reports the split as an advisory", () => {
+      const result = transformMigration(
+        `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "CREATE TABLE"]);
+      expect(result.exitCode).toBe(3);
+      expect(result.output.summary.errors).toBe(0);
+      expect(
+        result.output.files[0]?.diagnostics.find(
+          (d) => d.rule === "multi_ddl_transaction",
+        )?.fix_result.status,
+      ).toBe("fixed_with_warning");
+    });
+
+    test.each([
+      ["a single statement", `CREATE TABLE "a" ("id" UUID PRIMARY KEY);`],
+      [
+        "data changes only",
+        `INSERT INTO "a" ("id") VALUES (gen_random_uuid());\n\nINSERT INTO "a" ("id") VALUES (gen_random_uuid());`,
+      ],
+    ])("leaves %s as written without an advisory", (_case, sql) => {
+      const result = transformMigration(sql);
+
+      // Batches of data changes may each need their own transaction to stay
+      // under DSQL's per-transaction limits.
+      expect(result.sql).not.toMatch(/^(BEGIN|COMMIT);$/m);
+      expect(result.sql.trim()).toBe(sql);
+      expect(result.exitCode).toBe(0);
+      expect(result.output.files[0]?.diagnostics).toEqual([]);
+    });
+
+    test("terminates a final statement that has no semicolon", () => {
+      const result = transformMigration(
+        `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY)`,
+      );
+
+      expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "CREATE TABLE"]);
+      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(false);
+    });
+
+    test("keeps diagnostic line numbers aligned with the input", () => {
+      const result = transformMigration(
+        `-- one\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\n\n-- four\nCREATE INDEX "a_idx" ON "a"("id");`,
+      );
+
+      const index = result.output.files[0]?.diagnostics.find(
+        (d) => d.rule === "index_async",
+      );
+      expect(index?.line).toBe(5);
+    });
+
+    test("splits DDL from DML", () => {
+      const result = transformMigration(
+        `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nINSERT INTO "a" ("id") VALUES (gen_random_uuid());`,
+      );
+
+      expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "INSERT INTO"]);
+    });
+
+    test("ignores transaction keywords inside comments", () => {
+      const result = transformMigration(
+        `-- BEGIN;\n/*\nBEGIN;\n*/\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "CREATE TABLE"]);
+    });
+
+    test.each([
+      // Prisma writes a default that contains newlines as a multi-line literal.
+      [
+        "a BEGIN line in a string literal",
+        `"note" TEXT NOT NULL DEFAULT 'x\nBEGIN\ny'`,
+      ],
+      ["a COMMIT in a string literal", `"note" TEXT DEFAULT 'x; COMMIT'`],
+      ["a column named begin", `begin TIMESTAMP`],
+    ])("splits a script with %s", (_case, column) => {
+      const result = transformMigration(
+        `CREATE TABLE "a" (\n    "id" UUID PRIMARY KEY,\n${column}\n);\nCREATE INDEX "a_idx" ON "a"("id");`,
+      );
+
+      expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "CREATE INDEX"]);
+    });
+
+    test("is idempotent on its own output", () => {
+      const first = transformMigration(prismaMigration);
+      const second = transformMigration(first.sql);
+
+      expect(second.sql).toBe(first.sql);
+      expect(second.exitCode).toBe(0);
+    });
+
+    test.each([
+      "BEGIN",
+      "START TRANSACTION",
+      "begin transaction",
+      "/* comment */ BEGIN",
+    ])(
+      "does not wrap a script that already opens a transaction with %s",
+      (begin) => {
+        const result = transformMigration(
+          `${begin};\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);\nCOMMIT;`,
+        );
+
+        // dsql-lint splits the script's own transaction. A wrapper around it
+        // would leave an unmatched COMMIT after the split blocks.
+        expect(result.sql.match(/^(BEGIN|START TRANSACTION)/gim)).toHaveLength(
+          2,
+        );
+        expect(result.sql.match(/^COMMIT;$/gm)).toHaveLength(2);
+      },
+    );
+
+    test("does not wrap a script that commits after its first statement", () => {
+      const result = transformMigration(
+        `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nBEGIN;\nINSERT INTO "c" ("n") VALUES (1);\nCOMMIT;\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      // Wrapping would end at the script's own COMMIT and leave an unmatched
+      // COMMIT after the statements that follow it.
+      expect(result.sql.match(/^BEGIN;$/gm)).toHaveLength(1);
+      expect(result.sql.match(/^COMMIT;$/gm)).toHaveLength(1);
+      expect(result.exitCode).toBe(0);
+    });
+
+    test.each(["COMMIT", "END"])(
+      "does not wrap a script that ends a transaction with %s",
+      (end) => {
+        const result = transformMigration(
+          `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);\n${end};\nCREATE TABLE "c" ("id" UUID PRIMARY KEY);`,
+        );
+
+        expect(result.sql).not.toMatch(/^BEGIN;$/m);
+        expect(result.exitCode).toBe(0);
+      },
+    );
+
+    test.each([
+      `SET LOCAL search_path TO "target"`,
+      `SET LOCAL ROLE "migrator"`,
+      `SET /* scope */ LOCAL search_path TO "target"`,
+      `SET -- scope\nLOCAL search_path TO "target"`,
+      `SET CONSTRAINTS ALL DEFERRED`,
+      `SELECT set_config('search_path', 'target', true)`,
+      `SELECT set_config /* scope */ ('search_path', 'target', true)`,
+      `SELECT "set_config"('search_path', 'target', true)`,
+      `SELECT set_config('search_path', 'target', false), set_config('role', 'migrator', true)`,
+    ])("does not split a script that uses %s", (setting) => {
+      const result = transformMigration(
+        `${setting};\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      // Splitting would end the setting before the tables are created.
+      expect(result.sql).not.toMatch(/^(BEGIN|COMMIT);$/m);
+      expect(result.exitCode).toBe(0);
+    });
+
+    test.each([
+      ["a session setting", `SET search_path TO "target";`],
+      ["a column named local", `UPDATE "c" SET local = 1;`],
+      [
+        "a string literal",
+        `CREATE TABLE "c" ("n" TEXT DEFAULT 'x; SET LOCAL y');`,
+      ],
+      [
+        "an escape string literal",
+        String.raw`CREATE TABLE "c" ("n" TEXT DEFAULT E'it\'s; SET LOCAL x');`,
+      ],
+      [
+        "a dollar-quoted body",
+        `CREATE FUNCTION "f"() RETURNS INT AS $fn$ SELECT 1; SET LOCAL x = 1 $fn$ LANGUAGE sql;`,
+      ],
+      ["a nested comment", `/* a /* b */ SET LOCAL x = 1; */`],
+    ])("splits a script that mentions SET LOCAL only in %s", (_case, sql) => {
+      const result = transformMigration(
+        `${sql}\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      expect(blockKinds(result.sql).slice(-2)).toEqual([
+        "CREATE TABLE",
+        "CREATE TABLE",
+      ]);
+    });
+
+    test.each([
+      `SELECT pg_catalog.set_config('search_path', 'target', FALSE)`,
+      `SELECT set_config('search_path'::text, current_schema()::text, false)`,
+    ])("splits a script that calls set_config for the session: %s", (call) => {
+      const result = transformMigration(
+        `${call};\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      // A session setting outlasts each transaction, so splitting keeps it.
+      expect(blockKinds(result.sql).slice(-2)).toEqual([
+        "CREATE TABLE",
+        "CREATE TABLE",
+      ]);
+    });
+
+    test("still splits a multi-DDL transaction written explicitly", () => {
+      const result = transformMigration(
+        `BEGIN;\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);\nCOMMIT;`,
+      );
+
+      expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "CREATE TABLE"]);
+    });
+
+    test("adds no transaction to whitespace-only input", () => {
+      expect(transformMigration("  \n\n").sql.trim()).toBe("");
     });
   });
 

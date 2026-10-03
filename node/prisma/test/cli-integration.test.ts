@@ -8,6 +8,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { transactionBlocks } from "./transactions";
 
 function execAllowAdvisories(command: string): string {
   try {
@@ -62,6 +63,19 @@ CREATE INDEX "user_idx" ON "user"("id");`;
       );
 
       expect(output).toContain("CREATE INDEX ASYNC");
+    });
+
+    test("transform from stdin splits statements into transactions", () => {
+      const migration = `CREATE TABLE "user" ("id" UUID PRIMARY KEY);
+CREATE TABLE "post" ("id" UUID PRIMARY KEY);`;
+      const inputPath = path.join(tempDir, "stdin-split.sql");
+      fs.writeFileSync(inputPath, migration);
+
+      const output = execAllowAdvisories(
+        `cat ${inputPath} | npm run --silent dsql-transform 2>/dev/null`,
+      );
+
+      expect(transactionBlocks(output)).toHaveLength(2);
     });
 
     test("validator exits nonzero for unfixable SQL", () => {
@@ -131,6 +145,18 @@ model User {
       expect(output).toContain("CREATE INDEX ASYNC");
       expect(output).toContain("FOREIGN KEY");
       expect(output).toContain("NOT VALID");
+    });
+
+    test("dsql-migrate puts each statement in its own transaction", () => {
+      const outputPath = path.join(tempDir, "migration-split.sql");
+
+      execAllowAdvisories(
+        `npm run dsql-migrate -- prisma/veterinary-schema.prisma -o ${outputPath}`,
+      );
+
+      const output = fs.readFileSync(outputPath, "utf-8");
+      // Veterinary schema: CREATE SCHEMA, 5 tables, 2 indexes, 3 foreign keys.
+      expect(transactionBlocks(output)).toHaveLength(11);
     });
 
     test("dsql-migrate rewrites generated SERIAL columns", () => {

@@ -193,7 +193,8 @@ DROP TABLE "Owner";
 
       const result = transformMigration(downMigration);
 
-      expect(result.exitCode).toBe(0);
+      // Splitting the four DROP statements into transactions is an advisory.
+      expect(result.exitCode).toBe(3);
       expect(result.sql).toContain("DROP CONSTRAINT");
 
       // Other drops preserved

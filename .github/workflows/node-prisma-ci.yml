@@ -185,6 +185,17 @@ jobs:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
         run: npm run prisma:migrate-down
 
+      # Live `prisma migrate deploy` coverage runs in this job, after the
+      # example, because DDL running at the same time on the shared cluster
+      # fails with optimistic concurrency errors.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run deploy integration tests
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.cluster-endpoint }}
+        run: npm run test -- --testPathPatterns=deploy-integration
+
   delete-cluster:
     if: always() && needs.create-cluster.result == 'success'
     needs: [create-cluster, test, test-example]

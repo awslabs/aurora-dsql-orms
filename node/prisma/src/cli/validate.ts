@@ -82,7 +82,7 @@ async function checkSqlCompatibility(
     return;
   }
 
-  const result = transformMigration(sql);
+  const result = transformMigration(sql, { splitTransactions: false });
 
   // Consume structured diagnostics directly — no regex scraping of stderr.
   for (const file of result.output.files) {
