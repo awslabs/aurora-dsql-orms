@@ -25,8 +25,8 @@ const SCHEMA = `datasource db {
 model Owner {
   id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name String @db.VarChar(30)
-  // Generated as a multi-line literal with a line that starts with BEGIN.
-  note String @default("x\\nBEGIN;\\ny")
+  // The leading semicolon makes COMMIT resemble a standalone statement.
+  note String @default("x\\n;COMMIT;\\ny")
   pets Pet[]
 }
 

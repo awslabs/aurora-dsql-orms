@@ -416,7 +416,7 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
     test("ignores transaction keywords inside comments", () => {
       const result = transformMigration(
-        `-- BEGIN;\n/*\nBEGIN;\n*/\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+        `-- step 1; COMMIT once reviewed\n/* step 2; COMMIT */\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
       );
 
       expect(blockKinds(result.sql)).toEqual(["CREATE TABLE", "CREATE TABLE"]);
@@ -425,11 +425,11 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
     test.each([
       // Prisma writes a default that contains newlines as a multi-line literal.
       [
-        "a BEGIN line in a string literal",
-        `"note" TEXT NOT NULL DEFAULT 'x\nBEGIN\ny'`,
+        "a COMMIT line in a string literal",
+        `"note" TEXT NOT NULL DEFAULT 'x ;COMMIT\ny'`,
       ],
-      ["a COMMIT in a string literal", `"note" TEXT DEFAULT 'x; COMMIT'`],
-      ["a column named begin", `begin TIMESTAMP`],
+      ["COMMIT in a quoted column name", `"x;COMMIT" TIMESTAMP`],
+      ["a column named commit", `commit TIMESTAMP`],
     ])("splits a script with %s", (_case, column) => {
       const result = transformMigration(
         `CREATE TABLE "a" (\n    "id" UUID PRIMARY KEY,\n${column}\n);\nCREATE INDEX "a_idx" ON "a"("id");`,
