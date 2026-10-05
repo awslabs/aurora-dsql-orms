@@ -135,7 +135,30 @@ export function transformMigration(
   if (wrapped !== sql && !splitsTransaction(result.output)) {
     // Nothing needed its own transaction, so keep the file's transactions as
     // written, for example data batches that each stay under DSQL's limits.
-    result = runDsqlLintWithStdin(sql, ["--fix"]);
+    const unwrapped = runDsqlLintWithStdin(sql, ["--fix"]);
+    // Treat a wrapper-only fix as a possible renamed split rule so version
+    // drift surfaces before deployment.
+    const unexpectedFix = result.output.files
+      .flatMap((file) => file.diagnostics)
+      .find(
+        (diagnostic) =>
+          diagnostic.fix_result.status !== "unfixable" &&
+          !unwrapped.output.files.some((file) =>
+            file.diagnostics.some(
+              (other) =>
+                other.rule === diagnostic.rule &&
+                other.line === diagnostic.line &&
+                other.fix_result.status === diagnostic.fix_result.status,
+            ),
+          ),
+      );
+    if (unexpectedFix) {
+      throw new Error(
+        `dsql-lint reported an unrecognized transaction-dependent fix (${unexpectedFix.rule}). ` +
+          "Check compatibility with this dsql-lint version before deploying the migration.",
+      );
+    }
+    result = unwrapped;
   }
   // On any non-error exit, dsql-lint must return the fixed SQL inline
   // (stdin + --fix contract). A missing `fixed_sql` here means either the

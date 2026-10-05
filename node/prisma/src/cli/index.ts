@@ -51,6 +51,9 @@ Exit codes (transform / lint):
   3  Fixes applied, but some produced advisories (e.g. synchronous indexes made asynchronous,
      statements split into separate transactions).
      The migration is written; review the warnings before applying.
+
+The migrate command logs advisories but exits 0 after writing the migration.
+Review those advisories before applying it.
 `;
 
 function rejectUnknownFlags(args: string[], knownFlags: Set<string>): void {

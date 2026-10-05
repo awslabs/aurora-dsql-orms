@@ -479,15 +479,17 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(result.exitCode).toBe(0);
     });
 
-    test.each(["COMMIT", "END"])(
+    test.each(["COMMIT", "END", "commit", "end"])(
       "does not wrap a script that ends a transaction with %s",
       (end) => {
-        const result = transformMigration(
-          `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);\n${end};\nCREATE TABLE "c" ("id" UUID PRIMARY KEY);`,
-        );
+        const input = `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);\n${end};\nCREATE TABLE "c" ("id" UUID PRIMARY KEY);`;
+        const result = transformMigration(input);
+        const unwrapped = transformMigration(input, {
+          splitTransactions: false,
+        });
 
         expect(result.sql).not.toMatch(/^BEGIN;$/m);
-        expect(result.exitCode).toBe(0);
+        expect(result).toEqual(unwrapped);
       },
     );
 

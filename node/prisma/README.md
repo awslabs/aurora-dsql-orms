@@ -121,7 +121,9 @@ aborted, commands ignored until end of transaction block` instead of the
 original error. To find the cause, check which blocks were applied, then run
 the first block that wasn't with `psql` or `npx prisma db execute`. Fix the
 cause, then [resolve the failed migration](https://pris.ly/d/migrate-resolve).
-When the transform splits a file it exits with code `3` so you review this.
+When `transform` splits a file it exits with code `3` so you review this.
+`migrate` logs the same advisories but exits with code `0` after writing the
+migration. Review the advisories before deploying either command's output.
 
 A file that doesn't need splitting, such as one with a single DDL statement or
 only statements that change data, is left as written. In a file with DDL,
@@ -149,6 +151,10 @@ Check a SQL migration file for DSQL compatibility without applying fixes:
 ```bash
 npx aurora-dsql-prisma lint migration.sql
 ```
+
+`lint` checks the SQL as written; it does not model Prisma running the file as
+one implicit transaction. A clean lint result alone is not proof that the
+migration will deploy. Use `transform` and verify the migration against DSQL.
 
 ### All-in-One Migrate
 

@@ -12,6 +12,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
+import { Client } from "pg";
 import { transformMigration } from "../src/cli/transform";
 
 const PACKAGE_ROOT = path.join(__dirname, "..");
@@ -168,15 +169,90 @@ describeLive("prisma migrate deploy on Aurora DSQL", () => {
     );
   }
 
-  async function deploy(): Promise<CommandResult> {
+  async function deploy(): Promise<CommandResult & { schema: string }> {
     const schema = `deploy_test_${process.pid}_${Date.now()}`;
     schemas.push(schema);
-    return run(["prisma", "migrate", "deploy", "--config", configPath()], {
-      env: {
-        DEPLOY_TEST_DATABASE_URL: await databaseUrl(schema),
-        PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK: "1",
+    const result = run(
+      ["prisma", "migrate", "deploy", "--config", configPath()],
+      {
+        env: {
+          DEPLOY_TEST_DATABASE_URL: await databaseUrl(schema),
+          PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK: "1",
+        },
       },
+    );
+    return { ...result, schema };
+  }
+
+  async function expectDeployed(schema: string): Promise<void> {
+    const client = new Client({
+      connectionString: await databaseUrl(schema),
+      ssl: { rejectUnauthorized: true },
     });
+    await client.connect();
+    try {
+      const tables = await client.query(
+        `SELECT tablename FROM pg_catalog.pg_tables
+         WHERE schemaname = $1 AND tablename IN ('Owner', 'Pet')
+         ORDER BY tablename`,
+        [schema],
+      );
+      expect(tables.rows).toEqual([
+        { tablename: "Owner" },
+        { tablename: "Pet" },
+      ]);
+      const index = await client.query(
+        `SELECT tablename, indexname, indexdef FROM pg_catalog.pg_indexes
+         WHERE schemaname = $1 AND indexname = 'Pet_ownerId_idx'`,
+        [schema],
+      );
+      expect(index.rows).toHaveLength(1);
+      expect(index.rows[0]).toMatchObject({
+        tablename: "Pet",
+        indexname: "Pet_ownerId_idx",
+      });
+      expect(index.rows[0].indexdef).toMatch(/\("ownerId"\)/);
+      const foreignKey = await client.query(
+        `SELECT c.conname, c.convalidated, child.relname AS child,
+                parent.relname AS parent,
+                pg_catalog.pg_get_constraintdef(c.oid) AS definition
+         FROM pg_catalog.pg_constraint c
+         JOIN pg_catalog.pg_namespace n ON n.oid = c.connamespace
+         JOIN pg_catalog.pg_class child ON child.oid = c.conrelid
+         JOIN pg_catalog.pg_class parent ON parent.oid = c.confrelid
+         WHERE n.nspname = $1 AND c.contype = 'f'
+           AND c.conname = 'Pet_ownerId_fkey'`,
+        [schema],
+      );
+      expect(foreignKey.rows).toHaveLength(1);
+      expect(foreignKey.rows[0]).toMatchObject({
+        conname: "Pet_ownerId_fkey",
+        convalidated: false,
+        child: "Pet",
+        parent: "Owner",
+      });
+      expect(foreignKey.rows[0].definition).toMatch(
+        /FOREIGN KEY \("ownerId"\)/,
+      );
+      expect(foreignKey.rows[0].definition).toMatch(
+        /REFERENCES .*"Owner"\(id\)/,
+      );
+      // The test controls each generated identifier interpolated below.
+      const migration = await client.query(
+        `SELECT migration_name, finished_at IS NOT NULL AS finished,
+                rolled_back_at IS NULL AS not_rolled_back
+         FROM "${schema}"._prisma_migrations`,
+      );
+      expect(migration.rows).toEqual([
+        {
+          migration_name: "20260101000000_init",
+          finished: true,
+          not_rolled_back: true,
+        },
+      ]);
+    } finally {
+      await client.end();
+    }
   }
 
   test("deploys a migration generated for a multi-statement schema", async () => {
@@ -189,14 +265,45 @@ describeLive("prisma migrate deploy on Aurora DSQL", () => {
       "-o",
       outputFile,
     ]);
-    // Exit 3 means fixes were applied with advisories; the file is still written.
-    expect([0, 3]).toContain(generated.status);
+    expect(generated.status).toBe(0);
     writeMigration(fs.readFileSync(outputFile, "utf-8"));
 
     const result = await deploy();
 
     expect(result.output).toContain("All migrations have been successfully");
     expect(result.status).toBe(0);
+    await expectDeployed(result.schema);
+  }, 180_000);
+
+  test("deploys a migration transformed from Prisma diff output", async () => {
+    const raw = run([
+      "prisma",
+      "migrate",
+      "diff",
+      "--from-empty",
+      "--to-schema",
+      path.join(projectDir!, "schema.prisma"),
+      "--script",
+    ]);
+    expect(raw.status).toBe(0);
+    const inputFile = path.join(projectDir!, "raw.sql");
+    const outputFile = path.join(projectDir!, "transformed.sql");
+    fs.writeFileSync(inputFile, raw.stdout);
+    const transformed = run([
+      "tsx",
+      "src/cli/index.ts",
+      "transform",
+      inputFile,
+      "-o",
+      outputFile,
+    ]);
+    expect(transformed.status).toBe(3);
+    writeMigration(fs.readFileSync(outputFile, "utf-8"));
+
+    const result = await deploy();
+    expect(result.output).toContain("All migrations have been successfully");
+    expect(result.status).toBe(0);
+    await expectDeployed(result.schema);
   }, 180_000);
 
   test("DSQL rejects the same migration when it is not split", async () => {
@@ -223,5 +330,6 @@ describeLive("prisma migrate deploy on Aurora DSQL", () => {
       "multiple ddl statements not supported in a transaction",
     );
     expect(result.status).not.toBe(0);
+    expect(result.output).toContain("0A000");
   }, 180_000);
 });
