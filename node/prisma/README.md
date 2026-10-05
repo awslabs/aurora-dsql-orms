@@ -90,53 +90,25 @@ The transform command uses [`dsql-lint --fix`](https://github.com/awslabs/aurora
 
 #### Transactions
 
-Aurora DSQL allows one DDL statement per transaction, but `prisma migrate
-deploy` can send a migration file as a single query, which runs as one
-transaction. Prisma 7.3 and earlier always do this; later versions do it when
-they can't parse the file, such as one with `CREATE INDEX ASYNC`. The transform
-puts each statement in its own `BEGIN`/`COMMIT` block:
+Aurora DSQL allows one DDL statement per transaction. `transform` puts DDL
+statements in separate `BEGIN`/`COMMIT` blocks for `prisma migrate deploy`, which
+can run a file as one transaction. Data changes run separately from DDL;
+adjacent data changes share a transaction. Keep large data changes in separate
+migrations within DSQL's [transaction limits](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/CHAP_quotas.html).
 
-```sql
-BEGIN;
+If a statement fails, earlier committed changes remain applied. If Prisma reports
+only `current transaction is aborted`, run the first unapplied block with `psql`
+or `npx prisma db execute` to find the cause. Fix it, then
+[resolve the failed migration](https://pris.ly/d/migrate-resolve).
 
-CREATE TABLE "owner" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT "owner_pkey" PRIMARY KEY ("id")
-);
+Splitting produces an advisory: `transform` writes the SQL and exits with code
+`3`; `migrate` logs the advisory and exits with code `0`.
 
-COMMIT;
-
-BEGIN;
-
-CREATE INDEX ASYNC "pet_ownerId_idx" ON "pet"("ownerId");
-
-COMMIT;
-```
-
-The migration is no longer atomic: if a statement fails, the blocks before it
-stay applied. Prisma may report only `current transaction is aborted`; run the
-first unapplied block with `psql` or `npx prisma db execute` to see the real
-error, fix it, then [resolve the failed migration](https://pris.ly/d/migrate-resolve).
-`transform` exits with code `3` when it splits a file; `migrate` logs the same
-advisory and exits with code `0`.
-
-Data changes are kept out of DDL transactions, and adjacent ones share a
-transaction, so put a large data change in its own migration to stay under
-DSQL's [transaction limits](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/CHAP_quotas.html).
-
-These files are left as written:
-
-- Files that don't need splitting, such as a single DDL statement or only data
-  changes.
-- Files that end their own transactions with `COMMIT` or `ROLLBACK`.
-  Statements outside their blocks are not split, so put each DDL statement in
-  its own block.
-- Files that use a transaction-scoped setting such as `SET LOCAL search_path`,
-  because splitting would end the setting early. Put each DDL statement in its
-  own block and repeat the setting in each one.
-
-`dsql-lint` still splits any `BEGIN`/`COMMIT` block with more than one DDL
-statement, which also ends a setting made inside it.
+Single-statement and data-only files do not need splitting.
+For files containing `COMMIT`, `ROLLBACK`, or transaction-scoped settings such
+as `SET LOCAL`, put each DDL statement in its own transaction and repeat any
+required settings. `transform` does not add transaction blocks to these files,
+but `dsql-lint` can split existing blocks, ending their transaction-scoped settings.
 
 ### Lint Migrations
 
@@ -146,8 +118,8 @@ Check a SQL migration file for DSQL compatibility without applying fixes:
 npx aurora-dsql-prisma lint migration.sql
 ```
 
-`lint` checks the file as written, so it doesn't report DDL statements that
-Prisma would run in one transaction. Use `transform` for migrations you deploy.
+Use `transform` before deployment: `lint` checks SQL compatibility but does not
+account for Prisma running the file as one transaction.
 
 ### All-in-One Migrate
 
@@ -186,9 +158,7 @@ statement, in its own transaction, to validate existing rows:
 
 ```sql
 BEGIN;
-
 ALTER TABLE ASYNC "table_name" VALIDATE CONSTRAINT "constraint_name";
-
 COMMIT;
 ```
 
