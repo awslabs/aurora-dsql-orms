@@ -4,7 +4,7 @@
  * These tests run the actual CLI commands to verify the golden path
  * workflow works end-to-end with dsql-lint.
  */
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -77,6 +77,92 @@ CREATE TABLE "post" ("id" UUID PRIMARY KEY);`;
 
       expect(transactionBlocks(output)).toHaveLength(2);
     });
+
+    test("drains a large split migration to a slow stdout reader before exiting 3", () => {
+      const statements = Array.from(
+        { length: 1500 },
+        (_, i) => `CREATE TABLE "table_${i}" ("id" UUID PRIMARY KEY);`,
+      );
+      const inputPath = path.join(tempDir, "slow-reader.sql");
+      fs.writeFileSync(inputPath, statements.join("\n"));
+      const expected =
+        statements.map((sql) => `BEGIN;\n\n${sql}\n\nCOMMIT;`).join("\n\n") +
+        "\n";
+      expect(Buffer.byteLength(expected)).toBeGreaterThan(64 * 1024);
+
+      const result = spawnSync(
+        "bash",
+        [
+          "-o",
+          "pipefail",
+          "-c",
+          '"$1" "$2" transform "$3" | (sleep 1; cat)',
+          "--",
+          process.execPath,
+          path.join(__dirname, "../dist/cli/index.js"),
+          inputPath,
+        ],
+        { encoding: "utf-8" },
+      );
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(3);
+      expect(result.stdout).toBe(expected);
+    });
+
+    test.each([2, 101])(
+      "does not write output after dsql-lint exits %i",
+      (exitCode) => {
+        // Exercise the CLI's unexpected-exit boundary with a complete lint
+        // response; real lint errors do not normally include writable SQL.
+        const lintPath = path.join(tempDir, `lint-exit-${exitCode}`);
+        fs.writeFileSync(
+          lintPath,
+          `#!${process.execPath}
+const fs = require("fs");
+const sql = fs.readFileSync(0, "utf-8");
+console.log(JSON.stringify({
+  schema_version: 1,
+  files: [{ file: "<stdin>", diagnostics: [], error: null, output_file: null, fixed_sql: sql }],
+  summary: { errors: 0, warnings: 0, fixed: 0 }
+}));
+process.exitCode = ${exitCode};
+`,
+          { mode: 0o755 },
+        );
+        const inputPath = path.join(tempDir, "fatal-input.sql");
+        fs.writeFileSync(inputPath, 'CREATE TABLE "a" ("id" UUID);');
+
+        for (const command of ["transform", "migrate"]) {
+          const outputPath = path.join(
+            tempDir,
+            `fatal-${command}-${exitCode}.sql`,
+          );
+          const result = spawnSync(
+            process.execPath,
+            [
+              path.join(__dirname, "../dist/cli/index.js"),
+              command,
+              command === "transform"
+                ? inputPath
+                : "prisma/veterinary-schema.prisma",
+              "-o",
+              outputPath,
+            ],
+            {
+              cwd: path.join(__dirname, ".."),
+              encoding: "utf-8",
+              env: { ...process.env, DSQL_LINT_PATH: lintPath },
+            },
+          );
+
+          expect(result.error).toBeUndefined();
+          expect(result.status).toBe(exitCode);
+          expect(fs.existsSync(outputPath)).toBe(false);
+          expect(result.stdout).not.toContain("Migration written to");
+        }
+      },
+    );
 
     test("validator exits nonzero for unfixable SQL", () => {
       const schema = `

@@ -300,7 +300,8 @@ Examples:
     console.error(
       `\n✗ dsql-lint exited with code ${transformResult.exitCode}. Review the errors above.`,
     );
-    process.exit(transformResult.exitCode);
+    process.exitCode = transformResult.exitCode;
+    return;
   }
 
   // Ensure output directory exists
@@ -376,7 +377,8 @@ Options:
   // native crash = 101, ...). Propagate before writing so we never
   // write a partial output file on an unknown exit code.
   if (result.exitCode !== 0 && result.exitCode !== 3) {
-    process.exit(result.exitCode);
+    process.exitCode = result.exitCode;
+    return;
   }
 
   if (outputFile) {
@@ -386,7 +388,7 @@ Options:
   }
 
   if (result.exitCode === 3) {
-    process.exit(3);
+    process.exitCode = 3;
   }
 }
 
@@ -423,7 +425,7 @@ Options:
   const sql = fs.readFileSync(inputFile, "utf-8");
   const result = lintMigration(sql);
   reportDsqlLintDiagnostics(result.output);
-  process.exit(result.exitCode);
+  process.exitCode = result.exitCode;
 }
 
 function readStdin(): Promise<string> {
