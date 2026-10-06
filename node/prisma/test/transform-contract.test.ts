@@ -94,6 +94,23 @@ test("allows an unknown fix present in both wrapped and unwrapped runs", () => {
   expect(transformMigration(sql).sql).toBe("unwrapped");
 });
 
+test.each<[string, Partial<DsqlLintDiagnostic>]>([
+  ["rule", { rule: "other_compatibility_rule" }],
+  ["line", { line: 2 }],
+  ["status", { fix_result: { status: "fixed", detail: "test fix" } }],
+])(
+  "rejects an unknown fix when the unwrapped diagnostic has a different %s",
+  (_field, difference) => {
+    const fix = diagnostic("new_compatibility_rule", "fixed_with_warning");
+    lint
+      .mockReturnValueOnce(response("wrapped", [fix]))
+      .mockReturnValueOnce(response("unwrapped", [{ ...fix, ...difference }]));
+    expect(() => transformMigration(sql)).toThrow(
+      /unrecognized transaction-dependent fix \(new_compatibility_rule\)/,
+    );
+  },
+);
+
 test("keeps a recognized completed split without running the fallback", () => {
   lint.mockReturnValueOnce(
     response("split", [
