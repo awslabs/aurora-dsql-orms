@@ -110,6 +110,10 @@ as `SET LOCAL`, put each DDL statement in its own transaction and repeat any
 required settings. `transform` does not add transaction blocks to these files,
 but `dsql-lint` can split existing blocks, ending their transaction-scoped settings.
 
+For hand-written migrations, put each `CREATE ROLE`, `CREATE DOMAIN`, `GRANT`,
+or `COMMENT ON` statement in its own `BEGIN`/`COMMIT` block. `dsql-lint` does
+not split these statements into separate transactions.
+
 ### Lint Migrations
 
 Check a SQL migration file for DSQL compatibility without applying fixes:
@@ -153,8 +157,10 @@ This requires a `prisma.config.ts` that provides database credentials. See the [
 
 Prisma generates post-creation foreign keys with `ALTER TABLE ... ADD
 CONSTRAINT`. Aurora DSQL requires `NOT VALID` on these constraints, so
-`dsql-lint` preserves the foreign key and adds `NOT VALID`. Add a separate
-statement, in its own transaction, to validate existing rows:
+`dsql-lint` preserves the foreign key and adds `NOT VALID`. After running
+`transform`, add the following block to validate existing rows, or put it in
+a separate migration. Adding it before transformation prevents the transformer
+from wrapping the remaining statements:
 
 ```sql
 BEGIN;
