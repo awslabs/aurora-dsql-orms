@@ -29,5 +29,8 @@
     "@aws/aurora-dsql-drizzle": "file:../..",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.16.0"
+  },
+  "overrides": {
+    "esbuild": "^0.25.0"
   }
 }
