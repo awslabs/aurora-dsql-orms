@@ -500,7 +500,7 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(result.exitCode).toBe(3);
       expect(result).toEqual(
         expect.objectContaining({
-          advisories: [expect.stringContaining("COMMIT")],
+          advisories: [expect.stringContaining("uses COMMIT")],
         }),
       );
     });
@@ -527,7 +527,9 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
         expect(result.exitCode).toBe(exitCode);
         expect(result).toEqual(
           expect.objectContaining({
-            advisories: [expect.stringContaining(String(end).toUpperCase())],
+            advisories: [
+              expect.stringContaining(`uses ${String(end).toUpperCase()}`),
+            ],
           }),
         );
         expect(unwrapped.exitCode).toBe(exitCode === 1 ? 1 : 0);
@@ -579,6 +581,25 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       expect(result).toEqual(
         expect.objectContaining({
           advisories: [expect.stringContaining(reason)],
+        }),
+      );
+    });
+
+    test("warns about an unframed statement after an explicit transaction", () => {
+      const result = transformMigration(
+        `BEGIN;
+SET LOCAL search_path TO "target";
+CREATE TABLE "a" ("id" UUID PRIMARY KEY);
+COMMIT;
+CREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      expect(result.exitCode).toBe(3);
+      expect(result.sql.match(/^BEGIN;$/gm)).toHaveLength(1);
+      expect(result.sql.match(/^COMMIT;$/gm)).toHaveLength(1);
+      expect(result).toEqual(
+        expect.objectContaining({
+          advisories: [expect.stringContaining("uses SET LOCAL")],
         }),
       );
     });
