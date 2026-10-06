@@ -369,6 +369,26 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       ).toBe("fixed_with_warning");
     });
 
+    test("splits a large migration whose lint JSON exceeds 1 MiB", () => {
+      const statements = Array.from(
+        { length: 5400 },
+        (_, i) =>
+          `CREATE TABLE "table_${i}" ("id" UUID PRIMARY KEY, "note" TEXT DEFAULT '${"x".repeat(100)}');`,
+      );
+      const input = statements.join("\n");
+      expect(Buffer.byteLength(input)).toBeGreaterThan(900_000);
+      expect(Buffer.byteLength(input)).toBeLessThan(1_000_000);
+
+      const result = transformMigration(input);
+
+      expect(result.exitCode).toBe(3);
+      expect(Buffer.byteLength(JSON.stringify(result.output))).toBeGreaterThan(
+        1024 * 1024,
+      );
+      expect(transactionBlocks(result.sql)).toEqual(statements);
+      expect(result.sql.trimEnd()).toMatch(/COMMIT;$/);
+    });
+
     test.each([
       ["a single statement", `CREATE TABLE "a" ("id" UUID PRIMARY KEY);`],
       [
