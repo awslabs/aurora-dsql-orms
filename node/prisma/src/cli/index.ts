@@ -48,8 +48,12 @@ Exit codes (transform / lint):
   0  Clean, or all fixes applied without warnings
   1  Unfixable errors remain — review the diagnostics and fix manually
   2  Usage error (invalid arguments, propagated from dsql-lint)
-  3  Fixes applied, but some produced advisories (e.g. synchronous indexes made asynchronous).
+  3  Migration written with advisories (e.g. synchronous indexes made asynchronous,
+     statements split into separate transactions, transaction splitting skipped).
      The migration is written; review the warnings before applying.
+
+The migrate command logs advisories but exits 0 after writing the migration.
+Review those advisories before applying it.
 `;
 
 function rejectUnknownFlags(args: string[], knownFlags: Set<string>): void {
@@ -287,6 +291,9 @@ Examples:
   const transformResult = transformMigration(rawSql);
 
   reportDsqlLintDiagnostics(transformResult.output);
+  for (const advisory of transformResult.advisories) {
+    console.error(`WARNING — ${advisory}`);
+  }
 
   // Exit 1: unfixable errors or I/O errors. Exit 3: all fixed but some
   // produced warnings. Any other non-zero (clap usage error = 2, native
@@ -296,7 +303,8 @@ Examples:
     console.error(
       `\n✗ dsql-lint exited with code ${transformResult.exitCode}. Review the errors above.`,
     );
-    process.exit(transformResult.exitCode);
+    process.exitCode = transformResult.exitCode;
+    return;
   }
 
   // Ensure output directory exists
@@ -309,7 +317,7 @@ Examples:
   console.log(`\n✓ Migration written to: ${outputFile}`);
   if (transformResult.exitCode === 3) {
     console.log(
-      "  (dsql-lint produced warnings — review the advisories above.)",
+      "  (Migration produced warnings — review the advisories above.)",
     );
   }
 }
@@ -366,13 +374,17 @@ Options:
   const result = transformMigration(sql);
 
   reportDsqlLintDiagnostics(result.output);
+  for (const advisory of result.advisories) {
+    console.error(`WARNING — ${advisory}`);
+  }
 
   // Exit 1 = unfixable, exit 3 = fixed-with-warnings (still a usable
   // migration). Any other non-zero is unexpected (clap usage = 2,
   // native crash = 101, ...). Propagate before writing so we never
   // write a partial output file on an unknown exit code.
   if (result.exitCode !== 0 && result.exitCode !== 3) {
-    process.exit(result.exitCode);
+    process.exitCode = result.exitCode;
+    return;
   }
 
   if (outputFile) {
@@ -382,7 +394,7 @@ Options:
   }
 
   if (result.exitCode === 3) {
-    process.exit(3);
+    process.exitCode = 3;
   }
 }
 
@@ -419,7 +431,7 @@ Options:
   const sql = fs.readFileSync(inputFile, "utf-8");
   const result = lintMigration(sql);
   reportDsqlLintDiagnostics(result.output);
-  process.exit(result.exitCode);
+  process.exitCode = result.exitCode;
 }
 
 function readStdin(): Promise<string> {

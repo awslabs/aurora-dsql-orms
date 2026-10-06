@@ -88,6 +88,35 @@ npx prisma migrate diff \
 
 The transform command uses [`dsql-lint --fix`](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) to apply DSQL compatibility fixes. See the [dsql-lint README](https://github.com/awslabs/aurora-dsql-tools/tree/main/dsql-lint) for the full list of rules and transformations.
 
+#### Transactions
+
+Aurora DSQL allows one DDL statement per transaction. `transform` puts DDL
+statements in separate `BEGIN`/`COMMIT` blocks for `prisma migrate deploy`, which
+can run a file as one transaction. Data changes run separately from DDL;
+adjacent data changes share a transaction. Keep large data changes in separate
+migrations within DSQL's [transaction limits](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/CHAP_quotas.html).
+
+If a statement fails, earlier committed changes remain applied. If Prisma reports
+only `current transaction is aborted`, run the first unapplied block with `psql`
+or `npx prisma db execute` to find the cause. Fix it, then
+[resolve the failed migration](https://pris.ly/d/migrate-resolve).
+
+Splitting produces an advisory: `transform` writes the SQL and exits with code
+`3`; `migrate` logs the advisory and exits with code `0`.
+
+Single-statement and data-only files do not need splitting.
+For files containing `COMMIT`, `ROLLBACK`, or transaction-scoped settings such
+as `SET LOCAL`, put each DDL statement in its own transaction and repeat any
+required settings. `transform` does not add transaction blocks to these files,
+but `dsql-lint` can split existing blocks, ending their transaction-scoped settings.
+If any statements sit outside explicit transactions in these files, `transform`
+reports why wrapping was skipped and exits with code `3`. Files whose statements
+are all in explicit transactions do not get this additional advisory.
+
+For hand-written migrations, put each `CREATE ROLE`, `CREATE DOMAIN`, `GRANT`,
+or `COMMENT ON` statement in its own `BEGIN`/`COMMIT` block. `dsql-lint` does
+not split these statements into separate transactions.
+
 ### Lint Migrations
 
 Check a SQL migration file for DSQL compatibility without applying fixes:
@@ -95,6 +124,9 @@ Check a SQL migration file for DSQL compatibility without applying fixes:
 ```bash
 npx aurora-dsql-prisma lint migration.sql
 ```
+
+Use `transform` before deployment: `lint` checks SQL compatibility but does not
+account for Prisma running the file as one transaction.
 
 ### All-in-One Migrate
 
@@ -128,11 +160,15 @@ This requires a `prisma.config.ts` that provides database credentials. See the [
 
 Prisma generates post-creation foreign keys with `ALTER TABLE ... ADD
 CONSTRAINT`. Aurora DSQL requires `NOT VALID` on these constraints, so
-`dsql-lint` preserves the foreign key and adds `NOT VALID`. Add a separate
-statement to validate existing rows:
+`dsql-lint` preserves the foreign key and adds `NOT VALID`. After running
+`transform`, add the following block to validate existing rows, or put it in
+a separate migration. Adding it before transformation prevents the transformer
+from wrapping the remaining statements:
 
 ```sql
+BEGIN;
 ALTER TABLE ASYNC "table_name" VALIDATE CONSTRAINT "constraint_name";
+COMMIT;
 ```
 
 The transform exits with code `3` to ensure you review and add the validation

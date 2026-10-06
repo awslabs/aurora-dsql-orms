@@ -120,6 +120,7 @@ export function runDsqlLintWithStdin(
   const result = spawnSync(binary, ["--format", "json", ...args, "-"], {
     encoding: "utf-8",
     input: sql,
+    maxBuffer: Infinity,
   });
 
   if (result.error) {
