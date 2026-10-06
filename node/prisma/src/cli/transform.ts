@@ -69,7 +69,11 @@ function splitSkipReason(statement: string): string | undefined {
     /\bset_config\s*\(/i.test(
       statement.replace(
         /\bset_config\s*\((?:[^()]|\([^()]*\))*,\s*false\s*\)/gi,
-        "",
+        // A session-scoped outer call can hide a transaction-scoped inner call.
+        (call) =>
+          /\bset_config\s*\(/i.test(call.slice(call.indexOf("(") + 1))
+            ? call
+            : "",
       ),
     )
   ) {

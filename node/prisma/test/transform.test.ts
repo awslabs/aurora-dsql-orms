@@ -555,6 +555,14 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
         `SELECT set_config('search_path', concat(lower('x'), ''), false)`,
         "set_config",
       ],
+      [
+        `SELECT set_config('application_name', set_config('search_path', 'target', true), false)`,
+        "set_config",
+      ],
+      [
+        `SELECT pg_catalog.SET_CONFIG('application_name', pg_catalog.SET_CONFIG('search_path', 'target', TRUE), FALSE)`,
+        "set_config",
+      ],
       [`SELECT set_config('search_path', 'target', 'f')`, "set_config"],
       [
         `SELECT set_config('search_path', 'target', false::boolean)`,
