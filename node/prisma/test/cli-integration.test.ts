@@ -164,6 +164,76 @@ process.exitCode = ${exitCode};
       },
     );
 
+    test("prints skipped-splitting advisories on stderr while writing SQL to stdout", () => {
+      const inputPath = path.join(tempDir, "skipped.sql");
+      const sql = `SET LOCAL search_path TO "public";
+CREATE TABLE "a" ("id" UUID PRIMARY KEY);
+CREATE TABLE "b" ("id" UUID PRIMARY KEY);`;
+      fs.writeFileSync(inputPath, sql);
+
+      const result = spawnSync(
+        process.execPath,
+        [path.join(__dirname, "../dist/cli/index.js"), "transform", inputPath],
+        { encoding: "utf-8" },
+      );
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(3);
+      expect(result.stdout.replace(/\s+/g, " ").trim()).toBe(
+        sql.replace(/\s+/g, " ").trim(),
+      );
+      expect(result.stderr).toMatch(/WARNING.*splitting.*skipped.*SET LOCAL/i);
+      expect(result.stderr).toMatch(/each DDL statement.*transaction/i);
+    });
+
+    test("migrate reports skipped splitting but exits 0 after writing the migration", () => {
+      // Prisma normally generates no transaction-scoped settings. Substitute
+      // only its diff subprocess to exercise migrate's advisory handling.
+      const binDir = path.join(tempDir, "prisma-diff-bin");
+      fs.mkdirSync(binDir);
+      const sql = `SET LOCAL search_path TO "public";
+CREATE TABLE "a" ("id" UUID PRIMARY KEY);
+CREATE TABLE "b" ("id" UUID PRIMARY KEY);`;
+      fs.writeFileSync(
+        path.join(binDir, "npx"),
+        `#!${process.execPath}
+const args = process.argv.slice(2);
+if (JSON.stringify(args) !== JSON.stringify([
+  "prisma", "migrate", "diff", "--from-empty", "--to-schema", "prisma/veterinary-schema.prisma", "--script"
+])) process.exit(2);
+process.stdout.write(${JSON.stringify(sql)});
+`,
+        { mode: 0o755 },
+      );
+      const outputPath = path.join(tempDir, "skipped-migrate.sql");
+      const result = spawnSync(
+        process.execPath,
+        [
+          path.join(__dirname, "../dist/cli/index.js"),
+          "migrate",
+          "prisma/veterinary-schema.prisma",
+          "-o",
+          outputPath,
+        ],
+        {
+          cwd: path.join(__dirname, ".."),
+          encoding: "utf-8",
+          env: {
+            ...process.env,
+            PATH: `${binDir}${path.delimiter}${process.env.PATH}`,
+          },
+        },
+      );
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(0);
+      expect(result.stderr).toMatch(/WARNING.*splitting.*skipped.*SET LOCAL/i);
+      expect(result.stdout).toContain("Migration written to");
+      expect(
+        fs.readFileSync(outputPath, "utf-8").replace(/\s+/g, " ").trim(),
+      ).toBe(sql.replace(/\s+/g, " ").trim());
+    });
+
     test("validator exits nonzero for unfixable SQL", () => {
       const schema = `
 datasource db {

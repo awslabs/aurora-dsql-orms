@@ -4,6 +4,7 @@ export interface TransformResult {
   sql: string;
   output: DsqlLintJsonOutput;
   exitCode: number;
+  advisories: string[];
 }
 
 export interface TransformOptions {
@@ -13,6 +14,8 @@ export interface TransformOptions {
    */
   splitTransactions?: boolean;
 }
+
+const TRANSACTION_END = /^(?:commit|end|rollback|abort)\b/i;
 
 /**
  * Prisma can apply a migration file as a single query, which PostgreSQL runs
@@ -33,27 +36,60 @@ export interface TransformOptions {
  * script that uses one is not wrapped. `set_config` with `false` as its third
  * argument sets the value for the session, so it does not count.
  */
-function wrapInTransaction(sql: string): string {
+function wrapInTransaction(
+  sql: string,
+): Pick<TransformResult, "sql" | "advisories"> {
   const statements = codeOf(sql)
     .split(";")
     .map((statement) => statement.trim())
     .filter((statement) => statement !== "");
+  const reason = statements
+    .map(splitSkipReason)
+    .find((reason) => reason !== undefined);
+  if (reason) {
+    return {
+      sql,
+      advisories: hasStatementsOutsideTransaction(statements)
+        ? [
+            `Transaction splitting was skipped because the script uses ${reason}. ` +
+              "Put each DDL statement in its own BEGIN/COMMIT transaction and repeat any required transaction-scoped settings before deploying.",
+          ]
+        : [],
+    };
+  }
+  return { sql: `BEGIN; ${sql}\n;\nCOMMIT;\n`, advisories: [] };
+}
+
+function splitSkipReason(statement: string): string | undefined {
+  const end = statement.match(TRANSACTION_END);
+  if (end) return end[0].toUpperCase();
+  const setting = statement.match(/^set\s+(local|constraints)\b/i);
+  if (setting) return `SET ${setting[1]!.toUpperCase()}`;
   if (
-    statements.some(
-      (statement) =>
-        /^(?:commit|end|rollback|abort)\b/i.test(statement) ||
-        /^set\s+(?:local|constraints)\b/i.test(statement) ||
-        /\bset_config\s*\(/i.test(
-          statement.replace(
-            /\bset_config\s*\((?:[^()]|\([^()]*\))*,\s*false\s*\)/gi,
-            "",
-          ),
-        ),
+    /\bset_config\s*\(/i.test(
+      statement.replace(
+        /\bset_config\s*\((?:[^()]|\([^()]*\))*,\s*false\s*\)/gi,
+        "",
+      ),
     )
   ) {
-    return sql;
+    return "set_config with a scope that is not provably session-scoped";
   }
-  return `BEGIN; ${sql}\n;\nCOMMIT;\n`;
+  return undefined;
+}
+
+function hasStatementsOutsideTransaction(statements: string[]): boolean {
+  let inTransaction = false;
+  for (const statement of statements) {
+    if (/^(?:begin\b|start\s+transaction\b)/i.test(statement)) {
+      inTransaction = true;
+    } else if (TRANSACTION_END.test(statement)) {
+      inTransaction = false;
+    } else if (!inTransaction) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function splitsTransaction(output: DsqlLintJsonOutput): boolean {
@@ -130,7 +166,9 @@ export function transformMigration(
   sql: string,
   { splitTransactions = true }: TransformOptions = {},
 ): TransformResult {
-  const wrapped = splitTransactions ? wrapInTransaction(sql) : sql;
+  const { sql: wrapped, advisories } = splitTransactions
+    ? wrapInTransaction(sql)
+    : { sql, advisories: [] };
   let result = runDsqlLintWithStdin(wrapped, ["--fix"]);
   if (wrapped !== sql && !splitsTransaction(result.output)) {
     // Nothing needed its own transaction, so keep the file's transactions as
@@ -174,7 +212,9 @@ export function transformMigration(
   return {
     sql: fixedSql ?? "",
     output: result.output,
-    exitCode: result.exitCode,
+    exitCode:
+      result.exitCode === 0 && advisories.length > 0 ? 3 : result.exitCode,
+    advisories,
   };
 }
 

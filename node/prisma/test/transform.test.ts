@@ -464,6 +464,7 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
 
       expect(second.sql).toBe(first.sql);
       expect(second.exitCode).toBe(0);
+      expect(second).toEqual(expect.objectContaining({ advisories: [] }));
     });
 
     test.each([
@@ -496,12 +497,24 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
       // COMMIT after the statements that follow it.
       expect(result.sql.match(/^BEGIN;$/gm)).toHaveLength(1);
       expect(result.sql.match(/^COMMIT;$/gm)).toHaveLength(1);
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
+      expect(result).toEqual(
+        expect.objectContaining({
+          advisories: [expect.stringContaining("COMMIT")],
+        }),
+      );
     });
 
-    test.each(["COMMIT", "END", "commit", "end"])(
+    test.each([
+      ["COMMIT", 3],
+      ["END", 3],
+      ["commit", 3],
+      ["end", 3],
+      ["ROLLBACK", 3],
+      ["ABORT", 1], // dsql-lint reports ABORT as unsupported.
+    ])(
       "does not wrap a script that ends a transaction with %s",
-      (end) => {
+      (end, exitCode) => {
         const input = `CREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);\n${end};\nCREATE TABLE "c" ("id" UUID PRIMARY KEY);`;
         const result = transformMigration(input);
         const unwrapped = transformMigration(input, {
@@ -509,28 +522,104 @@ ALTER TABLE "Pet" ADD CONSTRAINT "Pet_ownerId_fkey" FOREIGN KEY ("ownerId") REFE
         });
 
         expect(result.sql).not.toMatch(/^BEGIN;$/m);
-        expect(result).toEqual(unwrapped);
+        expect(result.sql).toBe(unwrapped.sql);
+        expect(result.output).toEqual(unwrapped.output);
+        expect(result.exitCode).toBe(exitCode);
+        expect(result).toEqual(
+          expect.objectContaining({
+            advisories: [expect.stringContaining(String(end).toUpperCase())],
+          }),
+        );
+        expect(unwrapped.exitCode).toBe(exitCode === 1 ? 1 : 0);
+        expect(unwrapped).toEqual(expect.objectContaining({ advisories: [] }));
       },
     );
 
     test.each([
-      `SET LOCAL search_path TO "target"`,
-      `SET LOCAL ROLE "migrator"`,
-      `SET /* scope */ LOCAL search_path TO "target"`,
-      `SET -- scope\nLOCAL search_path TO "target"`,
-      `SET CONSTRAINTS ALL DEFERRED`,
-      `SELECT set_config('search_path', 'target', true)`,
-      `SELECT set_config /* scope */ ('search_path', 'target', true)`,
-      `SELECT "set_config"('search_path', 'target', true)`,
-      `SELECT set_config('search_path', 'target', false), set_config('role', 'migrator', true)`,
-    ])("does not split a script that uses %s", (setting) => {
+      [`SET LOCAL search_path TO "target"`, "SET LOCAL"],
+      [`SET LOCAL ROLE "migrator"`, "SET LOCAL"],
+      [`SET /* scope */ LOCAL search_path TO "target"`, "SET LOCAL"],
+      [`SET -- scope\nLOCAL search_path TO "target"`, "SET LOCAL"],
+      [`SET CONSTRAINTS ALL DEFERRED`, "SET CONSTRAINTS"],
+      [`SELECT set_config('search_path', 'target', true)`, "set_config"],
+      [
+        `SELECT set_config /* scope */ ('search_path', 'target', true)`,
+        "set_config",
+      ],
+      [`SELECT "set_config"('search_path', 'target', true)`, "set_config"],
+      [
+        `SELECT set_config('search_path', 'target', false), set_config('role', 'migrator', true)`,
+        "set_config",
+      ],
+      [
+        `SELECT set_config('search_path', concat(lower('x'), ''), false)`,
+        "set_config",
+      ],
+      [`SELECT set_config('search_path', 'target', 'f')`, "set_config"],
+      [
+        `SELECT set_config('search_path', 'target', false::boolean)`,
+        "set_config",
+      ],
+    ])("reports skipped splitting for %s", (setting, reason) => {
       const result = transformMigration(
         `${setting};\nCREATE TABLE "a" ("id" UUID PRIMARY KEY);\nCREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
       );
 
       // Splitting would end the setting before the tables are created.
       expect(result.sql).not.toMatch(/^(BEGIN|COMMIT);$/m);
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(3);
+      expect(result).toEqual(
+        expect.objectContaining({
+          advisories: [expect.stringContaining(reason)],
+        }),
+      );
+    });
+
+    test.each(["BEGIN", "START TRANSACTION"])(
+      "does not warn about skipped wrapping when statements are framed with %s",
+      (begin) => {
+        const input = `-- COMMIT is in a comment, not a statement\n${begin};
+SET LOCAL search_path TO "target";
+CREATE TABLE "a" ("id" UUID PRIMARY KEY);
+COMMIT;
+${begin};
+CREATE TABLE "b" ("id" UUID PRIMARY KEY);
+COMMIT;`;
+        const result = transformMigration(input);
+
+        expect(result.exitCode).toBe(0);
+        expect(result).toEqual(expect.objectContaining({ advisories: [] }));
+        expect(
+          result.sql
+            .split(";")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ).toEqual([
+          begin,
+          'SET LOCAL search_path TO "target"',
+          'CREATE TABLE "a" ("id" UUID PRIMARY KEY)',
+          "COMMIT",
+          begin,
+          'CREATE TABLE "b" ("id" UUID PRIMARY KEY)',
+          "COMMIT",
+        ]);
+      },
+    );
+
+    test("does not hide an unfixable error behind a skipped-splitting advisory", () => {
+      const result = transformMigration(
+        `SET LOCAL search_path TO "target";
+CREATE TABLE "a" ("tags" TEXT[]);
+CREATE TABLE "b" ("id" UUID PRIMARY KEY);`,
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(hasDiagnosticWithStatus(result.output, "unfixable")).toBe(true);
+      expect(result).toEqual(
+        expect.objectContaining({
+          advisories: [expect.stringContaining("SET LOCAL")],
+        }),
+      );
     });
 
     test.each([

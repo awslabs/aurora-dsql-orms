@@ -48,8 +48,8 @@ Exit codes (transform / lint):
   0  Clean, or all fixes applied without warnings
   1  Unfixable errors remain — review the diagnostics and fix manually
   2  Usage error (invalid arguments, propagated from dsql-lint)
-  3  Fixes applied, but some produced advisories (e.g. synchronous indexes made asynchronous,
-     statements split into separate transactions).
+  3  Migration written with advisories (e.g. synchronous indexes made asynchronous,
+     statements split into separate transactions, transaction splitting skipped).
      The migration is written; review the warnings before applying.
 
 The migrate command logs advisories but exits 0 after writing the migration.
@@ -291,6 +291,9 @@ Examples:
   const transformResult = transformMigration(rawSql);
 
   reportDsqlLintDiagnostics(transformResult.output);
+  for (const advisory of transformResult.advisories) {
+    console.error(`WARNING — ${advisory}`);
+  }
 
   // Exit 1: unfixable errors or I/O errors. Exit 3: all fixed but some
   // produced warnings. Any other non-zero (clap usage error = 2, native
@@ -314,7 +317,7 @@ Examples:
   console.log(`\n✓ Migration written to: ${outputFile}`);
   if (transformResult.exitCode === 3) {
     console.log(
-      "  (dsql-lint produced warnings — review the advisories above.)",
+      "  (Migration produced warnings — review the advisories above.)",
     );
   }
 }
@@ -371,6 +374,9 @@ Options:
   const result = transformMigration(sql);
 
   reportDsqlLintDiagnostics(result.output);
+  for (const advisory of result.advisories) {
+    console.error(`WARNING — ${advisory}`);
+  }
 
   // Exit 1 = unfixable, exit 3 = fixed-with-warnings (still a usable
   // migration). Any other non-zero is unexpected (clap usage = 2,

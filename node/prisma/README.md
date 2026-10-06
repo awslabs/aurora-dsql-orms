@@ -109,6 +109,9 @@ For files containing `COMMIT`, `ROLLBACK`, or transaction-scoped settings such
 as `SET LOCAL`, put each DDL statement in its own transaction and repeat any
 required settings. `transform` does not add transaction blocks to these files,
 but `dsql-lint` can split existing blocks, ending their transaction-scoped settings.
+If any statements sit outside explicit transactions in these files, `transform`
+reports why wrapping was skipped and exits with code `3`. Files whose statements
+are all in explicit transactions do not get this additional advisory.
 
 For hand-written migrations, put each `CREATE ROLE`, `CREATE DOMAIN`, `GRANT`,
 or `COMMENT ON` statement in its own `BEGIN`/`COMMIT` block. `dsql-lint` does
