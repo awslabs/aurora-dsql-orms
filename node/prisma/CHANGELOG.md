@@ -24,8 +24,6 @@
 
 ### Changed
 
-- Replace the custom SQL transform with dsql-lint and delegate validator
-  checks to it.
 - Consume `dsql-lint` via the new `@aws/dsql-lint` npm package: the
   prebuilt platform binary is resolved automatically, replacing the
   previous `cargo install dsql-lint` prerequisite. `DSQL_LINT_PATH`
@@ -43,6 +41,21 @@
   with a clear version-skew message if it diverges.
 - Replace inline DSQL limitation language with links to the official
   Aurora DSQL documentation.
+
+### Fixed
+
+- Updated the npm release workflow to use trusted publishing reliably by
+  upgrading npm without `sudo` and clearing legacy token credentials before
+  publishing.
+
+## [0.1.1] - 2026-04-28
+
+### Changed
+
+- Replaced the custom SQL transformer with `dsql-lint` and delegated schema
+  validation to the same compatibility engine.
+- Added structured diagnostic handling for migration transformation and schema
+  validation.
 
 ### Fixed
 
