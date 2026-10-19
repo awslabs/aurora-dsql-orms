@@ -18,6 +18,15 @@ namespace Amazon.AuroraDsql.EntityFrameworkCore.Infrastructure;
 /// </summary>
 internal sealed class DsqlDatabaseCreator : NpgsqlDatabaseCreator
 {
+#if NET10_0_OR_GREATER
+    public DsqlDatabaseCreator(
+        RelationalDatabaseCreatorDependencies dependencies,
+        INpgsqlRelationalConnection connection,
+        IRawSqlCommandBuilder rawSqlCommandBuilder)
+        : base(dependencies, connection, rawSqlCommandBuilder)
+    {
+    }
+#else
     public DsqlDatabaseCreator(
         RelationalDatabaseCreatorDependencies dependencies,
         INpgsqlRelationalConnection connection,
@@ -26,6 +35,7 @@ internal sealed class DsqlDatabaseCreator : NpgsqlDatabaseCreator
         : base(dependencies, connection, rawSqlCommandBuilder, connectionLogger)
     {
     }
+#endif
 
     public override bool Exists() => true;
 
