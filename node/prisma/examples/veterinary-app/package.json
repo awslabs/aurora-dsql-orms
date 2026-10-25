@@ -43,7 +43,7 @@
     "fast-xml-parser": "^5.4.1",
     "mysql2": "^3.24.5",
     "deepmerge-ts": "^8.0.2",
-    "fast-uri": "^3.1.8"
+    "fast-uri": "^3.1.9"
   },
   "comments": {
     "overrides": {
