@@ -1,8 +1,8 @@
 plugins {
   id 'java'
-  id 'org.springframework.boot' version '4.1.1'
+  id 'org.springframework.boot' version '4.1.2'
   id 'io.spring.dependency-management' version '1.1.7'
-  id 'org.graalvm.buildtools.native' version '1.1.14'
+  id 'org.graalvm.buildtools.native' version '1.1.16'
 }
 
 apply plugin: 'java'
@@ -45,7 +45,7 @@ dependencies {
   testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
 
   // AWS SDK deps
-  implementation 'software.amazon.awssdk:dsql:2.56.0'
+  implementation 'software.amazon.awssdk:dsql:2.57.3'
   implementation 'software.amazon.dsql:aurora-dsql-jdbc-connector:1.5.1'
 
   // The Aurora DSQL Hibernate dialect is provided as a locally built JAR in lib/ by CI
