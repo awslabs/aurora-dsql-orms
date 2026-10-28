@@ -31,9 +31,9 @@ To publish to Maven Central staging:
 ./gradlew publish
 ```
 
-To upload to Maven Central:
+To release to Maven Central:
 ```bash
-JRELEASER_MAVENCENTRAL_STAGE=UPLOAD ./gradlew jreleaserDeploy
+JRELEASER_MAVENCENTRAL_STAGE=FULL ./gradlew jreleaserDeploy
 ```
 
 ## Project Structure
