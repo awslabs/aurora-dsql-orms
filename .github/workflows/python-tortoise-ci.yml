@@ -24,7 +24,7 @@ defaults:
 
 jobs:
   build:
-    name: Build
+    name: Build (Tortoise)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -37,7 +37,7 @@ jobs:
         run: uv build
 
   check-attribution:
-    name: Check Attribution
+    name: Check Attribution (Tortoise)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -60,7 +60,7 @@ jobs:
             (echo "THIRD_PARTY.json is out of date." && exit 1)
 
   unit-tests:
-    name: Unit Tests (Python ${{ matrix.python-version }})
+    name: Unit Tests (Tortoise, Python ${{ matrix.python-version }})
     needs: build
     runs-on: ubuntu-latest
     strategy:
@@ -87,7 +87,7 @@ jobs:
       id-token: write # required by aws-actions/configure-aws-credentials
 
   integration-tests:
-    name: Integration Tests (Python ${{ matrix.python-version }})
+    name: Integration Tests (Tortoise, Python ${{ matrix.python-version }})
     needs: create-cluster
     runs-on: ubuntu-latest
     permissions:

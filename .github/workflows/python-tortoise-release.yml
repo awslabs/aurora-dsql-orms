@@ -19,7 +19,10 @@ jobs:
       - uses: lewagon/wait-on-check-action@v1.9.1
         with:
           ref: ${{ github.sha }}
-          running-workflow-name: "Wait for CI to pass"
+          # Gate only on Tortoise's own CI (integration tests cover build, unit
+          # tests and cluster; attribution runs separately), not unrelated
+          # monorepo checks such as other ORMs or Dependabot.
+          check-regexp: "^(Integration Tests \\(Tortoise, Python 3\\.\\d+\\)|Check Attribution \\(Tortoise\\))$"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 
