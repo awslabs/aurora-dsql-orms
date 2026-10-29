@@ -1,6 +1,5 @@
 <a id="python/tortoise-orm/v0.3.0"></a>
-# [Aurora DSQL Adapter for Tortoise ORM v0.3.0 (python/tortoise-orm/v0.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.3.0) - 2026-09-25
-
+# [Aurora DSQL Adapter for Tortoise ORM v0.3.0 (python/tortoise-orm/v0.3.0)](https://github.com/awslabs/aurora-dsql-orms/releases/tag/python/tortoise-orm/v0.3.0) - 2026-10-29
 
 This release adds native Aurora DSQL foreign-key support and enables `SELECT ... FOR UPDATE` row locking.
 
@@ -15,8 +14,19 @@ This release adds native Aurora DSQL foreign-key support and enables `SELECT ...
 * Rely on native foreign keys in ORM samples by [@amaksimo](https://github.com/amaksimo) in [#601](https://github.com/awslabs/aurora-dsql-orms/issues/601)
 * build(deps): bump anyio from 4.12.1 to 4.14.2 in /python/tortoise-orm by [@dependabot](https://github.com/dependabot)[bot] in [#647](https://github.com/awslabs/aurora-dsql-orms/issues/647)
 
-**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.2.0...python/tortoise-orm/v0.3.0
+### Since the original v0.3.0 tag
 
+The first v0.3.0 release workflow failed before publishing, so v0.3.0 never reached PyPI. The tag was moved from `9689e6b` to `a65b05c` to publish it. The commits in between change CI, tests, formatting, and dev dependencies only; runtime behavior and dependencies are unchanged.
+
+* fix(ci): scope tortoise release wait-for-ci to this module's checks in [#756](https://github.com/awslabs/aurora-dsql-orms/issues/756)
+* test(tortoise): enable aerich downgrade coverage for native DROP COLUMN in [#600](https://github.com/awslabs/aurora-dsql-orms/issues/600)
+* docs: regenerate component changelogs from GitHub Releases in [#690](https://github.com/awslabs/aurora-dsql-orms/issues/690)
+* build(deps-dev): bump the python-tortoise group in [#651](https://github.com/awslabs/aurora-dsql-orms/issues/651), [#702](https://github.com/awslabs/aurora-dsql-orms/issues/702), [#729](https://github.com/awslabs/aurora-dsql-orms/issues/729), [#747](https://github.com/awslabs/aurora-dsql-orms/issues/747)
+* build(deps): bump virtualenv in [#681](https://github.com/awslabs/aurora-dsql-orms/issues/681), [#687](https://github.com/awslabs/aurora-dsql-orms/issues/687), [#737](https://github.com/awslabs/aurora-dsql-orms/issues/737)
+* build(deps): bump setuptools from 83.0.0 to 84.1.0 in [#740](https://github.com/awslabs/aurora-dsql-orms/issues/740)
+* build(deps): bump urllib3 from 2.7.0 to 2.8.0 in [#683](https://github.com/awslabs/aurora-dsql-orms/issues/683)
+
+**Full Changelog**: https://github.com/awslabs/aurora-dsql-orms/compare/python/tortoise-orm/v0.2.0...python/tortoise-orm/v0.3.0
 
 [Changes][python/tortoise-orm/v0.3.0]
 
