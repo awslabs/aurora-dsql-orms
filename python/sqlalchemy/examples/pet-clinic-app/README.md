@@ -130,7 +130,6 @@ from sqlalchemy import event
 from aurora_dsql_sqlalchemy import create_dsql_engine
 
 ADMIN = "admin"
-NON_ADMIN_SCHEMA = "myschema"
 
 
 def create_engine_for_example():
@@ -161,7 +160,7 @@ def create_engine_for_example():
         existing_autocommit = dbapi_connection.autocommit
         dbapi_connection.autocommit = True
         cursor = dbapi_connection.cursor()
-        cursor.execute("SET SESSION search_path='%s'" % NON_ADMIN_SCHEMA)
+        cursor.execute("SET SESSION search_path='myschema'")
         cursor.close()
         dbapi_connection.autocommit = existing_autocommit
 
