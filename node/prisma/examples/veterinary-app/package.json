@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "prettier": "^3.9.10",
     "prisma": "^7.10.1",
     "ts-jest": "^29.4.15",
@@ -30,7 +30,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@aws-sdk/dsql-signer": "^3.1156.0",
+    "@aws-sdk/dsql-signer": "^3.1160.0",
     "@aws/aurora-dsql-node-postgres-connector": "^0.1.9",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
