@@ -215,6 +215,41 @@ describe("transformMigrationFile (Drizzle statement-breakpoint)", () => {
     expect(result.sql).toContain(BREAKPOINT);
   });
 
+  test("emits ALTER TABLE ASYNC ... VALIDATE CONSTRAINT after a NOT VALID foreign key", () => {
+    const input = [
+      `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+      `ALTER TABLE "pet" ADD CONSTRAINT "pet_fk" FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`,
+    ].join(`\n${BREAKPOINT}\n`);
+
+    const result = transformMigrationFile(input);
+    const statements = result.sql.split(BREAKPOINT).map((s) => s.trim());
+
+    expect(result.exitCode).toBe(3);
+    expect(statements).toHaveLength(3);
+    expect(statements[1]).toMatch(/NOT VALID;$/);
+    expect(statements[2]).toBe(
+      `ALTER TABLE ASYNC "pet" VALIDATE CONSTRAINT "pet_fk";`,
+    );
+  });
+
+  test("emits validation for a single NOT VALID foreign key without breakpoints", () => {
+    const result = transformMigrationFile(
+      `ALTER TABLE "public"."pet" ADD CONSTRAINT "pet_fk" FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`,
+    );
+
+    expect(result.sql.split(BREAKPOINT).map((s) => s.trim())[1]).toBe(
+      `ALTER TABLE ASYNC "public"."pet" VALIDATE CONSTRAINT "pet_fk";`,
+    );
+  });
+
+  test("does not emit validation for a foreign key that is not NOT VALID", () => {
+    const result = transformMigrationFile(
+      `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+    );
+
+    expect(result.sql).not.toContain("VALIDATE CONSTRAINT");
+  });
+
   test("single-statement input (no breakpoints) still transforms", () => {
     const result = transformMigrationFile(`CREATE INDEX "idx" ON "t"("c");`);
 
@@ -246,5 +281,127 @@ describe("transformMigrationFile (Drizzle statement-breakpoint)", () => {
 
     expect(result.sql).toContain('CREATE TABLE "t"');
     expect(result.outputs).toHaveLength(1);
+  });
+
+  describe("foreign key validation", () => {
+    const fk = (t: string, c: string) =>
+      `ALTER TABLE ${t} ADD CONSTRAINT ${c} FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`;
+    const split = (sql: string) => sql.split(BREAKPOINT).map((x) => x.trim());
+    const join = (...stmts: string[]) => stmts.join(`\n${BREAKPOINT}\n`);
+
+    test("two foreign keys each get their own VALIDATE right after their ADD", () => {
+      const statements = split(
+        transformMigrationFile(join(fk('"a"', '"a_fk"'), fk('"b"', '"b_fk"')))
+          .sql,
+      );
+
+      expect(statements).toHaveLength(4);
+      expect(statements[0]).toContain('ADD CONSTRAINT "a_fk"');
+      expect(statements[1]).toBe(
+        `ALTER TABLE ASYNC "a" VALIDATE CONSTRAINT "a_fk";`,
+      );
+      expect(statements[2]).toContain('ADD CONSTRAINT "b_fk"');
+      expect(statements[3]).toBe(
+        `ALTER TABLE ASYNC "b" VALIDATE CONSTRAINT "b_fk";`,
+      );
+    });
+
+    test("preserves quoted identifiers with escaped quotes", () => {
+      const result = transformMigrationFile(fk('"we""ird"', '"fk""x"'));
+
+      expect(split(result.sql)[1]).toBe(
+        `ALTER TABLE ASYNC "we""ird" VALIDATE CONSTRAINT "fk""x";`,
+      );
+    });
+
+    test("CREATE TABLE with an inline foreign key gets no VALIDATE", () => {
+      const result = transformMigrationFile(
+        `CREATE TABLE "pet" ("id" UUID PRIMARY KEY, "ownerId" UUID REFERENCES "owner"("id"));`,
+      );
+
+      expect(result.sql).not.toContain("VALIDATE CONSTRAINT");
+    });
+
+    test("is idempotent with breakpoints", () => {
+      const input = join(
+        `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+        fk('"pet"', '"pet_fk"'),
+      );
+      const once = transformMigrationFile(input).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
+    });
+
+    test("is idempotent without breakpoints", () => {
+      const once = transformMigrationFile(fk('"pet"', '"pet_fk"')).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
+    });
+
+    test("is idempotent with several foreign keys in one file", () => {
+      const input = join(
+        `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+        fk('"pet"', '"pet_fk"'),
+        fk('"owner"', '"owner_fk"'),
+        fk('"toy"', '"toy_fk"'),
+      );
+      const once = transformMigrationFile(input).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(3);
+    });
+
+    test("is idempotent with escaped quotes in identifiers", () => {
+      const once = transformMigrationFile(fk('"we""ird"', '"fk""x"')).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
+    });
+
+    test("is idempotent with schema-qualified tables", () => {
+      const once = transformMigrationFile(fk('"public"."pet"', '"pet_fk"')).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(once).toContain(
+        `ALTER TABLE ASYNC "public"."pet" VALIDATE CONSTRAINT "pet_fk";`,
+      );
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
+    });
+
+    test("an existing VALIDATE is recognised despite spacing and unquoted names", () => {
+      const input = join(
+        fk('"pet"', '"pet_fk"'),
+        `alter  table async pet\nvalidate constraint pet_fk`,
+      );
+
+      expect(
+        transformMigrationFile(input).sql.match(/VALIDATE CONSTRAINT/gi),
+      ).toHaveLength(1);
+    });
+
+    test("validateForeignKeys: false skips the VALIDATE statement", () => {
+      const inputs = [
+        fk('"pet"', '"pet_fk"'),
+        join(
+          `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+          fk('"pet"', '"pet_fk"'),
+        ),
+      ];
+
+      for (const input of inputs) {
+        const result = transformMigrationFile(input, {
+          validateForeignKeys: false,
+        });
+        expect(result.sql).toContain("NOT VALID");
+        expect(result.sql).not.toContain("VALIDATE CONSTRAINT");
+      }
+    });
   });
 });

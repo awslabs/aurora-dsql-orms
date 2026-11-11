@@ -23,12 +23,14 @@ Commands:
     (forwarding args after \`--\`), then rewrites the generated SQL for DSQL with
     dsql-lint --fix, so one command covers the whole workflow. --out is the
     migrations dir to transform (default: ./drizzle). Re-running is safe — the
-    transform is idempotent.
+    transform is idempotent. Pass --no-validate-fks to skip the
+    ALTER TABLE ASYNC ... VALIDATE CONSTRAINT statement that follows each
+    NOT VALID foreign key.
 
     Reach for \`transform\` or \`lint\` only when you need a step on its own, e.g.
     checking migrations you already have in CI.
 
-  transform [input] [-o output]
+  transform [input] [-o output] [--no-validate-fks]
     Transforms SQL migrations to be DSQL-compatible using dsql-lint --fix.
     Preserves Drizzle's \`--> statement-breakpoint\` markers. Reads stdin / writes
     stdout when no file is given.
@@ -132,8 +134,10 @@ Usage:
 Runs \`drizzle-kit generate\` and rewrites the generated SQL for DSQL.
 
 Options:
-  --out <dir>    Migrations directory to transform (default: ./drizzle)
-  -h, --help     Show this help message
+  --out <dir>        Migrations directory to transform (default: ./drizzle)
+  --no-validate-fks  Do not emit ALTER TABLE ASYNC ... VALIDATE CONSTRAINT
+                     after NOT VALID foreign keys
+  -h, --help         Show this help message
 
 Everything after \`--\` is forwarded to drizzle-kit, e.g.:
   aurora-dsql-drizzle generate --out ./drizzle -- --config drizzle.config.ts
@@ -145,7 +149,11 @@ Everything after \`--\` is forwarded to drizzle-kit, e.g.:
   const ownArgs = separator === -1 ? args : args.slice(0, separator);
   const kitArgs = separator === -1 ? [] : args.slice(separator + 1);
 
-  rejectUnknownFlags(ownArgs, new Set(["--out", "-h", "--help"]));
+  rejectUnknownFlags(
+    ownArgs,
+    new Set(["--out", "--no-validate-fks", "-h", "--help"]),
+  );
+  const validateForeignKeys = !ownArgs.includes("--no-validate-fks");
 
   let outDir = "drizzle";
   for (let i = 0; i < ownArgs.length; i++) {
@@ -188,7 +196,9 @@ Everything after \`--\` is forwarded to drizzle-kit, e.g.:
   let worst = 0;
   for (const file of sqlFiles) {
     const filePath = path.join(outDir, file);
-    const result = transformMigrationFile(fs.readFileSync(filePath, "utf-8"));
+    const result = transformMigrationFile(fs.readFileSync(filePath, "utf-8"), {
+      validateForeignKeys,
+    });
     result.outputs.forEach(reportDsqlLintDiagnostics);
     worst = worseExitCode(worst, result.exitCode);
     if (result.exitCode === 1) {
@@ -221,16 +231,22 @@ Migration Transformer - Convert SQL migrations for Aurora DSQL
 Uses dsql-lint --fix under the hood.
 
 Usage:
-  aurora-dsql-drizzle transform [input.sql] [-o output.sql]
+  aurora-dsql-drizzle transform [input.sql] [-o output.sql] [--no-validate-fks]
 
 Options:
   -o, --output <file>   Write output to file instead of stdout
+  --no-validate-fks     Do not emit ALTER TABLE ASYNC ... VALIDATE CONSTRAINT
+                        after NOT VALID foreign keys
   -h, --help            Show this help message
 `);
     process.exit(0);
   }
 
-  rejectUnknownFlags(args, new Set(["-o", "--output", "-h", "--help"]));
+  rejectUnknownFlags(
+    args,
+    new Set(["-o", "--output", "--no-validate-fks", "-h", "--help"]),
+  );
+  const validateForeignKeys = !args.includes("--no-validate-fks");
 
   let inputFile: string | undefined;
   let outputFile: string | undefined;
@@ -267,7 +283,7 @@ Options:
     }
   }
 
-  const result = transformMigrationFile(sql);
+  const result = transformMigrationFile(sql, { validateForeignKeys });
   result.outputs.forEach(reportDsqlLintDiagnostics);
 
   // Exit 1 = unfixable, exit 3 = fixed-with-warnings (still a usable
