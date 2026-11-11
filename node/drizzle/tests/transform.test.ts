@@ -342,6 +342,39 @@ describe("transformMigrationFile (Drizzle statement-breakpoint)", () => {
       expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
     });
 
+    test("is idempotent with several foreign keys in one file", () => {
+      const input = join(
+        `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+        fk('"pet"', '"pet_fk"'),
+        fk('"owner"', '"owner_fk"'),
+        fk('"toy"', '"toy_fk"'),
+      );
+      const once = transformMigrationFile(input).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(3);
+    });
+
+    test("is idempotent with escaped quotes in identifiers", () => {
+      const once = transformMigrationFile(fk('"we""ird"', '"fk""x"')).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
+    });
+
+    test("is idempotent with schema-qualified tables", () => {
+      const once = transformMigrationFile(fk('"public"."pet"', '"pet_fk"')).sql;
+      const twice = transformMigrationFile(once).sql;
+
+      expect(once).toContain(
+        `ALTER TABLE ASYNC "public"."pet" VALIDATE CONSTRAINT "pet_fk";`,
+      );
+      expect(twice).toBe(once);
+      expect(once.match(/VALIDATE CONSTRAINT/g)).toHaveLength(1);
+    });
+
     test("an existing VALIDATE is recognised despite spacing and unquoted names", () => {
       const input = join(
         fk('"pet"', '"pet_fk"'),

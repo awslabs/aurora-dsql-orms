@@ -346,6 +346,17 @@ describe("CLI argument parsing", () => {
     expect(status).toBe(1);
   });
 
+  test("generate accepts --no-validate-fks as its own flag", () => {
+    // Reaching drizzle-kit (which then fails on the missing config) proves the
+    // flag was not rejected as unknown.
+    const { stderr, status } = runExpectingFailure(
+      "generate --no-validate-fks -- --config does-not-exist.ts",
+    );
+    expect(stderr).not.toContain("Unknown flag");
+    expect(stderr).toContain("drizzle-kit generate failed");
+    expect(status).toBe(1);
+  });
+
   test("lint without an input file is rejected", () => {
     const { stderr, status } = runExpectingFailure("lint");
     expect(stderr).toContain("Input file required");
