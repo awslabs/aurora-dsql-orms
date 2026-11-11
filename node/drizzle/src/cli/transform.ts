@@ -59,6 +59,27 @@ export function worseExitCode(a: number, b: number): number {
   return exitRank(b) > exitRank(a) ? b : a;
 }
 
+// An identifier: quoted ("" escapes a quote) or bare, optionally schema-qualified.
+const IDENT = String.raw`(?:"(?:[^"]|"")*"|[A-Za-z_][\w$]*)(?:\.(?:"(?:[^"]|"")*"|[A-Za-z_][\w$]*))?`;
+const NOT_VALID_FK_RE = new RegExp(
+  String.raw`^\s*ALTER\s+TABLE\s+(?:ONLY\s+)?(${IDENT})\s+ADD\s+CONSTRAINT\s+(${IDENT})\s+FOREIGN\s+KEY[\s\S]*NOT\s+VALID\s*;?\s*$`,
+  "i",
+);
+
+/**
+ * For an `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY ... NOT VALID`
+ * statement, return the companion `ALTER TABLE ASYNC ... VALIDATE CONSTRAINT`
+ * statement that validates the rows that already exist. Returns undefined for
+ * any other statement.
+ */
+function validationStatementFor(statement: string): string | undefined {
+  const match = NOT_VALID_FK_RE.exec(statement);
+  if (!match) {
+    return undefined;
+  }
+  return `ALTER TABLE ASYNC ${match[1]} VALIDATE CONSTRAINT ${match[2]};`;
+}
+
 export interface FileTransformResult {
   sql: string;
   exitCode: number;
@@ -69,7 +90,9 @@ export interface FileTransformResult {
  * Transform a whole migration file for DSQL. Drizzle splits statements with
  * `--> statement-breakpoint`; each statement is transformed independently and
  * the markers are re-inserted so the runtime migrator can still split the file.
- * Statements that dsql-lint removes entirely are dropped.
+ * Statements that dsql-lint removes entirely are dropped. A foreign key that
+ * ends up `NOT VALID` is followed by an `ALTER TABLE ASYNC ... VALIDATE
+ * CONSTRAINT` statement so existing rows are validated by the migrator.
  */
 export function transformMigrationFile(sql: string): FileTransformResult {
   if (!sql.includes(BREAKPOINT)) {
@@ -89,8 +112,11 @@ export function transformMigrationFile(sql: string): FileTransformResult {
       );
     }
     const result = transformMigration(sql);
+    const validation = validationStatementFor(result.sql);
     return {
-      sql: result.sql,
+      sql: validation
+        ? `${result.sql.trim()}\n${BREAKPOINT}\n${validation}\n`
+        : result.sql,
       exitCode: result.exitCode,
       outputs: [result.output],
     };
@@ -110,6 +136,10 @@ export function transformMigrationFile(sql: string): FileTransformResult {
     const fixed = result.sql.trim();
     if (fixed) {
       parts.push(fixed);
+      const validation = validationStatementFor(fixed);
+      if (validation) {
+        parts.push(validation);
+      }
     }
   }
 

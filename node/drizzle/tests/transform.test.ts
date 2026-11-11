@@ -215,6 +215,41 @@ describe("transformMigrationFile (Drizzle statement-breakpoint)", () => {
     expect(result.sql).toContain(BREAKPOINT);
   });
 
+  test("emits ALTER TABLE ASYNC ... VALIDATE CONSTRAINT after a NOT VALID foreign key", () => {
+    const input = [
+      `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+      `ALTER TABLE "pet" ADD CONSTRAINT "pet_fk" FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`,
+    ].join(`\n${BREAKPOINT}\n`);
+
+    const result = transformMigrationFile(input);
+    const statements = result.sql.split(BREAKPOINT).map((s) => s.trim());
+
+    expect(result.exitCode).toBe(3);
+    expect(statements).toHaveLength(3);
+    expect(statements[1]).toMatch(/NOT VALID;$/);
+    expect(statements[2]).toBe(
+      `ALTER TABLE ASYNC "pet" VALIDATE CONSTRAINT "pet_fk";`,
+    );
+  });
+
+  test("emits validation for a single NOT VALID foreign key without breakpoints", () => {
+    const result = transformMigrationFile(
+      `ALTER TABLE "public"."pet" ADD CONSTRAINT "pet_fk" FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`,
+    );
+
+    expect(result.sql.split(BREAKPOINT).map((s) => s.trim())[1]).toBe(
+      `ALTER TABLE ASYNC "public"."pet" VALIDATE CONSTRAINT "pet_fk";`,
+    );
+  });
+
+  test("does not emit validation for a foreign key that is not NOT VALID", () => {
+    const result = transformMigrationFile(
+      `CREATE TABLE "pet" ("id" UUID PRIMARY KEY);`,
+    );
+
+    expect(result.sql).not.toContain("VALIDATE CONSTRAINT");
+  });
+
   test("single-statement input (no breakpoints) still transforms", () => {
     const result = transformMigrationFile(`CREATE INDEX "idx" ON "t"("c");`);
 
