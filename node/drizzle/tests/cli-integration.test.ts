@@ -63,6 +63,30 @@ describe("CLI Integration", () => {
     expect(output).toContain("CREATE INDEX ASYNC");
   });
 
+  test("transform emits FK validation by default and --no-validate-fks skips it", () => {
+    const inputPath = path.join(tempDir, "fk-input.sql");
+    const withPath = path.join(tempDir, "fk-with.sql");
+    const withoutPath = path.join(tempDir, "fk-without.sql");
+    fs.writeFileSync(
+      inputPath,
+      `ALTER TABLE "pet" ADD CONSTRAINT "pet_fk" FOREIGN KEY ("ownerId") REFERENCES "owner"("id");`,
+    );
+
+    runTransformAllowingWarnings(
+      `npm run dsql-transform ${inputPath} -- -o ${withPath}`,
+    );
+    runTransformAllowingWarnings(
+      `npm run dsql-transform ${inputPath} -- -o ${withoutPath} --no-validate-fks`,
+    );
+
+    expect(fs.readFileSync(withPath, "utf-8")).toContain(
+      `ALTER TABLE ASYNC "pet" VALIDATE CONSTRAINT "pet_fk";`,
+    );
+    const without = fs.readFileSync(withoutPath, "utf-8");
+    expect(without).toContain("NOT VALID");
+    expect(without).not.toContain("VALIDATE CONSTRAINT");
+  });
+
   test("transform preserves Drizzle statement-breakpoints", () => {
     const inputPath = path.join(tempDir, "bp-input.sql");
     const outputPath = path.join(tempDir, "bp-output.sql");
