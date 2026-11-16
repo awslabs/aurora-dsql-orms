@@ -97,6 +97,11 @@ The workflow is:
 ... VALIDATE CONSTRAINT ...` statement after the transformed `NOT VALID`
    statement. The constraint applies to new writes immediately; the validation
    job checks existing rows. The migrator waits for that asynchronous job.
+   Re-running `generate` or `transform` on an already-transformed file does not
+   add a second `VALIDATE CONSTRAINT` statement. To skip the validation
+   statement (for example on very large tables), pass `--no-validate-fks` to
+   `generate` or `transform`; from code, call
+   `transformMigrationFile(sql, { validateForeignKeys: false })`.
 
    Aurora DSQL supports `NO ACTION`, `RESTRICT`, `CASCADE`, `SET NULL`, and
    `SET DEFAULT`, plus `MATCH SIMPLE`, `MATCH FULL`, and deferrable foreign
@@ -118,8 +123,8 @@ The workflow is:
 ## CLI
 
 ```
-aurora-dsql-drizzle generate [--out <dir>] [-- <drizzle-kit args>]   Generate + transform
-aurora-dsql-drizzle transform [input] [-o output]                    Transform SQL for DSQL
+aurora-dsql-drizzle generate [--out <dir>] [--no-validate-fks] [-- <drizzle-kit args>]   Generate + transform
+aurora-dsql-drizzle transform [input] [-o output] [--no-validate-fks]                    Transform SQL for DSQL
 aurora-dsql-drizzle lint [input]                                      Lint SQL for DSQL
 ```
 
