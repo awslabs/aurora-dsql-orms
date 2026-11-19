@@ -34,10 +34,13 @@ jobs:
         with:
           ref: ${{ inputs.checkout-ref }}
 
-      - name: Set up .NET 8
+      - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Build adapter
         run: dotnet build "$ADAPTER" --configuration Release
@@ -53,10 +56,13 @@ jobs:
         with:
           ref: ${{ inputs.checkout-ref }}
 
-      - name: Set up .NET 8
+      - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Build sample app
         run: dotnet build "$EXAMPLE" --configuration Release
@@ -83,10 +89,13 @@ jobs:
         with:
           ref: ${{ inputs.checkout-ref }}
 
-      - name: Set up .NET 8
+      - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -111,10 +120,13 @@ jobs:
         with:
           ref: ${{ inputs.checkout-ref }}
 
-      - name: Set up .NET 8
+      - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6

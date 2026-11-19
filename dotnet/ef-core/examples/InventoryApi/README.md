@@ -6,7 +6,7 @@ handles IAM authentication and transaction management transparently.
 
 ## Prerequisites
 
-- .NET 8.0 SDK
+- .NET 8.0, 9.0, or 10.0 SDK
 - Aurora DSQL cluster
 - AWS credentials configured (env vars, profile, or IAM role)
 
@@ -14,7 +14,7 @@ handles IAM authentication and transaction management transparently.
 
 ```bash
 export CLUSTER_ENDPOINT="your-cluster.dsql.us-east-1.on.aws"
-dotnet run --project dotnet/ef-core/examples/InventoryApi/
+dotnet run --project dotnet/ef-core/examples/InventoryApi/ --framework net8.0
 ```
 
 The app applies pending migrations at startup via `MigrateAsync()`.
