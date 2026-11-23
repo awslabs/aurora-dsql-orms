@@ -17,18 +17,18 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.6.1",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.0",
+    "drizzle-kit": "^0.31.11",
     "prettier": "4.0.0-alpha.13",
     "ts-jest": "^29.4.15",
-    "tsx": "^4.23.13",
-    "typescript": "^5.8.3"
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@aws/aurora-dsql-drizzle": "file:../..",
-    "drizzle-orm": "^0.45.2",
-    "pg": "^8.16.0"
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8.23.1"
   },
   "overrides": {
     "esbuild": "^0.25.0"
