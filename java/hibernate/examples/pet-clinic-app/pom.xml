@@ -10,7 +10,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.1.2</version>
+    <version>4.2.0</version>
     <relativePath/>
   </parent>
   <name>petclinic</name>
@@ -24,7 +24,7 @@
     <project.build.outputTimestamp>2025-05-05T18:02:25Z</project.build.outputTimestamp>
 
     <!-- Web dependencies -->
-    <webjars-bootstrap.version>5.3.8</webjars-bootstrap.version>
+    <webjars-bootstrap.version>5.3.9</webjars-bootstrap.version>
     <webjars-font-awesome.version>4.7.0</webjars-font-awesome.version>
 
     <checkstyle.version>12.3.1</checkstyle.version>
